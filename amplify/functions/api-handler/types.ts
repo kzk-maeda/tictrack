@@ -21,6 +21,7 @@ export interface Child {
   userId: string;
   displayName: string;
   birthYearMonth: string;
+  isDefault?: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,9 +1,9 @@
 import type { APIGatewayProxyEvent } from "aws-lambda";
 import type { RouteDefinition, RouteResult } from "./types.js";
-import { listChildren, createChild, updateChild, deleteChild } from "./routes/children.js";
+import { listChildren, createChild, updateChild, deleteChild, setDefaultChild } from "./routes/children.js";
 import { getMe, updateMe } from "./routes/users.js";
 import { listTicCards, createTicCard, updateTicCard, deleteTicCard } from "./routes/tic-cards.js";
-import { listEpisodes, createEpisode } from "./routes/episodes.js";
+import { listEpisodes, createEpisode, deleteEpisode } from "./routes/episodes.js";
 import { handleVideoUploadUrl, handleVideoUploadComplete, handleVideoPlaybackUrl } from "./routes/videos.js";
 import { NotFoundError } from "./lib/errors.js";
 
@@ -19,6 +19,11 @@ const routes: RouteDefinition[] = [
     method: "DELETE",
     pattern: /^\/children\/([^/]+)$/,
     handler: (e, p) => deleteChild(e, p),
+  },
+  {
+    method: "POST",
+    pattern: /^\/children\/([^/]+)\/set-default$/,
+    handler: (e, p) => setDefaultChild(e, p),
   },
   { method: "GET", pattern: /^\/users\/me$/, handler: (e) => getMe(e) },
   { method: "PUT", pattern: /^\/users\/me$/, handler: (e) => updateMe(e) },
@@ -40,6 +45,11 @@ const routes: RouteDefinition[] = [
   // Episodes
   { method: "GET", pattern: /^\/children\/([^/]+)\/episodes$/, handler: (e, p) => listEpisodes(e, p) },
   { method: "POST", pattern: /^\/children\/([^/]+)\/episodes$/, handler: (e, p) => createEpisode(e, p) },
+  {
+    method: "DELETE",
+    pattern: /^\/children\/([^/]+)\/episodes\/([^/]+)$/,
+    handler: (e, p) => deleteEpisode(e, p),
+  },
 
   // Video Upload
   {

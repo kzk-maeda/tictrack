@@ -1,20 +1,29 @@
 "use client";
 
-import { Clock } from "lucide-react";
+import { useState } from "react";
+import { Clock, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatTime } from "@/lib/date-utils";
+import { apiClient } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 import type { Episode, TicCard } from "@/lib/types";
 
 interface EpisodeCardProps {
   episode: Episode;
   ticCard?: TicCard;
+  onDelete?: () => void;
 }
 
-export function EpisodeCard({ episode, ticCard }: EpisodeCardProps) {
+export function EpisodeCard({ episode, ticCard, onDelete }: EpisodeCardProps) {
   const locale = useLocale();
   const t = useTranslations("timeline");
+  const tCommon = useTranslations("common");
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const occurredDate = new Date(episode.occurredAt);
   const timeString = formatTime(occurredDate, locale);
@@ -23,6 +32,36 @@ export function EpisodeCard({ episode, ticCard }: EpisodeCardProps) {
     episode.recordType === "quick_log" ? t("recordTypeQuick") : t("recordTypeVideo");
 
   const contextLabel = episode.context || t("contextUnknown");
+
+  const handleDelete = async () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      setTimeout(() => setConfirmDelete(false), 3000);
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await apiClient(`/children/${episode.childId}/episodes/${episode.episodeId}`, {
+        method: "DELETE",
+      });
+      toast({
+        title: t("deleteSuccess"),
+        description: t("deleteSuccessDescription"),
+      });
+      onDelete?.();
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast({
+        variant: "destructive",
+        title: t("deleteError"),
+        description: error instanceof Error ? error.message : t("deleteErrorDescription"),
+      });
+    } finally {
+      setIsDeleting(false);
+      setConfirmDelete(false);
+    }
+  };
 
   return (
     <Card>
@@ -56,6 +95,14 @@ export function EpisodeCard({ episode, ticCard }: EpisodeCardProps) {
               </p>
             )}
           </div>
+          <Button
+            variant={confirmDelete ? "destructive" : "ghost"}
+            size="icon"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </CardContent>
     </Card>

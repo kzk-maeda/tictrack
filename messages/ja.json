@@ -88,7 +88,11 @@
     "recordTypeVideo": "動画",
     "contextUnknown": "不明",
     "deletedCard": "（削除されたカード）",
-    "unclassified": "（未分類）"
+    "unclassified": "（未分類）",
+    "deleteSuccess": "削除しました",
+    "deleteSuccessDescription": "記録を削除しました",
+    "deleteError": "削除に失敗しました",
+    "deleteErrorDescription": "記録の削除に失敗しました"
   },
   "capture": {
     "title": "動画を撮影",

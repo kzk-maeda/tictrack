@@ -1,10 +1,10 @@
 import type { APIGatewayProxyEvent } from "aws-lambda";
-import { PutCommand, GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, GetCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { ulid } from "ulid";
 import type { RouteResult, Episode } from "../types.js";
 import { getUserId } from "../lib/auth.js";
 import { docClient, TableNames } from "../lib/dynamodb.js";
-import { ok, created } from "../lib/response.js";
+import { ok, created, noContent } from "../lib/response.js";
 import { parseJsonBody, validateISODateTime } from "../lib/validation.js";
 import { ForbiddenError, NotFoundError } from "../lib/errors.js";
 
@@ -131,4 +131,40 @@ export async function createEpisode(
   );
 
   return created(episode);
+}
+
+export async function deleteEpisode(
+  event: APIGatewayProxyEvent,
+  params: Record<string, string>,
+): Promise<RouteResult> {
+  const userId = getUserId(event);
+  const { childId, episodeId } = params;
+
+  await verifyChildOwnership(childId, userId);
+
+  // Verify episode exists and belongs to this child
+  const getResult = await docClient.send(
+    new GetCommand({
+      TableName: TableNames.EPISODES,
+      Key: { episodeId },
+    }),
+  );
+
+  if (!getResult.Item) {
+    throw new NotFoundError("Episode not found");
+  }
+
+  if (getResult.Item.childId !== childId) {
+    throw new ForbiddenError("Episode does not belong to this child");
+  }
+
+  // Delete the episode
+  await docClient.send(
+    new DeleteCommand({
+      TableName: TableNames.EPISODES,
+      Key: { episodeId },
+    }),
+  );
+
+  return noContent();
 }

@@ -88,7 +88,11 @@
     "recordTypeVideo": "Video",
     "contextUnknown": "Unknown",
     "deletedCard": "(Deleted card)",
-    "unclassified": "(Unclassified)"
+    "unclassified": "(Unclassified)",
+    "deleteSuccess": "Deleted",
+    "deleteSuccessDescription": "Record deleted successfully",
+    "deleteError": "Delete failed",
+    "deleteErrorDescription": "Failed to delete record"
   },
   "capture": {
     "title": "Record Video",

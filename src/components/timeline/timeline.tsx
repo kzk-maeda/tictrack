@@ -31,7 +31,7 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
   const tCommon = useTranslations("common");
   const tCapture = useTranslations("capture");
   const { children, isLoading: childrenLoading } = useChildren();
-  const { episodes, isLoading: episodesLoading, error: episodesError, createEpisode } =
+  const { episodes, isLoading: episodesLoading, error: episodesError, createEpisode, refresh } =
     useEpisodes(selectedChildId);
   const { ticCards } = useTicCards(selectedChildId);
 
@@ -134,6 +134,7 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
               date={date}
               episodes={groupedEpisodes[date]}
               ticCards={ticCards}
+              onRefresh={refresh}
             />
           ))}
         </div>

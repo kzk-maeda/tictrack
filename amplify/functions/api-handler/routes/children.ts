@@ -151,3 +151,55 @@ export async function deleteChild(
 
   return noContent();
 }
+
+export async function setDefaultChild(
+  event: APIGatewayProxyEvent,
+  params: Record<string, string>,
+): Promise<RouteResult> {
+  const userId = getUserId(event);
+  const childId = params.childId;
+
+  await getOwnedChild(childId, userId);
+
+  // Get all children for this user
+  const listResult = await docClient.send(
+    new QueryCommand({
+      TableName: TableNames.CHILDREN,
+      IndexName: "userId-index",
+      KeyConditionExpression: "userId = :userId",
+      ExpressionAttributeValues: { ":userId": userId },
+    }),
+  );
+
+  // Unset isDefault for all children
+  for (const child of listResult.Items || []) {
+    if (child.childId !== childId && child.isDefault) {
+      await docClient.send(
+        new UpdateCommand({
+          TableName: TableNames.CHILDREN,
+          Key: { childId: child.childId },
+          UpdateExpression: "REMOVE isDefault SET updatedAt = :updatedAt",
+          ExpressionAttributeValues: {
+            ":updatedAt": new Date().toISOString(),
+          },
+        }),
+      );
+    }
+  }
+
+  // Set isDefault=true for the target child
+  const result = await docClient.send(
+    new UpdateCommand({
+      TableName: TableNames.CHILDREN,
+      Key: { childId },
+      UpdateExpression: "SET isDefault = :isDefault, updatedAt = :updatedAt",
+      ExpressionAttributeValues: {
+        ":isDefault": true,
+        ":updatedAt": new Date().toISOString(),
+      },
+      ReturnValues: "ALL_NEW",
+    }),
+  );
+
+  return ok(result.Attributes);
+}
