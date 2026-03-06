@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuthenticator } from "@aws-amplify/ui-react";
 import { useRouter } from "next/navigation";
+import { Nav } from "@/components/layout/nav";
 import { Timeline } from "@/components/timeline/timeline";
 
 export default function Home() {
@@ -28,12 +29,15 @@ export default function Home() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">タイムライン</h1>
-      <Timeline
-        selectedChildId={selectedChildId}
-        onSelectChild={setSelectedChildId}
-      />
+    <div className="min-h-screen bg-background">
+      <Nav />
+      <main className="container max-w-2xl mx-auto py-8 px-4">
+        <h1 className="text-3xl font-bold mb-6">タイムライン</h1>
+        <Timeline
+          selectedChildId={selectedChildId}
+          onSelectChild={setSelectedChildId}
+        />
+      </main>
     </div>
   );
 }
