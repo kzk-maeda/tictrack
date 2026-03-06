@@ -1,0 +1,134 @@
+import type { APIGatewayProxyEvent } from "aws-lambda";
+import { PutCommand, GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { ulid } from "ulid";
+import type { RouteResult, Episode } from "../types.js";
+import { getUserId } from "../lib/auth.js";
+import { docClient, TableNames } from "../lib/dynamodb.js";
+import { ok, created } from "../lib/response.js";
+import { parseJsonBody, validateISODateTime } from "../lib/validation.js";
+import { ForbiddenError, NotFoundError } from "../lib/errors.js";
+
+async function verifyChildOwnership(
+  childId: string,
+  userId: string,
+): Promise<void> {
+  const result = await docClient.send(
+    new GetCommand({
+      TableName: TableNames.CHILDREN,
+      Key: { childId },
+    }),
+  );
+
+  if (!result.Item) {
+    throw new NotFoundError("Child not found");
+  }
+
+  if (result.Item.userId !== userId) {
+    throw new ForbiddenError("Access denied");
+  }
+}
+
+async function verifyTicCardOwnership(
+  ticCardId: string,
+  childId: string,
+): Promise<void> {
+  const result = await docClient.send(
+    new GetCommand({
+      TableName: TableNames.TIC_CARDS,
+      Key: { cardId: ticCardId },
+    }),
+  );
+
+  if (!result.Item) {
+    throw new NotFoundError("Tic card not found");
+  }
+
+  if (result.Item.childId !== childId) {
+    throw new ForbiddenError("Tic card does not belong to this child");
+  }
+}
+
+export async function listEpisodes(
+  event: APIGatewayProxyEvent,
+  params: Record<string, string>,
+): Promise<RouteResult> {
+  const userId = getUserId(event);
+  const childId = params.childId;
+
+  await verifyChildOwnership(childId, userId);
+
+  const from = event.queryStringParameters?.from;
+  const to = event.queryStringParameters?.to;
+
+  let keyConditionExpression = "childId = :childId";
+  const expressionValues: Record<string, string> = { ":childId": childId };
+
+  if (from && to) {
+    keyConditionExpression += " AND occurredAt BETWEEN :from AND :to";
+    expressionValues[":from"] = from;
+    expressionValues[":to"] = to;
+  }
+
+  const result = await docClient.send(
+    new QueryCommand({
+      TableName: TableNames.EPISODES,
+      IndexName: "childId-occurredAt-index",
+      KeyConditionExpression: keyConditionExpression,
+      ExpressionAttributeValues: expressionValues,
+      ScanIndexForward: false, // Descending order (newest first)
+    }),
+  );
+
+  return ok(result.Items || []);
+}
+
+export async function createEpisode(
+  event: APIGatewayProxyEvent,
+  params: Record<string, string>,
+): Promise<RouteResult> {
+  const userId = getUserId(event);
+  const childId = params.childId;
+  const body = parseJsonBody(event.body);
+
+  await verifyChildOwnership(childId, userId);
+
+  const recordType = body.recordType as "video" | "quick_log";
+  if (recordType !== "video" && recordType !== "quick_log") {
+    throw new ForbiddenError("recordType must be 'video' or 'quick_log'");
+  }
+
+  const occurredAt = validateISODateTime(body.occurredAt);
+  const ticCardId = typeof body.ticCardId === "string" ? body.ticCardId : undefined;
+  const context = typeof body.context === "string" ? body.context : undefined;
+  const notes = typeof body.notes === "string" ? body.notes : undefined;
+
+  // Cross-child isolation: Verify tic card belongs to this child
+  if (ticCardId) {
+    await verifyTicCardOwnership(ticCardId, childId);
+  }
+
+  const labelStatus = recordType === "quick_log" ? "confirmed" : "pending";
+
+  const now = new Date().toISOString();
+  const episode: Episode = {
+    episodeId: ulid(),
+    childId,
+    recordType,
+    ticCardId,
+    occurredAt,
+    context,
+    notes,
+    labelStatus,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await docClient.send(
+    new PutCommand({
+      TableName: TableNames.EPISODES,
+      Item: episode,
+    }),
+  );
+
+  return created(episode);
+}

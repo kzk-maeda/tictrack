@@ -2,6 +2,8 @@ import type { APIGatewayProxyEvent } from "aws-lambda";
 import type { RouteDefinition, RouteResult } from "./types.js";
 import { listChildren, createChild, updateChild, deleteChild } from "./routes/children.js";
 import { getMe, updateMe } from "./routes/users.js";
+import { listTicCards, createTicCard, updateTicCard, deleteTicCard } from "./routes/tic-cards.js";
+import { listEpisodes, createEpisode } from "./routes/episodes.js";
 import { NotFoundError } from "./lib/errors.js";
 
 const routes: RouteDefinition[] = [
@@ -19,6 +21,24 @@ const routes: RouteDefinition[] = [
   },
   { method: "GET", pattern: /^\/users\/me$/, handler: (e) => getMe(e) },
   { method: "PUT", pattern: /^\/users\/me$/, handler: (e) => updateMe(e) },
+
+  // TicCards
+  { method: "GET", pattern: /^\/children\/([^/]+)\/tic-cards$/, handler: (e, p) => listTicCards(e, p) },
+  { method: "POST", pattern: /^\/children\/([^/]+)\/tic-cards$/, handler: (e, p) => createTicCard(e, p) },
+  {
+    method: "PUT",
+    pattern: /^\/children\/([^/]+)\/tic-cards\/([^/]+)$/,
+    handler: (e, p) => updateTicCard(e, p),
+  },
+  {
+    method: "DELETE",
+    pattern: /^\/children\/([^/]+)\/tic-cards\/([^/]+)$/,
+    handler: (e, p) => deleteTicCard(e, p),
+  },
+
+  // Episodes
+  { method: "GET", pattern: /^\/children\/([^/]+)\/episodes$/, handler: (e, p) => listEpisodes(e, p) },
+  { method: "POST", pattern: /^\/children\/([^/]+)\/episodes$/, handler: (e, p) => createEpisode(e, p) },
 ];
 
 export async function route(
@@ -34,6 +54,7 @@ export async function route(
 
     const params: Record<string, string> = {};
     if (match[1]) params.childId = match[1];
+    if (match[2]) params.cardId = match[2];
 
     return def.handler(event, params);
   }

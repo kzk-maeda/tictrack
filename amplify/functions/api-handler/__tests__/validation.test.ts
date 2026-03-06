@@ -4,6 +4,9 @@ import {
   validateDisplayName,
   validateBirthYearMonth,
   parseJsonBody,
+  validateTicType,
+  validateSeverity,
+  validateISODateTime,
 } from "../lib/validation.js";
 import { ValidationError } from "../lib/errors.js";
 
@@ -122,5 +125,77 @@ describe("parseJsonBody", () => {
   it("throws ValidationError for JSON primitive", () => {
     expect(() => parseJsonBody('"string"')).toThrow(ValidationError);
     expect(() => parseJsonBody("42")).toThrow(ValidationError);
+  });
+});
+
+describe("validateTicType", () => {
+  it("returns valid type 'motor'", () => {
+    expect(validateTicType("motor")).toBe("motor");
+  });
+
+  it("returns valid type 'vocal'", () => {
+    expect(validateTicType("vocal")).toBe("vocal");
+  });
+
+  it("throws ValidationError for invalid type", () => {
+    expect(() => validateTicType("invalid")).toThrow(ValidationError);
+    expect(() => validateTicType("invalid")).toThrow("must be 'motor' or 'vocal'");
+  });
+
+  it("throws ValidationError for non-string value", () => {
+    expect(() => validateTicType(null)).toThrow(ValidationError);
+    expect(() => validateTicType(123)).toThrow(ValidationError);
+  });
+});
+
+describe("validateSeverity", () => {
+  it("returns valid severity 1", () => {
+    expect(validateSeverity(1)).toBe(1);
+  });
+
+  it("returns valid severity 2", () => {
+    expect(validateSeverity(2)).toBe(2);
+  });
+
+  it("returns valid severity 3", () => {
+    expect(validateSeverity(3)).toBe(3);
+  });
+
+  it("throws ValidationError for severity 0", () => {
+    expect(() => validateSeverity(0)).toThrow(ValidationError);
+    expect(() => validateSeverity(0)).toThrow("must be 1, 2, or 3");
+  });
+
+  it("throws ValidationError for severity 4", () => {
+    expect(() => validateSeverity(4)).toThrow(ValidationError);
+  });
+
+  it("throws ValidationError for non-number value", () => {
+    expect(() => validateSeverity("2")).toThrow(ValidationError);
+    expect(() => validateSeverity(null)).toThrow(ValidationError);
+  });
+
+  it("throws ValidationError for non-integer value", () => {
+    expect(() => validateSeverity(2.5)).toThrow(ValidationError);
+  });
+});
+
+describe("validateISODateTime", () => {
+  it("returns valid ISO 8601 datetime", () => {
+    expect(validateISODateTime("2026-03-06T14:30:00Z")).toBe("2026-03-06T14:30:00Z");
+  });
+
+  it("returns valid ISO 8601 datetime with milliseconds", () => {
+    expect(validateISODateTime("2026-03-06T14:30:00.123Z")).toBe("2026-03-06T14:30:00.123Z");
+  });
+
+  it("throws ValidationError for invalid format", () => {
+    expect(() => validateISODateTime("2026-03-06")).toThrow(ValidationError);
+    expect(() => validateISODateTime("2026/03/06 14:30")).toThrow(ValidationError);
+  });
+
+  it("throws ValidationError for non-string value", () => {
+    expect(() => validateISODateTime(null)).toThrow(ValidationError);
+    expect(() => validateISODateTime(new Date())).toThrow(ValidationError);
   });
 });
