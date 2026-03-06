@@ -1,0 +1,27 @@
+name: check-ci
+description: Check if code passes all CI checks locally before pushing
+instructions: |
+  This skill runs all CI checks locally to catch issues before pushing.
+
+  This replicates what GitHub Actions will run on PR:
+  1. Tests (npm run test)
+  2. Linting (npm run lint)
+  3. Build (npm run build)
+
+  Steps:
+  1. Confirm current branch and changes
+  2. Run: npm run test
+     - If fails: Show error and stop
+  3. Run: npm run lint
+     - If fails: Show error and stop
+  4. Run: npm run build
+     - If fails: Show error and stop
+  5. If all pass:
+     - ✅ All checks passed
+     - Ready to push and create PR
+     - Remind: git push origin {branch-name}
+
+  Notes:
+  - Run this before creating PR to avoid CI failures
+  - Faster to catch issues locally than waiting for CI
+  - Saves CI minutes quota

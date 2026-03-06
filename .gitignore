@@ -223,7 +223,8 @@ out/
 next-env.d.ts
 
 .vscode
-.claude
+.claude/*
+!.claude/skills/
 
 # Serwist (generated service worker)
 public/sw.js
