@@ -56,14 +56,24 @@ export default function CapturePage() {
         setError("動画の再生に失敗しました");
       };
 
-      video.onloadeddata = () => {
-        console.log("Video loaded successfully:", {
+      video.onloadedmetadata = () => {
+        console.log("Video metadata loaded:", {
           duration: video.duration,
           videoWidth: video.videoWidth,
           videoHeight: video.videoHeight,
         });
       };
 
+      video.onloadeddata = () => {
+        console.log("Video data loaded:", {
+          duration: video.duration,
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight,
+        });
+      };
+
+      // Force reload by setting src explicitly
+      video.src = recordedUrl;
       video.load();
 
       // Try to play automatically
@@ -119,10 +129,17 @@ export default function CapturePage() {
   const startRecording = (stream: MediaStream) => {
     chunksRef.current = [];
 
-    // Detect supported MIME type
-    const mimeType = MediaRecorder.isTypeSupported("video/webm")
-      ? "video/webm"
-      : "video/mp4";
+    // Detect supported MIME type with codec
+    let mimeType = "video/webm";
+    if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
+      mimeType = "video/webm;codecs=vp9";
+    } else if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8")) {
+      mimeType = "video/webm;codecs=vp8";
+    } else if (MediaRecorder.isTypeSupported("video/mp4")) {
+      mimeType = "video/mp4";
+    }
+
+    console.log("Using MIME type:", mimeType);
 
     const mediaRecorder = new MediaRecorder(stream, {
       mimeType,
@@ -291,6 +308,7 @@ export default function CapturePage() {
         <Card className="overflow-hidden aspect-video bg-black relative">
           {state === "preview" && recordedUrl ? (
             <video
+              key={recordedUrl}
               ref={previewVideoRef}
               src={recordedUrl}
               controls
