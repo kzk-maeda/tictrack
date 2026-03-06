@@ -151,7 +151,8 @@ export default function CapturePage() {
     };
 
     mediaRecorderRef.current = mediaRecorder;
-    mediaRecorder.start();
+    // Start recording with timeslice to collect data periodically
+    mediaRecorder.start(100); // Collect data every 100ms
     setState("recording");
     setCountdown(MAX_DURATION);
 
