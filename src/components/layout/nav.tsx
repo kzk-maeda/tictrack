@@ -15,8 +15,8 @@ export function Nav() {
   const t = useTranslations("nav");
 
   const navItems = [
-    { href: "/", label: t("timeline"), icon: Home },
     { href: "/tic-cards", label: t("ticCards"), icon: CreditCard },
+    { href: "/timeline", label: t("timeline"), icon: Home },
     { href: "/settings", label: t("settings"), icon: Settings },
   ];
 

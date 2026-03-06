@@ -12,7 +12,7 @@ import type { Child } from "@/lib/types";
 export function ChildrenList() {
   const t = useTranslations("children");
   const tCommon = useTranslations("common");
-  const { children, isLoading, error, createChild, updateChild, deleteChild } =
+  const { children, isLoading, error, createChild, updateChild, deleteChild, setDefaultChild } =
     useChildren();
   const [formOpen, setFormOpen] = useState(false);
   const [editingChild, setEditingChild] = useState<Child | null>(null);
@@ -31,6 +31,10 @@ export function ChildrenList() {
       setDeleteConfirm(child);
       setTimeout(() => setDeleteConfirm(null), 3000);
     }
+  };
+
+  const handleToggleDefault = async (child: Child) => {
+    await setDefaultChild(child.childId);
   };
 
   const handleSubmit = async (data: {
@@ -85,6 +89,7 @@ export function ChildrenList() {
               child={child}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onToggleDefault={handleToggleDefault}
             />
           ))}
         </div>

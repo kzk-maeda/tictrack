@@ -10,12 +10,14 @@ interface TimelineDayGroupProps {
   date: string;
   episodes: Episode[];
   ticCards: TicCard[];
+  onRefresh?: () => void;
 }
 
 export function TimelineDayGroup({
   date,
   episodes,
   ticCards,
+  onRefresh,
 }: TimelineDayGroupProps) {
   const locale = useLocale();
   const t = useTranslations("timeline");
@@ -42,7 +44,12 @@ export function TimelineDayGroup({
             ? ticCards.find((c) => c.cardId === episode.ticCardId)
             : undefined;
           return (
-            <EpisodeCard key={episode.episodeId} episode={episode} ticCard={ticCard} />
+            <EpisodeCard
+              key={episode.episodeId}
+              episode={episode}
+              ticCard={ticCard}
+              onDelete={onRefresh}
+            />
           );
         })}
       </div>

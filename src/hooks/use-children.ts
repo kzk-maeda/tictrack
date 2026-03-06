@@ -60,5 +60,14 @@ export function useChildren() {
     setChildren((prev) => prev.filter((c) => c.childId !== childId));
   }, []);
 
-  return { children, isLoading, error, createChild, updateChild, deleteChild, refresh };
+  const setDefaultChild = useCallback(async (childId: string) => {
+    const updated = await apiClient<Child>(`/children/${childId}/set-default`, {
+      method: "POST",
+    });
+    // Refresh all children to update isDefault flags
+    await refresh();
+    return updated;
+  }, [refresh]);
+
+  return { children, isLoading, error, createChild, updateChild, deleteChild, setDefaultChild, refresh };
 }
