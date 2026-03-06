@@ -4,6 +4,7 @@ import { listChildren, createChild, updateChild, deleteChild } from "./routes/ch
 import { getMe, updateMe } from "./routes/users.js";
 import { listTicCards, createTicCard, updateTicCard, deleteTicCard } from "./routes/tic-cards.js";
 import { listEpisodes, createEpisode } from "./routes/episodes.js";
+import { handleVideoUploadUrl, handleVideoUploadComplete, handleVideoPlaybackUrl } from "./routes/videos.js";
 import { NotFoundError } from "./lib/errors.js";
 
 const routes: RouteDefinition[] = [
@@ -39,6 +40,23 @@ const routes: RouteDefinition[] = [
   // Episodes
   { method: "GET", pattern: /^\/children\/([^/]+)\/episodes$/, handler: (e, p) => listEpisodes(e, p) },
   { method: "POST", pattern: /^\/children\/([^/]+)\/episodes$/, handler: (e, p) => createEpisode(e, p) },
+
+  // Video Upload
+  {
+    method: "POST",
+    pattern: /^\/children\/([^/]+)\/episodes\/([^/]+)\/upload-url$/,
+    handler: (e) => handleVideoUploadUrl(e),
+  },
+  {
+    method: "POST",
+    pattern: /^\/children\/([^/]+)\/episodes\/([^/]+)\/upload-complete$/,
+    handler: (e) => handleVideoUploadComplete(e),
+  },
+  {
+    method: "GET",
+    pattern: /^\/children\/([^/]+)\/episodes\/([^/]+)\/video-url$/,
+    handler: (e) => handleVideoPlaybackUrl(e),
+  },
 ];
 
 export async function route(
@@ -55,6 +73,7 @@ export async function route(
     const params: Record<string, string> = {};
     if (match[1]) params.childId = match[1];
     if (match[2]) params.cardId = match[2];
+    if (match[2]) params.episodeId = match[2];
 
     return def.handler(event, params);
   }
