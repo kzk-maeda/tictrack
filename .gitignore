@@ -214,7 +214,7 @@ node_modules/
 
 # Amplify Gen 2
 .amplify/
-amplify_outputs.json
+# amplify_outputs.json - Committed mock for CI, real one generated locally
 amplifyconfiguration.json
 
 # Next.js
