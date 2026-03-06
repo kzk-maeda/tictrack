@@ -49,7 +49,27 @@ export default function CapturePage() {
   // Load preview video when recorded
   useEffect(() => {
     if (state === "preview" && recordedUrl && previewVideoRef.current) {
-      previewVideoRef.current.load();
+      const video = previewVideoRef.current;
+
+      video.onerror = (e) => {
+        console.error("Video playback error:", e);
+        setError("動画の再生に失敗しました");
+      };
+
+      video.onloadeddata = () => {
+        console.log("Video loaded successfully:", {
+          duration: video.duration,
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight,
+        });
+      };
+
+      video.load();
+
+      // Try to play automatically
+      video.play().catch((err) => {
+        console.warn("Autoplay failed (normal on some browsers):", err);
+      });
     }
   }, [state, recordedUrl]);
 
@@ -117,8 +137,15 @@ export default function CapturePage() {
 
     mediaRecorder.onstop = () => {
       const blob = new Blob(chunksRef.current, { type: mimeType });
+      console.log("Video recorded:", {
+        size: blob.size,
+        type: blob.type,
+        chunks: chunksRef.current.length,
+      });
       setRecordedBlob(blob);
-      setRecordedUrl(URL.createObjectURL(blob));
+      const blobUrl = URL.createObjectURL(blob);
+      console.log("Blob URL created:", blobUrl);
+      setRecordedUrl(blobUrl);
       stopCamera();
       setState("preview");
     };
@@ -302,6 +329,15 @@ export default function CapturePage() {
         {error && (
           <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
             {error}
+          </div>
+        )}
+
+        {/* Debug Info */}
+        {state === "preview" && recordedBlob && (
+          <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
+            <div>Type: {recordedBlob.type}</div>
+            <div>Size: {(recordedBlob.size / 1024 / 1024).toFixed(2)} MB</div>
+            {recordedUrl && <div>URL: {recordedUrl.substring(0, 50)}...</div>}
           </div>
         )}
 
