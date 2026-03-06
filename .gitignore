@@ -208,3 +208,11 @@ __marimo__/
 
 # Kiro (IDE settings with secrets)
 .kiro/
+
+# Node.js
+node_modules/
+
+# Amplify Gen 2
+.amplify/
+amplify_outputs.json
+amplifyconfiguration.json
