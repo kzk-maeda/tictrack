@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Camera, Video, X, Check, RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { apiClient } from "@/lib/api";
 
 type RecordingState = "idle" | "requesting" | "recording" | "preview";
 
@@ -23,6 +24,8 @@ export default function CapturePage() {
   const [error, setError] = useState<string | null>(null);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -156,13 +159,79 @@ export default function CapturePage() {
   const saveVideo = async () => {
     if (!recordedBlob || !childId || !episodeId) return;
 
+    setUploading(true);
+    setError(null);
+
     try {
-      // TODO: Upload to S3 via presigned URL
-      // For now, just navigate back
+      // Step 1: Get presigned URL
+      const { url: uploadUrl, s3Key } = await apiClient<{
+        url: string;
+        s3Key: string;
+      }>(`/children/${childId}/episodes/${episodeId}/upload-url`, {
+        method: "POST",
+        body: {
+          contentType: recordedBlob.type,
+          fileSize: recordedBlob.size,
+        },
+      });
+
+      // Step 2: Upload to S3 with progress tracking
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(percentComplete);
+        }
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        xhr.addEventListener("load", () => {
+          if (xhr.status === 200) {
+            resolve();
+          } else {
+            reject(new Error(`Upload failed: ${xhr.status}`));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload failed"));
+        });
+
+        xhr.open("PUT", uploadUrl);
+        xhr.setRequestHeader("Content-Type", recordedBlob.type);
+        xhr.send(recordedBlob);
+      });
+
+      // Step 3: Calculate video duration
+      const video = document.createElement("video");
+      video.src = recordedUrl!;
+      await new Promise((resolve) => {
+        video.onloadedmetadata = resolve;
+      });
+      const duration = video.duration;
+
+      // Step 4: Notify backend that upload is complete
+      await apiClient(`/children/${childId}/episodes/${episodeId}/upload-complete`, {
+        method: "POST",
+        body: {
+          s3Key,
+          mimeType: recordedBlob.type,
+          fileSize: recordedBlob.size,
+          duration,
+        },
+      });
+
+      // Success! Navigate back to timeline
       router.push(`/?childId=${childId}`);
     } catch (err) {
       console.error("Upload error:", err);
-      setError("動画のアップロードに失敗しました");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "動画のアップロードに失敗しました"
+      );
+      setUploading(false);
     }
   };
 
@@ -225,6 +294,22 @@ export default function CapturePage() {
           </div>
         )}
 
+        {/* Upload Progress */}
+        {uploading && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{tCommon("saving")}</span>
+              <span className="font-medium">{uploadProgress}%</span>
+            </div>
+            <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-primary h-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Controls */}
         <div className="flex gap-4">
           {state === "idle" && (
@@ -261,13 +346,21 @@ export default function CapturePage() {
                 variant="outline"
                 className="flex-1"
                 size="lg"
+                disabled={uploading}
               >
                 <RotateCcw className="mr-2 h-5 w-5" />
                 {t("retake")}
               </Button>
-              <Button onClick={saveVideo} className="flex-1" size="lg">
+              <Button
+                onClick={saveVideo}
+                className="flex-1"
+                size="lg"
+                disabled={uploading}
+              >
                 <Check className="mr-2 h-5 w-5" />
-                {tCommon("save")}
+                {uploading
+                  ? `${tCommon("saving")} ${uploadProgress}%`
+                  : tCommon("save")}
               </Button>
             </>
           )}
