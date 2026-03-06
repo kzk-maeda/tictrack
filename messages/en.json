@@ -90,6 +90,15 @@
     "deletedCard": "(Deleted card)",
     "unclassified": "(Unclassified)"
   },
+  "capture": {
+    "title": "Record Video",
+    "startRecording": "Start Recording",
+    "stopRecording": "Stop Recording",
+    "requestingCamera": "Starting camera...",
+    "retake": "Retake",
+    "cameraNotSupported": "Your browser does not support camera access",
+    "selectVideo": "Select Video"
+  },
   "episodes": {},
   "settings": {
     "title": "Settings"

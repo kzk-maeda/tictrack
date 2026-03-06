@@ -90,6 +90,15 @@
     "deletedCard": "（削除されたカード）",
     "unclassified": "（未分類）"
   },
+  "capture": {
+    "title": "動画を撮影",
+    "startRecording": "撮影を開始",
+    "stopRecording": "撮影を停止",
+    "requestingCamera": "カメラを起動中...",
+    "retake": "撮り直し",
+    "cameraNotSupported": "お使いのブラウザはカメラに対応していません",
+    "selectVideo": "動画を選択"
+  },
   "episodes": {},
   "settings": {
     "title": "設定"

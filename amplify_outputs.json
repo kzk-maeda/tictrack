@@ -1,38 +1,72 @@
 {
-  "version": "1",
   "auth": {
-    "user_pool_id": "us-east-1_XXXXXXXXX",
-    "aws_region": "us-east-1",
-    "user_pool_client_id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
-    "identity_pool_id": "us-east-1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "user_pool_id": "ap-northeast-1_k1nZn5TA4",
+    "aws_region": "ap-northeast-1",
+    "user_pool_client_id": "4mcmlk6nfpsev1k7sdq61eoldi",
+    "identity_pool_id": "ap-northeast-1:6a7c7624-9aab-4f40-923c-a7082d11848d",
     "mfa_methods": [],
-    "standard_required_attributes": ["email"],
-    "username_attributes": ["email"],
-    "user_verification_types": ["email"],
-    "mfa_configuration": "OPTIONAL",
+    "standard_required_attributes": [
+      "email"
+    ],
+    "username_attributes": [
+      "email"
+    ],
+    "user_verification_types": [
+      "email"
+    ],
+    "groups": [],
+    "mfa_configuration": "NONE",
     "password_policy": {
       "min_length": 8,
       "require_lowercase": true,
-      "require_uppercase": true,
       "require_numbers": true,
-      "require_symbols": true
+      "require_symbols": true,
+      "require_uppercase": true
     },
-    "oauth": {
-      "identity_providers": [],
-      "domain": "",
-      "scopes": [],
-      "redirect_sign_in_uri": [],
-      "redirect_sign_out_uri": [],
-      "response_type": "code"
-    }
+    "unauthenticated_identities_enabled": true
   },
   "storage": {
-    "aws_region": "us-east-1",
-    "bucket_name": "amplify-storage-bucket-XXXXXXXXXX"
+    "aws_region": "ap-northeast-1",
+    "bucket_name": "amplify-awsaideascompetit-tictrackmediabucket710f7-vrusjcjf3sph",
+    "buckets": [
+      {
+        "name": "tictrack-media",
+        "bucket_name": "amplify-awsaideascompetit-tictrackmediabucket710f7-vrusjcjf3sph",
+        "aws_region": "ap-northeast-1",
+        "paths": {
+          "videos/${cognito-identity.amazonaws.com:sub}/*": {
+            "entityidentity": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ]
+          },
+          "tmp/*": {
+            "authenticated": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ]
+          },
+          "reports/*": {
+            "authenticated": [
+              "get",
+              "list"
+            ]
+          }
+        }
+      }
+    ]
   },
+  "version": "1.4",
   "custom": {
     "API": {
-      "endpoint": "https://api.example.com"
-    }
+      "endpoint": "https://pfc0e4eobj.execute-api.ap-northeast-1.amazonaws.com/dev/",
+      "region": "ap-northeast-1"
+    },
+    "KnowledgeBucket": "amplify-awsaideascompetit-foundationknowledgebucke-ohydxmvs2y3b",
+    "AgentsECR": "728291782722.dkr.ecr.ap-northeast-1.amazonaws.com/amplify-awsaideascompetition-kazukimaeda-sandbox-79195a0cd8-foundationstack908c88ba-8y7gmdzt3foy-foundationagentsrepo6fc60767-la5zvp6ov0hc"
   }
 }

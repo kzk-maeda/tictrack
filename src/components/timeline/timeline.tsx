@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   Select,
@@ -10,6 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Video } from "lucide-react";
 import { TimelineDayGroup } from "./timeline-day-group";
 import { useChildren } from "@/hooks/use-children";
 import { useEpisodes } from "@/hooks/use-episodes";
@@ -22,13 +25,32 @@ interface TimelineProps {
 }
 
 export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
+  const router = useRouter();
   const t = useTranslations("timeline");
   const tChildren = useTranslations("children");
   const tCommon = useTranslations("common");
+  const tCapture = useTranslations("capture");
   const { children, isLoading: childrenLoading } = useChildren();
-  const { episodes, isLoading: episodesLoading, error: episodesError } =
+  const { episodes, isLoading: episodesLoading, error: episodesError, createEpisode } =
     useEpisodes(selectedChildId);
   const { ticCards } = useTicCards(selectedChildId);
+
+  const handleRecordVideo = async () => {
+    if (!selectedChildId) return;
+
+    try {
+      // Create a new episode first
+      const episode = await createEpisode({
+        recordType: "video",
+        occurredAt: new Date().toISOString(),
+      });
+
+      // Navigate to capture page with childId and episodeId
+      router.push(`/capture?childId=${selectedChildId}&episodeId=${episode.episodeId}`);
+    } catch (error) {
+      console.error("Failed to create episode:", error);
+    }
+  };
 
   // Group episodes by date (YYYY-MM-DD)
   const groupedEpisodes = useMemo(() => {
@@ -77,6 +99,20 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Record Video Button */}
+      {selectedChildId && (
+        <div className="mb-6">
+          <Button
+            onClick={handleRecordVideo}
+            className="w-full"
+            size="lg"
+          >
+            <Video className="mr-2 h-5 w-5" />
+            {tCapture("title")}
+          </Button>
+        </div>
+      )}
 
       {!selectedChildId ? (
         <p className="text-muted-foreground text-center py-8">
