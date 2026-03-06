@@ -65,7 +65,7 @@ export async function handleVideoUploadUrl(
     const getResult = await docClient.send(
       new GetCommand({
         TableName: EPISODES_TABLE,
-        Key: { episodeId, childId },
+        Key: { episodeId },
       }),
     );
 
@@ -130,7 +130,7 @@ export async function handleVideoUploadComplete(
   const getResult = await docClient.send(
     new GetCommand({
       TableName: EPISODES_TABLE,
-      Key: { episodeId, childId },
+      Key: { episodeId },
     }),
   );
 
@@ -147,7 +147,7 @@ export async function handleVideoUploadComplete(
   const updateResult = await docClient.send(
     new UpdateCommand({
       TableName: EPISODES_TABLE,
-      Key: { episodeId, childId },
+      Key: { episodeId },
       UpdateExpression:
         "SET videoS3Key = :s3Key, videoMimeType = :mimeType, videoFileSize = :fileSize, videoDuration = :duration, uploadStatus = :status, updatedAt = :updatedAt",
       ExpressionAttributeValues: {
@@ -178,7 +178,7 @@ export async function handleVideoPlaybackUrl(
   const getResult = await docClient.send(
     new GetCommand({
       TableName: EPISODES_TABLE,
-      Key: { episodeId, childId },
+      Key: { episodeId },
     }),
   );
 
