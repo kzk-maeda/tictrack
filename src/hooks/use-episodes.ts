@@ -58,5 +58,16 @@ export function useEpisodes(childId: string | null) {
     [childId],
   );
 
-  return { episodes, isLoading, error, createEpisode, refresh };
+  const getVideoUrl = useCallback(
+    async (episodeId: string) => {
+      if (!childId) throw new Error("No child selected");
+      const data = await apiClient<{ url: string }>(
+        `/children/${childId}/episodes/${episodeId}/video-url`,
+      );
+      return data.url;
+    },
+    [childId],
+  );
+
+  return { episodes, isLoading, error, createEpisode, getVideoUrl, refresh };
 }

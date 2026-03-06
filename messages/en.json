@@ -92,7 +92,9 @@
     "deleteSuccess": "Deleted",
     "deleteSuccessDescription": "Record deleted successfully",
     "deleteError": "Delete failed",
-    "deleteErrorDescription": "Failed to delete record"
+    "deleteErrorDescription": "Failed to delete record",
+    "videoLoadError": "Failed to load video",
+    "videoNotSupported": "Your browser does not support video playback"
   },
   "capture": {
     "title": "Record Video",

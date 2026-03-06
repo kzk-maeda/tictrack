@@ -3,6 +3,7 @@ export interface Child {
   userId: string;
   displayName: string;
   birthYearMonth: string;
+  isDefault?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,6 +45,11 @@ export interface Episode {
   context?: string;
   notes?: string;
   labelStatus: "pending" | "ai_suggested" | "confirmed" | "edited";
+  videoS3Key?: string;
+  videoMimeType?: string;
+  videoFileSize?: number;
+  videoDuration?: number;
+  uploadStatus?: "pending" | "completed" | "failed";
   createdAt: string;
   updatedAt: string;
 }

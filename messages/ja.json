@@ -92,7 +92,9 @@
     "deleteSuccess": "削除しました",
     "deleteSuccessDescription": "記録を削除しました",
     "deleteError": "削除に失敗しました",
-    "deleteErrorDescription": "記録の削除に失敗しました"
+    "deleteErrorDescription": "記録の削除に失敗しました",
+    "videoLoadError": "動画の読み込みに失敗しました",
+    "videoNotSupported": "お使いのブラウザは動画の再生に対応していません"
   },
   "capture": {
     "title": "動画を撮影",
