@@ -1,0 +1,42 @@
+import type { APIGatewayProxyEvent } from "aws-lambda";
+import type { RouteDefinition, RouteResult } from "./types.js";
+import { listChildren, createChild, updateChild, deleteChild } from "./routes/children.js";
+import { getMe, updateMe } from "./routes/users.js";
+import { NotFoundError } from "./lib/errors.js";
+
+const routes: RouteDefinition[] = [
+  { method: "GET", pattern: /^\/children$/, handler: (e) => listChildren(e) },
+  { method: "POST", pattern: /^\/children$/, handler: (e) => createChild(e) },
+  {
+    method: "PUT",
+    pattern: /^\/children\/([^/]+)$/,
+    handler: (e, p) => updateChild(e, p),
+  },
+  {
+    method: "DELETE",
+    pattern: /^\/children\/([^/]+)$/,
+    handler: (e, p) => deleteChild(e, p),
+  },
+  { method: "GET", pattern: /^\/users\/me$/, handler: (e) => getMe(e) },
+  { method: "PUT", pattern: /^\/users\/me$/, handler: (e) => updateMe(e) },
+];
+
+export async function route(
+  event: APIGatewayProxyEvent,
+): Promise<RouteResult> {
+  // Strip stage prefix if present (e.g., /dev/children -> /children)
+  const path = event.path.replace(/^\/dev/, "") || "/";
+
+  for (const def of routes) {
+    if (event.httpMethod !== def.method) continue;
+    const match = path.match(def.pattern);
+    if (!match) continue;
+
+    const params: Record<string, string> = {};
+    if (match[1]) params.childId = match[1];
+
+    return def.handler(event, params);
+  }
+
+  throw new NotFoundError(`No route found for ${event.httpMethod} ${path}`);
+}
