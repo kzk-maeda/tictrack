@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +22,8 @@ interface ChildFormProps {
 }
 
 export function ChildForm({ open, onOpenChange, child, onSubmit }: ChildFormProps) {
+  const t = useTranslations("children.form");
+  const tCommon = useTranslations("common");
   const [displayName, setDisplayName] = useState(child?.displayName || "");
   const [birthYearMonth, setBirthYearMonth] = useState(child?.birthYearMonth || "");
   const [error, setError] = useState<string | null>(null);
@@ -33,11 +36,11 @@ export function ChildForm({ open, onOpenChange, child, onSubmit }: ChildFormProp
     setError(null);
 
     if (!displayName.trim()) {
-      setError("名前を入力してください");
+      setError(t("errorNameRequired"));
       return;
     }
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(birthYearMonth)) {
-      setError("生年月はYYYY-MM形式で入力してください");
+      setError(t("errorDateFormat"));
       return;
     }
 
@@ -48,7 +51,7 @@ export function ChildForm({ open, onOpenChange, child, onSubmit }: ChildFormProp
       setDisplayName("");
       setBirthYearMonth("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "エラーが発生しました");
+      setError(e instanceof Error ? e.message : t("errorGeneral"));
     } finally {
       setIsSubmitting(false);
     }
@@ -58,22 +61,22 @@ export function ChildForm({ open, onOpenChange, child, onSubmit }: ChildFormProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "子ども情報を編集" : "子どもを追加"}</DialogTitle>
+          <DialogTitle>{isEditing ? t("titleEdit") : t("titleAdd")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="displayName">名前</Label>
+              <Label htmlFor="displayName">{t("displayName")}</Label>
               <Input
                 id="displayName"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="例: タロウ"
+                placeholder={t("displayNamePlaceholder")}
                 maxLength={50}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="birthYearMonth">生年月</Label>
+              <Label htmlFor="birthYearMonth">{t("birthYearMonth")}</Label>
               <Input
                 id="birthYearMonth"
                 type="month"
@@ -85,10 +88,10 @@ export function ChildForm({ open, onOpenChange, child, onSubmit }: ChildFormProp
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              キャンセル
+              {tCommon("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "保存中..." : isEditing ? "更新" : "追加"}
+              {isSubmitting ? tCommon("saving") : isEditing ? tCommon("update") : tCommon("add")}
             </Button>
           </DialogFooter>
         </form>

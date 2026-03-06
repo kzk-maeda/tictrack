@@ -1,6 +1,7 @@
 "use client";
 
 import { Pencil, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Child } from "@/lib/types";
@@ -12,6 +13,8 @@ interface ChildCardProps {
 }
 
 export function ChildCard({ child, onEdit, onDelete }: ChildCardProps) {
+  const t = useTranslations("children");
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -31,7 +34,7 @@ export function ChildCard({ child, onEdit, onDelete }: ChildCardProps) {
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          生年月: {child.birthYearMonth}
+          {t("birthYearMonth")}: {child.birthYearMonth}
         </p>
       </CardContent>
     </Card>

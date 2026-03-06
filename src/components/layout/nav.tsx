@@ -6,15 +6,18 @@ import { useAuthenticator } from "@aws-amplify/ui-react";
 import { LogOut, Home, CreditCard, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "./language-switcher";
 
 export function Nav() {
   const pathname = usePathname();
   const { user, signOut } = useAuthenticator((context) => [context.user]);
+  const t = useTranslations("nav");
 
   const navItems = [
-    { href: "/", label: "タイムライン", icon: Home },
-    { href: "/tic-cards", label: "チックカード", icon: CreditCard },
-    { href: "/settings", label: "設定", icon: Settings },
+    { href: "/", label: t("timeline"), icon: Home },
+    { href: "/tic-cards", label: t("ticCards"), icon: CreditCard },
+    { href: "/settings", label: t("settings"), icon: Settings },
   ];
 
   return (
@@ -23,12 +26,13 @@ export function Nav() {
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-xl font-bold">TicTrack</h1>
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             <span className="text-sm text-muted-foreground">
               {user?.signInDetails?.loginId}
             </span>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-1" />
-              ログアウト
+              {t("logout")}
             </Button>
           </div>
         </div>

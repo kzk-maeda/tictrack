@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -20,6 +21,9 @@ import { toast } from "@/hooks/use-toast";
 import type { TicCard } from "@/lib/types";
 
 export function TicCardsList() {
+  const t = useTranslations("ticCards");
+  const tChildren = useTranslations("children");
+  const tCommon = useTranslations("common");
   const { children, isLoading: childrenLoading } = useChildren();
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
 
@@ -48,8 +52,8 @@ export function TicCardsList() {
       await deleteTicCard(card.cardId);
       setDeleteConfirm(null);
       toast({
-        title: "削除しました",
-        description: `「${card.label}」を削除しました`,
+        title: t("toast.deleted"),
+        description: t("toast.deletedDescription", { label: card.label }),
       });
     } else {
       setDeleteConfirm(card);
@@ -66,13 +70,13 @@ export function TicCardsList() {
         context: "unknown",
       });
       toast({
-        title: "記録しました",
-        description: `「${card.label}」を記録しました`,
+        title: t("toast.logged"),
+        description: t("toast.loggedDescription", { label: card.label }),
       });
     } catch (e) {
       toast({
-        title: "エラー",
-        description: e instanceof Error ? e.message : "記録に失敗しました",
+        title: t("toast.errorLog"),
+        description: e instanceof Error ? e.message : t("toast.errorLogDescription"),
         variant: "destructive",
       });
     }
@@ -88,14 +92,14 @@ export function TicCardsList() {
     if (editingCard) {
       await updateTicCard(editingCard.cardId, data);
       toast({
-        title: "更新しました",
-        description: `「${data.label}」を更新しました`,
+        title: t("toast.updated"),
+        description: t("toast.updatedDescription", { label: data.label }),
       });
     } else {
       await createTicCard(data);
       toast({
-        title: "追加しました",
-        description: `「${data.label}」を追加しました`,
+        title: t("toast.created"),
+        description: t("toast.createdDescription", { label: data.label }),
       });
     }
   };
@@ -106,19 +110,19 @@ export function TicCardsList() {
   };
 
   if (childrenLoading) {
-    return <p className="text-muted-foreground">読み込み中...</p>;
+    return <p className="text-muted-foreground">{tCommon("loading")}</p>;
   }
 
   return (
     <div>
       <div className="mb-6 space-y-2">
-        <Label htmlFor="child-select">子どもを選択</Label>
+        <Label htmlFor="child-select">{tChildren("selectChild")}</Label>
         <Select
           value={selectedChildId || ""}
           onValueChange={(v) => setSelectedChildId(v || null)}
         >
           <SelectTrigger id="child-select" className="w-full">
-            <SelectValue placeholder="子どもを選択してください" />
+            <SelectValue placeholder={tChildren("selectPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
             {children.map((child) => (
@@ -132,12 +136,12 @@ export function TicCardsList() {
 
       {!selectedChildId ? (
         <p className="text-muted-foreground text-center py-8">
-          子どもを選択してください
+          {tChildren("selectPlaceholder")}
         </p>
       ) : (
         <>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">チックカード</h2>
+            <h2 className="text-xl font-semibold">{t("titleShort")}</h2>
             <Button
               size="sm"
               onClick={() => {
@@ -146,17 +150,17 @@ export function TicCardsList() {
               }}
             >
               <Plus className="h-4 w-4 mr-1" />
-              追加
+              {t("add")}
             </Button>
           </div>
 
           {cardsLoading ? (
-            <p className="text-muted-foreground">読み込み中...</p>
+            <p className="text-muted-foreground">{tCommon("loading")}</p>
           ) : cardsError ? (
             <p className="text-destructive">{cardsError}</p>
           ) : ticCards.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
-              チックカードを追加してください
+              {t("noCards")}
             </p>
           ) : (
             <div className="space-y-3">
@@ -176,7 +180,7 @@ export function TicCardsList() {
 
       {deleteConfirm && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-destructive text-destructive-foreground px-4 py-2 rounded-md text-sm">
-          もう一度タップで「{deleteConfirm.label}」を削除
+          {tChildren("deleteConfirm", { name: deleteConfirm.label })}
         </div>
       )}
 

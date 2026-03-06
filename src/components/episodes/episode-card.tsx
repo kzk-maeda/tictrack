@@ -1,8 +1,10 @@
 "use client";
 
-import { Calendar, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatTime } from "@/lib/date-utils";
 import type { Episode, TicCard } from "@/lib/types";
 
 interface EpisodeCardProps {
@@ -11,16 +13,16 @@ interface EpisodeCardProps {
 }
 
 export function EpisodeCard({ episode, ticCard }: EpisodeCardProps) {
+  const locale = useLocale();
+  const t = useTranslations("timeline");
+
   const occurredDate = new Date(episode.occurredAt);
-  const timeString = occurredDate.toLocaleTimeString("ja-JP", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const timeString = formatTime(occurredDate, locale);
 
   const recordTypeLabel =
-    episode.recordType === "quick_log" ? "ワンタップ" : "動画";
+    episode.recordType === "quick_log" ? t("recordTypeQuick") : t("recordTypeVideo");
 
-  const contextLabel = episode.context || "不明";
+  const contextLabel = episode.context || t("contextUnknown");
 
   return (
     <Card>
@@ -45,7 +47,7 @@ export function EpisodeCard({ episode, ticCard }: EpisodeCardProps) {
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">
-                {episode.ticCardId ? "（削除されたカード）" : "（未分類）"}
+                {episode.ticCardId ? t("deletedCard") : t("unclassified")}
               </p>
             )}
             {episode.notes && (

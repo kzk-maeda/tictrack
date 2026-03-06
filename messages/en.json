@@ -1,0 +1,106 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "appName": "TicTrack",
+    "cancel": "Cancel",
+    "save": "Save",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "update": "Update",
+    "saving": "Saving...",
+    "noData": "No data available"
+  },
+  "auth": {
+    "title": "TicTrack",
+    "description": "Sign In",
+    "coppaGuardian": "I am a parent/guardian",
+    "coppaConsent": "I consent to collect my child's data"
+  },
+  "nav": {
+    "timeline": "Timeline",
+    "ticCards": "Tic Cards",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "children": {
+    "title": "Children",
+    "add": "Add",
+    "selectChild": "Select Child",
+    "selectPlaceholder": "Please select a child",
+    "noChildren": "Please add a child",
+    "birthYearMonth": "Birth Year/Month",
+    "deleteConfirm": "Tap again to delete \"{name}\"",
+    "form": {
+      "titleAdd": "Add Child",
+      "titleEdit": "Edit Child Information",
+      "displayName": "Name",
+      "displayNamePlaceholder": "e.g., Taro",
+      "birthYearMonth": "Birth Year/Month",
+      "errorNameRequired": "Please enter a name",
+      "errorDateFormat": "Please enter birth year/month in YYYY-MM format",
+      "errorGeneral": "An error occurred"
+    }
+  },
+  "ticCards": {
+    "title": "Tic Card Management",
+    "titleShort": "Tic Cards",
+    "add": "Add",
+    "noCards": "Please add a tic card",
+    "quickLog": "Log",
+    "inactive": "Inactive",
+    "form": {
+      "titleAdd": "Add Tic Card",
+      "titleEdit": "Edit Tic Card",
+      "label": "Label",
+      "labelPlaceholder": "e.g., Head shake",
+      "type": "Type",
+      "typeMotor": "Motor",
+      "typeVocal": "Vocal",
+      "severity": "Severity",
+      "severityMild": "Mild",
+      "severityModerate": "Moderate",
+      "severitySevere": "Severe",
+      "description": "Description (optional)",
+      "descriptionPlaceholder": "e.g., Shakes head left and right",
+      "active": "Active",
+      "errorLabelRequired": "Please enter a label"
+    },
+    "toast": {
+      "created": "Added",
+      "createdDescription": "Added \"{label}\"",
+      "updated": "Updated",
+      "updatedDescription": "Updated \"{label}\"",
+      "deleted": "Deleted",
+      "deletedDescription": "Deleted \"{label}\"",
+      "logged": "Logged",
+      "loggedDescription": "Logged \"{label}\"",
+      "errorLog": "Error",
+      "errorLogDescription": "Failed to log"
+    }
+  },
+  "timeline": {
+    "title": "Timeline",
+    "noRecords": "No records yet",
+    "today": "Today",
+    "recordCount": "({count} {count, plural, one {record} other {records}})",
+    "recordTypeQuick": "Quick Log",
+    "recordTypeVideo": "Video",
+    "contextUnknown": "Unknown",
+    "deletedCard": "(Deleted card)",
+    "unclassified": "(Unclassified)"
+  },
+  "episodes": {},
+  "settings": {
+    "title": "Settings"
+  },
+  "offline": {
+    "title": "Offline",
+    "message": "You are offline. Please check your connection."
+  },
+  "manifest": {
+    "name": "TicTrack",
+    "shortName": "TicTrack",
+    "description": "Caregiver-first, non-diagnostic app for recording and analyzing children's tic symptoms"
+  }
+}

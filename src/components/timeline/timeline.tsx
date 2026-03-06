@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,9 @@ interface TimelineProps {
 }
 
 export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
+  const t = useTranslations("timeline");
+  const tChildren = useTranslations("children");
+  const tCommon = useTranslations("common");
   const { children, isLoading: childrenLoading } = useChildren();
   const { episodes, isLoading: episodesLoading, error: episodesError } =
     useEpisodes(selectedChildId);
@@ -50,19 +54,19 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
   );
 
   if (childrenLoading) {
-    return <p className="text-muted-foreground">読み込み中...</p>;
+    return <p className="text-muted-foreground">{tCommon("loading")}</p>;
   }
 
   return (
     <div>
       <div className="mb-6 space-y-2">
-        <Label htmlFor="child-select-timeline">子どもを選択</Label>
+        <Label htmlFor="child-select-timeline">{tChildren("selectChild")}</Label>
         <Select
           value={selectedChildId || ""}
           onValueChange={(v) => onSelectChild(v || null)}
         >
           <SelectTrigger id="child-select-timeline" className="w-full">
-            <SelectValue placeholder="子どもを選択してください" />
+            <SelectValue placeholder={tChildren("selectPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
             {children.map((child) => (
@@ -76,15 +80,15 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
 
       {!selectedChildId ? (
         <p className="text-muted-foreground text-center py-8">
-          子どもを選択してください
+          {tChildren("selectPlaceholder")}
         </p>
       ) : episodesLoading ? (
-        <p className="text-muted-foreground">読み込み中...</p>
+        <p className="text-muted-foreground">{tCommon("loading")}</p>
       ) : episodesError ? (
         <p className="text-destructive">{episodesError}</p>
       ) : dates.length === 0 ? (
         <p className="text-muted-foreground text-center py-8">
-          まだ記録がありません
+          {t("noRecords")}
         </p>
       ) : (
         <div>

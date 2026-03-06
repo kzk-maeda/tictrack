@@ -1,22 +1,38 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AmplifyProvider } from "@/components/providers/amplify-provider";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, getLocale } from "next-intl/server";
+import { Toaster } from "@/components/ui/toaster";
 
-export const metadata: Metadata = {
-  title: "TicTrack",
-  description: "介護者ファーストの、子どものチック症状を記録・分析する非診断アプリ",
-  manifest: "/manifest.json",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const messages: any = await getMessages();
 
-export default function RootLayout({
+  return {
+    title: messages.common.appName as string,
+    description: messages.manifest.description as string,
+    manifest: "/manifest.json",
+  };
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="ja">
+    <html lang={locale}>
       <body>
-        <AmplifyProvider>{children}</AmplifyProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <AmplifyProvider>
+            {children}
+            <Toaster />
+          </AmplifyProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

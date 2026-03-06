@@ -1,6 +1,7 @@
 "use client";
 
 import { Pencil, Trash2, Zap } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,8 +20,11 @@ export function TicCardCard({
   onDelete,
   onQuickLog,
 }: TicCardCardProps) {
-  const typeLabel = card.type === "motor" ? "運動性" : "音声性";
-  const severityLabel = ["軽度", "中度", "重度"][card.severity - 1] || "";
+  const t = useTranslations("ticCards");
+  const tForm = useTranslations("ticCards.form");
+
+  const typeLabel = card.type === "motor" ? tForm("typeMotor") : tForm("typeVocal");
+  const severityLabel = [tForm("severityMild"), tForm("severityModerate"), tForm("severitySevere")][card.severity - 1] || "";
 
   return (
     <Card className={card.isActive ? "" : "opacity-50"}>
@@ -29,7 +33,7 @@ export function TicCardCard({
           <CardTitle className="text-lg">{card.label}</CardTitle>
           {!card.isActive && (
             <Badge variant="outline" className="text-xs">
-              非アクティブ
+              {t("inactive")}
             </Badge>
           )}
         </div>
@@ -42,7 +46,7 @@ export function TicCardCard({
             className="gap-1"
           >
             <Zap className="h-3 w-3" />
-            記録
+            {t("quickLog")}
           </Button>
           <Button variant="ghost" size="icon" onClick={() => onEdit(card)}>
             <Pencil className="h-4 w-4" />

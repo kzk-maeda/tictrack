@@ -1,7 +1,9 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { Separator } from "@/components/ui/separator";
 import { EpisodeCard } from "@/components/episodes/episode-card";
+import { formatDate } from "@/lib/date-utils";
 import type { Episode, TicCard } from "@/lib/types";
 
 interface TimelineDayGroupProps {
@@ -15,13 +17,11 @@ export function TimelineDayGroup({
   episodes,
   ticCards,
 }: TimelineDayGroupProps) {
+  const locale = useLocale();
+  const t = useTranslations("timeline");
+
   const dateObj = new Date(date);
-  const dateString = dateObj.toLocaleDateString("ja-JP", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    weekday: "short",
-  });
+  const dateString = formatDate(dateObj, locale);
 
   const isToday =
     dateObj.toDateString() === new Date().toDateString();
@@ -30,10 +30,10 @@ export function TimelineDayGroup({
     <div>
       <div className="flex items-center gap-2 mb-3">
         <h3 className="text-lg font-semibold">
-          {isToday ? "今日" : dateString}
+          {isToday ? t("today") : dateString}
         </h3>
         <span className="text-sm text-muted-foreground">
-          ({episodes.length}件)
+          {t("recordCount", { count: episodes.length })}
         </span>
       </div>
       <div className="space-y-2 mb-6">
