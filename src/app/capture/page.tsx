@@ -28,6 +28,7 @@ export default function CapturePage() {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const previewVideoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -44,6 +45,13 @@ export default function CapturePage() {
       if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     };
   }, [recordedUrl]);
+
+  // Load preview video when recorded
+  useEffect(() => {
+    if (state === "preview" && recordedUrl && previewVideoRef.current) {
+      previewVideoRef.current.load();
+    }
+  }, [state, recordedUrl]);
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -255,8 +263,11 @@ export default function CapturePage() {
         <Card className="overflow-hidden aspect-video bg-black relative">
           {state === "preview" && recordedUrl ? (
             <video
+              ref={previewVideoRef}
               src={recordedUrl}
               controls
+              playsInline
+              loop
               className="w-full h-full object-contain"
             />
           ) : (
