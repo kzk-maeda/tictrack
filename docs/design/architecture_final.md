@@ -236,41 +236,48 @@ graph TB
 
 ### 4.3 Amplify Gen 2 バックエンド構成
 
+> **注**: REST API アーキテクチャのため `defineData`（AppSync）は不使用。DynamoDB はカスタム CDK Construct で直接定義。
+> 各ステップのリソースは `backend.ts` で段階的に有効化する。
+
 ```
 amplify/
-├── backend.ts              # defineBackend — バックエンド全体の定義
+├── backend.ts                          # defineBackend + カスタムスタック（段階的有効化）
 ├── auth/
-│   └── resource.ts         # defineAuth — Cognito User Pool 設定
-├── data/
-│   └── resource.ts         # defineData — DynamoDB テーブル定義（Amplify Data）
+│   └── resource.ts                     # defineAuth — Cognito User Pool 設定 (Step 1)
 ├── storage/
-│   └── resource.ts         # defineStorage — S3 バケット設定
-└── functions/
-    ├── api-handler/
-    │   └── resource.ts     # defineFunction — API Lambda (Node.js 20)
-    ├── ai-proxy/
-    │   └── resource.ts     # AI Proxy Lambda — AgentCore HTTP 呼び出し (Node.js 20)
-    └── report-generator/
-        └── resource.ts     # レポート生成 Lambda (Node.js 20)
+│   └── resource.ts                     # defineStorage — S3 media バケット (Step 1)
+├── functions/
+│   ├── api-handler/
+│   │   ├── resource.ts                 # defineFunction — API Lambda (Node.js 20, ARM64)
+│   │   └── handler.ts                  # プレースホルダー 501 (Step 1)
+│   ├── ai-proxy/                       # → Step 4 で作成
+│   ├── report-generator/               # → Step 6 で作成
+│   └── data-deletion/                  # → Step 8 で作成
+└── custom/
+    ├── database/index.ts               # DatabaseConstruct — DynamoDB 8 テーブル (Step 0)
+    ├── foundation/index.ts             # FoundationConstruct — S3 knowledge + ECR (Step 0)
+    ├── api/index.ts                    # ApiConstruct — REST API + Cognito Authorizer (Step 1)
+    ├── ai/index.ts                     # → Step 4: AiConstruct (Guardrails + AgentCore IAM)
+    └── orchestration/index.ts          # → Step 6: OrchestrationConstruct (SF + EventBridge)
 
-agents/                       # Python 3.12 プロジェクト（Strands Agents SDK）
-├── pyproject.toml            # uv/pip 依存管理
-├── Dockerfile                # ARM64 コンテナ（AgentCore 用）
+agents/                                   # Python 3.12 プロジェクト（Strands Agents SDK）
+├── pyproject.toml                        # uv/pip 依存管理
+├── Dockerfile                            # ARM64 コンテナ（AgentCore 用）
 ├── tic_labeling/
-│   ├── agent.py              # Tic Labeling Agent 定義 + FastAPI /invocations
+│   ├── agent.py                          # Tic Labeling Agent 定義 + FastAPI /invocations
 │   └── tools/
-│       ├── analyze_video.py      # @tool: Nova Pro 動画分析
-│       ├── transcribe_audio.py   # @tool: Amazon Transcribe
-│       ├── integrate_results.py  # @tool: 結果統合
-│       ├── match_tics.py         # @tool: Claude Haiku 照合
-│       ├── apply_guardrails.py   # @tool: Bedrock Guardrails
-│       └── store_label.py        # @tool: DynamoDB 書き込み
+│       ├── analyze_video.py              # @tool: Nova Pro 動画分析
+│       ├── transcribe_audio.py           # @tool: Amazon Transcribe
+│       ├── integrate_results.py          # @tool: 結果統合
+│       ├── match_tics.py                 # @tool: Claude Haiku 照合
+│       ├── apply_guardrails.py           # @tool: Bedrock Guardrails
+│       └── store_label.py               # @tool: DynamoDB 書き込み
 ├── micro_guide/
-│   ├── agent.py              # Micro-Guide Agent 定義
+│   ├── agent.py                          # Micro-Guide Agent 定義
 │   └── tools/
-│       ├── retrieve_kb.py        # @tool: Knowledge Bases 検索
-│       └── format_guidance.py    # @tool: 回答フォーマット
-└── tests/                    # pytest + moto テスト
+│       ├── retrieve_kb.py               # @tool: Knowledge Bases 検索
+│       └── format_guidance.py           # @tool: 回答フォーマット
+└── tests/                                # pytest + moto テスト
 ```
 
 ### 4.4 動画キャプチャ UX フロー
