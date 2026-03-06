@@ -7,7 +7,7 @@ import { problemDetails } from "../lib/response.js";
 import { getUserId } from "../lib/auth.js";
 
 const s3Client = new S3Client({});
-const MEDIA_BUCKET = process.env.MEDIA_BUCKET!;
+const MEDIA_BUCKET = process.env.S3_MEDIA_BUCKET!;
 const EPISODES_TABLE = process.env.EPISODES_TABLE!;
 
 const ALLOWED_CONTENT_TYPES = ["video/mp4", "video/webm"];
