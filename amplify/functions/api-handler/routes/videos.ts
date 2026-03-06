@@ -5,6 +5,7 @@ import { docClient } from "../lib/dynamodb.js";
 import { GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { ok } from "../lib/response.js";
 import { getUserId } from "../lib/auth.js";
+import { ValidationError, NotFoundError } from "../lib/errors.js";
 import type { RouteResult } from "../types.js";
 
 const s3Client = new S3Client({});
@@ -41,14 +42,14 @@ export async function handleVideoUploadUrl(
 
     // Validation
     if (!ALLOWED_CONTENT_TYPES.includes(contentType)) {
-      throw new Error(
-        `Invalid Content Type: Content type must be one of: ${ALLOWED_CONTENT_TYPES.join(", ")}`,
+      throw new ValidationError(
+        `Content type must be one of: ${ALLOWED_CONTENT_TYPES.join(", ")}`,
       );
     }
 
     if (fileSize > MAX_FILE_SIZE) {
-      throw new Error(
-        `File Too Large: File size must not exceed ${MAX_FILE_SIZE / (1024 * 1024)}MB`,
+      throw new ValidationError(
+        `File size must not exceed ${MAX_FILE_SIZE / (1024 * 1024)}MB`,
       );
     }
 
@@ -63,7 +64,7 @@ export async function handleVideoUploadUrl(
 
     if (!getResult.Item) {
       console.log("Episode not found");
-      throw new Error("Episode Not Found: Episode not found");
+      throw new NotFoundError("Episode not found");
     }
 
     console.log("Episode found", getResult.Item);
@@ -109,7 +110,7 @@ export async function handleVideoUploadComplete(
   );
 
   if (!getResult.Item) {
-    throw new Error("Episode Not Found: Episode not found");
+    throw new NotFoundError("Episode not found");
   }
 
   // Update episode with video metadata
@@ -148,7 +149,7 @@ export async function handleVideoPlaybackUrl(
   );
 
   if (!getResult.Item || !getResult.Item.videoS3Key) {
-    throw new Error("Video Not Found: Video not found");
+    throw new NotFoundError("Video not found");
   }
 
   // Generate presigned URL for playback (GET)

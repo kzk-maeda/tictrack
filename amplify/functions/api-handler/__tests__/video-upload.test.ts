@@ -42,6 +42,7 @@ describe("Video Upload API", () => {
           contentType: "video/mp4",
           fileSize: 5000000, // 5MB
         },
+        userId: mockUserId,
       });
 
       const result = await handler(event);
@@ -57,7 +58,7 @@ describe("Video Upload API", () => {
     });
 
     it("should reject unsupported content types", async () => {
-      send.mockResolvedValueOnce({ Item: { episodeId: mockEpisodeId } });
+      // No DB mock needed - validation happens before DB call
 
       const event = createMockEvent({
         method: "POST",
@@ -80,7 +81,7 @@ describe("Video Upload API", () => {
     });
 
     it("should reject files larger than 50MB", async () => {
-      send.mockResolvedValueOnce({ Item: { episodeId: mockEpisodeId } });
+      // No DB mock needed - validation happens before DB call
 
       const event = createMockEvent({
         method: "POST",
@@ -134,7 +135,17 @@ describe("Video Upload API", () => {
   describe("POST /children/{childId}/episodes/{episodeId}/upload-complete", () => {
     it("should update episode with video metadata", async () => {
       send.mockResolvedValueOnce({ Item: { episodeId: mockEpisodeId } }); // GetItem
-      send.mockResolvedValueOnce({}); // UpdateItem
+      send.mockResolvedValueOnce({
+        Attributes: {
+          episodeId: mockEpisodeId,
+          videoS3Key: `videos/${mockUserId}/${mockChildId}/${mockEpisodeId}/video.mp4`,
+          videoMimeType: "video/mp4",
+          videoFileSize: 5000000,
+          videoDuration: 12.5,
+          uploadStatus: "completed",
+          updatedAt: new Date().toISOString(),
+        },
+      }); // UpdateItem
 
       const event = createMockEvent({
         method: "POST",
@@ -160,7 +171,17 @@ describe("Video Upload API", () => {
 
     it("should link video to episode via episodeId", async () => {
       send.mockResolvedValueOnce({ Item: { episodeId: mockEpisodeId } });
-      send.mockResolvedValueOnce({});
+      send.mockResolvedValueOnce({
+        Attributes: {
+          episodeId: mockEpisodeId,
+          videoS3Key: `videos/${mockUserId}/${mockChildId}/${mockEpisodeId}/video.mp4`,
+          videoMimeType: "video/mp4",
+          videoFileSize: 5000000,
+          videoDuration: 12.5,
+          uploadStatus: "completed",
+          updatedAt: new Date().toISOString(),
+        },
+      });
 
       const event = createMockEvent({
         method: "POST",
