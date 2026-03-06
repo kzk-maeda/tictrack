@@ -75,6 +75,9 @@ export async function route(
     if (match[2]) params.cardId = match[2];
     if (match[2]) params.episodeId = match[2];
 
+    // Set pathParameters on event so handlers can access them
+    event.pathParameters = params;
+
     return def.handler(event, params);
   }
 
