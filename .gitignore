@@ -14,8 +14,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -216,3 +216,29 @@ node_modules/
 .amplify/
 amplify_outputs.json
 amplifyconfiguration.json
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+.vscode
+.claude
+
+# Serwist (generated service worker)
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js
+public/swe-worker-*.js.map
+
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/
+
+# Agents virtual environment
+agents/.venv/
+agents/~/.cache/
+
+# uv cache (root-level, created during uv operations)
+~/.cache/

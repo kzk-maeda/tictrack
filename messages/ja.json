@@ -1,0 +1,106 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "appName": "TicTrack",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "add": "追加",
+    "edit": "編集",
+    "delete": "削除",
+    "update": "更新",
+    "saving": "保存中...",
+    "noData": "データがありません"
+  },
+  "auth": {
+    "title": "TicTrack",
+    "description": "ログイン",
+    "coppaGuardian": "私は保護者です",
+    "coppaConsent": "子どものデータ収集に同意します"
+  },
+  "nav": {
+    "timeline": "タイムライン",
+    "ticCards": "チックカード",
+    "settings": "設定",
+    "logout": "ログアウト"
+  },
+  "children": {
+    "title": "子ども",
+    "add": "追加",
+    "selectChild": "子どもを選択",
+    "selectPlaceholder": "子どもを選択してください",
+    "noChildren": "子どもを追加してください",
+    "birthYearMonth": "生年月",
+    "deleteConfirm": "もう一度タップで「{name}」を削除",
+    "form": {
+      "titleAdd": "子どもを追加",
+      "titleEdit": "子ども情報を編集",
+      "displayName": "名前",
+      "displayNamePlaceholder": "例: タロウ",
+      "birthYearMonth": "生年月",
+      "errorNameRequired": "名前を入力してください",
+      "errorDateFormat": "生年月はYYYY-MM形式で入力してください",
+      "errorGeneral": "エラーが発生しました"
+    }
+  },
+  "ticCards": {
+    "title": "チックカード管理",
+    "titleShort": "チックカード",
+    "add": "追加",
+    "noCards": "チックカードを追加してください",
+    "quickLog": "記録",
+    "inactive": "非アクティブ",
+    "form": {
+      "titleAdd": "チックカードを追加",
+      "titleEdit": "チックカードを編集",
+      "label": "ラベル",
+      "labelPlaceholder": "例: 首振り",
+      "type": "種類",
+      "typeMotor": "運動性",
+      "typeVocal": "音声性",
+      "severity": "強度",
+      "severityMild": "軽度",
+      "severityModerate": "中度",
+      "severitySevere": "重度",
+      "description": "説明（任意）",
+      "descriptionPlaceholder": "例: 左右に首を振る",
+      "active": "アクティブ",
+      "errorLabelRequired": "ラベルを入力してください"
+    },
+    "toast": {
+      "created": "追加しました",
+      "createdDescription": "「{label}」を追加しました",
+      "updated": "更新しました",
+      "updatedDescription": "「{label}」を更新しました",
+      "deleted": "削除しました",
+      "deletedDescription": "「{label}」を削除しました",
+      "logged": "記録しました",
+      "loggedDescription": "「{label}」を記録しました",
+      "errorLog": "エラー",
+      "errorLogDescription": "記録に失敗しました"
+    }
+  },
+  "timeline": {
+    "title": "タイムライン",
+    "noRecords": "まだ記録がありません",
+    "today": "今日",
+    "recordCount": "({count}件)",
+    "recordTypeQuick": "ワンタップ",
+    "recordTypeVideo": "動画",
+    "contextUnknown": "不明",
+    "deletedCard": "（削除されたカード）",
+    "unclassified": "（未分類）"
+  },
+  "episodes": {},
+  "settings": {
+    "title": "設定"
+  },
+  "offline": {
+    "title": "Offline",
+    "message": "You are offline. Please check your connection."
+  },
+  "manifest": {
+    "name": "TicTrack",
+    "shortName": "TicTrack",
+    "description": "介護者ファーストの、子どものチック症状を記録・分析する非診断アプリ"
+  }
+}
