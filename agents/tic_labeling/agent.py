@@ -31,8 +31,18 @@ app = FastAPI(
 
 # Initialize Strands Agent with tools
 agent = Agent(
-    name="Tic Labeling Agent",
-    instructions="""You are an AI assistant that analyzes videos of tic episodes.
+    tools=[
+        analyze_video,
+        transcribe_audio,
+        integrate_results,
+        apply_guardrails,
+        store_label,
+    ],
+    callback_handler=None,  # Disable console output for web integration
+)
+
+# System instructions to be prepended to each prompt
+AGENT_INSTRUCTIONS = """You are an AI assistant that analyzes videos of tic episodes.
 
 Your task is to:
 1. Analyze the video using Nova Pro to detect tic movements and behaviors
@@ -49,16 +59,8 @@ Important guidelines:
 - Rate severity on a scale of 1-3 based on intensity and frequency
 - Identify context if possible (time of day, activity, environment)
 
-Always be cautious and humble about limitations of AI analysis.""",
-    tools=[
-        analyze_video,
-        transcribe_audio,
-        integrate_results,
-        apply_guardrails,
-        store_label,
-    ],
-    callback_handler=None,  # Disable console output for web integration
-)
+Always be cautious and humble about limitations of AI analysis.
+"""
 
 
 # Request/Response models
@@ -99,8 +101,10 @@ async def analyze_tic_episode(request: AnalyzeRequest):
     try:
         logger.info(f"Starting analysis for episode {request.episode_id}")
 
-        # Construct prompt for the agent
-        prompt = f"""Analyze the tic episode video with the following details:
+        # Construct prompt for the agent (prepend instructions)
+        prompt = f"""{AGENT_INSTRUCTIONS}
+
+Analyze the tic episode video with the following details:
 - Episode ID: {request.episode_id}
 - Child ID: {request.child_id}
 - S3 Key: {request.s3_key}
