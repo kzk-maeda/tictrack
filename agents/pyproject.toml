@@ -29,3 +29,10 @@ packages = ["tic_labeling", "micro_guide"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+# Run tests in parallel by default (use -n0 to disable)
+addopts = "-n auto"
+
+[dependency-groups]
+dev = [
+    "pytest-xdist>=3.8.0",
+]

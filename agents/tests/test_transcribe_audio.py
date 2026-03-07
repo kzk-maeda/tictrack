@@ -108,8 +108,9 @@ class TestTranscribeAudio:
         assert "cough" in result["detected_sounds"]
         assert "throat clearing" in result["detected_sounds"]
 
+    @patch("tic_labeling.tools.transcribe_audio.time")
     @patch("tic_labeling.tools.transcribe_audio.transcribe_client")
-    def test_transcribe_audio_handles_timeout(self, mock_transcribe):
+    def test_transcribe_audio_handles_timeout(self, mock_transcribe, mock_time):
         """Test that tool handles transcription timeout gracefully"""
         # Arrange
         mock_transcribe.start_transcription_job.return_value = {}
@@ -119,6 +120,10 @@ class TestTranscribeAudio:
                 "TranscriptionJobStatus": "IN_PROGRESS"
             }
         }
+        # Mock time to trigger timeout immediately
+        # First call returns 0 (start_time), second returns 301 (past timeout)
+        mock_time.time.side_effect = [0, 301]
+        mock_time.sleep.return_value = None
 
         # Act
         result = transcribe_audio(self.sample_s3_key, self.sample_bucket)

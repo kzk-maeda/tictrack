@@ -5,7 +5,7 @@ This tool stores AI-generated labels in DynamoDB (AILabels and Episodes tables).
 """
 
 import boto3
-from datetime import datetime
+from datetime import datetime, timezone
 from strands import tool
 from typing import Dict, Any
 import logging
@@ -73,7 +73,7 @@ def store_label(
             "metadata": label_data.get("metadata", {}),
             "guardrailPassed": guardrail_result.get("guardrail_passed", False),
             "guardrailAction": guardrail_result.get("action_taken", "NONE"),
-            "createdAt": datetime.utcnow().isoformat(),
+            "createdAt": datetime.now(timezone.utc).isoformat(),
         }
 
         # Save to AILabels table
@@ -96,7 +96,7 @@ def store_label(
                     "context": label_data.get("context"),
                     "confidence": label_data.get("confidence"),
                 },
-                ":updatedAt": datetime.utcnow().isoformat(),
+                ":updatedAt": datetime.now(timezone.utc).isoformat(),
             }
         )
         logger.info(f"Updated episode {episode_id} with AI label")
