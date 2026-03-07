@@ -18,8 +18,8 @@ class TestAnalyzeVideo:
         self.sample_s3_key = "videos/user123/child456/episode789/video.mp4"
         self.sample_bucket = "tictrack-media-test"
 
-    @patch("tic_labeling.tools.analyze_video.bedrock_runtime")
-    def test_analyze_video_returns_structured_json(self, mock_bedrock):
+    @patch("tic_labeling.tools.analyze_video._get_bedrock_client")
+    def test_analyze_video_returns_structured_json(self, mock_get_client):
         """Test that analyze_video returns structured JSON with required fields"""
         # Arrange
         mock_response = {
@@ -46,7 +46,9 @@ class TestAnalyzeVideo:
                 }).encode()
             )
         }
-        mock_bedrock.invoke_model.return_value = mock_response
+        mock_client = Mock()
+        mock_client.invoke_model.return_value = mock_response
+        mock_get_client.return_value = mock_client
 
         # Act
         result = analyze_video(self.sample_s3_key, self.sample_bucket)
@@ -59,8 +61,8 @@ class TestAnalyzeVideo:
         assert "suggested_severity" in result
         assert "confidence" in result
 
-    @patch("tic_labeling.tools.analyze_video.bedrock_runtime")
-    def test_suggested_type_is_valid_enum(self, mock_bedrock):
+    @patch("tic_labeling.tools.analyze_video._get_bedrock_client")
+    def test_suggested_type_is_valid_enum(self, mock_get_client):
         """Test that suggested_type is one of: motor, vocal, both"""
         # Arrange
         mock_response = {
@@ -81,7 +83,9 @@ class TestAnalyzeVideo:
                 }).encode()
             )
         }
-        mock_bedrock.invoke_model.return_value = mock_response
+        mock_client = Mock()
+        mock_client.invoke_model.return_value = mock_response
+        mock_get_client.return_value = mock_client
 
         # Act
         result = analyze_video(self.sample_s3_key, self.sample_bucket)
@@ -89,8 +93,8 @@ class TestAnalyzeVideo:
         # Assert
         assert result["suggested_type"] in ["motor", "vocal", "both"]
 
-    @patch("tic_labeling.tools.analyze_video.bedrock_runtime")
-    def test_suggested_severity_is_between_1_and_3(self, mock_bedrock):
+    @patch("tic_labeling.tools.analyze_video._get_bedrock_client")
+    def test_suggested_severity_is_between_1_and_3(self, mock_get_client):
         """Test that suggested_severity is an integer between 1 and 3"""
         # Arrange
         mock_response = {
@@ -111,7 +115,9 @@ class TestAnalyzeVideo:
                 }).encode()
             )
         }
-        mock_bedrock.invoke_model.return_value = mock_response
+        mock_client = Mock()
+        mock_client.invoke_model.return_value = mock_response
+        mock_get_client.return_value = mock_client
 
         # Act
         result = analyze_video(self.sample_s3_key, self.sample_bucket)
@@ -120,8 +126,8 @@ class TestAnalyzeVideo:
         assert isinstance(result["suggested_severity"], int)
         assert 1 <= result["suggested_severity"] <= 3
 
-    @patch("tic_labeling.tools.analyze_video.bedrock_runtime")
-    def test_observations_contain_required_fields(self, mock_bedrock):
+    @patch("tic_labeling.tools.analyze_video._get_bedrock_client")
+    def test_observations_contain_required_fields(self, mock_get_client):
         """Test that each observation contains timestamp, description, and intensity"""
         # Arrange
         mock_response = {
@@ -153,7 +159,9 @@ class TestAnalyzeVideo:
                 }).encode()
             )
         }
-        mock_bedrock.invoke_model.return_value = mock_response
+        mock_client = Mock()
+        mock_client.invoke_model.return_value = mock_response
+        mock_get_client.return_value = mock_client
 
         # Act
         result = analyze_video(self.sample_s3_key, self.sample_bucket)
@@ -165,9 +173,9 @@ class TestAnalyzeVideo:
             assert "intensity" in obs
             assert obs["intensity"] in ["low", "medium", "high"]
 
-    @patch("tic_labeling.tools.analyze_video.bedrock_runtime")
-    def test_analyze_video_calls_nova_pro_with_correct_model_id(self, mock_bedrock):
-        """Test that the tool uses Nova Pro model ID"""
+    @patch("tic_labeling.tools.analyze_video._get_bedrock_client")
+    def test_analyze_video_calls_nova_pro_with_correct_model_id(self, mock_get_client):
+        """Test that the tool uses Nova Pro inference profile"""
         # Arrange
         mock_response = {
             "body": MagicMock(
@@ -187,21 +195,26 @@ class TestAnalyzeVideo:
                 }).encode()
             )
         }
-        mock_bedrock.invoke_model.return_value = mock_response
+        mock_client = Mock()
+        mock_client.invoke_model.return_value = mock_response
+        mock_get_client.return_value = mock_client
 
         # Act
         analyze_video(self.sample_s3_key, self.sample_bucket)
 
         # Assert
-        mock_bedrock.invoke_model.assert_called_once()
-        call_kwargs = mock_bedrock.invoke_model.call_args[1]
+        mock_client.invoke_model.assert_called_once()
+        call_kwargs = mock_client.invoke_model.call_args[1]
+        # Default region is us-east-1, which uses US inference profile
         assert call_kwargs["modelId"] == "us.amazon.nova-pro-v1:0"
 
-    @patch("tic_labeling.tools.analyze_video.bedrock_runtime")
-    def test_analyze_video_raises_error_on_api_failure(self, mock_bedrock):
+    @patch("tic_labeling.tools.analyze_video._get_bedrock_client")
+    def test_analyze_video_raises_error_on_api_failure(self, mock_get_client):
         """Test that tool raises RuntimeError when Nova Pro API fails"""
         # Arrange
-        mock_bedrock.invoke_model.side_effect = Exception("API Error")
+        mock_client = Mock()
+        mock_client.invoke_model.side_effect = Exception("API Error")
+        mock_get_client.return_value = mock_client
 
         # Act & Assert
         with pytest.raises(RuntimeError) as exc_info:
@@ -209,8 +222,8 @@ class TestAnalyzeVideo:
 
         assert "Video analysis failed" in str(exc_info.value)
 
-    @patch("tic_labeling.tools.analyze_video.bedrock_runtime")
-    def test_analyze_video_handles_non_json_response(self, mock_bedrock):
+    @patch("tic_labeling.tools.analyze_video._get_bedrock_client")
+    def test_analyze_video_handles_non_json_response(self, mock_get_client):
         """Test that tool handles non-JSON responses gracefully"""
         # Arrange
         mock_response = {
@@ -226,7 +239,9 @@ class TestAnalyzeVideo:
                 }).encode()
             )
         }
-        mock_bedrock.invoke_model.return_value = mock_response
+        mock_client = Mock()
+        mock_client.invoke_model.return_value = mock_response
+        mock_get_client.return_value = mock_client
 
         # Act
         result = analyze_video(self.sample_s3_key, self.sample_bucket)

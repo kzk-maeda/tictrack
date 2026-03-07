@@ -35,12 +35,14 @@ class TestStoreLabel:
             "action_taken": "NONE"
         }
 
-    @patch("tic_labeling.tools.store_label.dynamodb")
-    def test_store_label_saves_to_ailabels_table(self, mock_dynamodb):
+    @patch("tic_labeling.tools.store_label._get_dynamodb")
+    def test_store_label_saves_to_ailabels_table(self, mock_get_dynamodb):
         """Test that label is saved to AILabels table"""
         # Arrange
+        mock_dynamodb = Mock()
         mock_table = MagicMock()
         mock_dynamodb.Table.return_value = mock_table
+        mock_get_dynamodb.return_value = mock_dynamodb
 
         # Act
         result = store_label(
@@ -61,12 +63,14 @@ class TestStoreLabel:
         assert item["severity"] == 2
         assert item["version"] == 1
 
-    @patch("tic_labeling.tools.store_label.dynamodb")
-    def test_store_label_updates_episodes_table(self, mock_dynamodb):
+    @patch("tic_labeling.tools.store_label._get_dynamodb")
+    def test_store_label_updates_episodes_table(self, mock_get_dynamodb):
         """Test that Episodes table is updated with labelStatus"""
         # Arrange
+        mock_dynamodb = Mock()
         mock_table = MagicMock()
         mock_dynamodb.Table.return_value = mock_table
+        mock_get_dynamodb.return_value = mock_dynamodb
 
         # Act
         result = store_label(
@@ -85,12 +89,14 @@ class TestStoreLabel:
         assert ":status" in update_args["ExpressionAttributeValues"]
         assert update_args["ExpressionAttributeValues"][":status"] == "ai_suggested"
 
-    @patch("tic_labeling.tools.store_label.dynamodb")
-    def test_store_label_sets_labelstatus_to_ai_suggested(self, mock_dynamodb):
+    @patch("tic_labeling.tools.store_label._get_dynamodb")
+    def test_store_label_sets_labelstatus_to_ai_suggested(self, mock_get_dynamodb):
         """Test that Episodes.labelStatus is updated to 'ai_suggested'"""
         # Arrange
+        mock_dynamodb = Mock()
         mock_table = MagicMock()
         mock_dynamodb.Table.return_value = mock_table
+        mock_get_dynamodb.return_value = mock_dynamodb
 
         # Act
         store_label(
@@ -104,12 +110,14 @@ class TestStoreLabel:
         update_call = mock_table.update_item.call_args[1]
         assert update_call["ExpressionAttributeValues"][":status"] == "ai_suggested"
 
-    @patch("tic_labeling.tools.store_label.dynamodb")
-    def test_store_label_includes_original_ai_label(self, mock_dynamodb):
+    @patch("tic_labeling.tools.store_label._get_dynamodb")
+    def test_store_label_includes_original_ai_label(self, mock_get_dynamodb):
         """Test that originalAILabel is stored in Episodes table"""
         # Arrange
+        mock_dynamodb = Mock()
         mock_table = MagicMock()
         mock_dynamodb.Table.return_value = mock_table
+        mock_get_dynamodb.return_value = mock_dynamodb
 
         # Act
         store_label(
@@ -129,12 +137,14 @@ class TestStoreLabel:
         assert "context" in original_label
         assert "confidence" in original_label
 
-    @patch("tic_labeling.tools.store_label.dynamodb")
-    def test_store_label_generates_versioned_label_id(self, mock_dynamodb):
+    @patch("tic_labeling.tools.store_label._get_dynamodb")
+    def test_store_label_generates_versioned_label_id(self, mock_get_dynamodb):
         """Test that labelId is generated as episodeId-v1"""
         # Arrange
+        mock_dynamodb = Mock()
         mock_table = MagicMock()
         mock_dynamodb.Table.return_value = mock_table
+        mock_get_dynamodb.return_value = mock_dynamodb
 
         # Act
         result = store_label(
@@ -147,12 +157,14 @@ class TestStoreLabel:
         # Assert
         assert result["ai_label_id"] == f"{self.sample_episode_id}-v1"
 
-    @patch("tic_labeling.tools.store_label.dynamodb")
-    def test_store_label_returns_completed_status(self, mock_dynamodb):
+    @patch("tic_labeling.tools.store_label._get_dynamodb")
+    def test_store_label_returns_completed_status(self, mock_get_dynamodb):
         """Test that function returns status='completed' on success"""
         # Arrange
+        mock_dynamodb = Mock()
         mock_table = MagicMock()
         mock_dynamodb.Table.return_value = mock_table
+        mock_get_dynamodb.return_value = mock_dynamodb
 
         # Act
         result = store_label(
@@ -166,13 +178,15 @@ class TestStoreLabel:
         assert result["status"] == "completed"
         assert result["episode_updated"] is True
 
-    @patch("tic_labeling.tools.store_label.dynamodb")
-    def test_store_label_raises_error_on_dynamodb_failure(self, mock_dynamodb):
+    @patch("tic_labeling.tools.store_label._get_dynamodb")
+    def test_store_label_raises_error_on_dynamodb_failure(self, mock_get_dynamodb):
         """Test that function raises RuntimeError when DynamoDB operation fails"""
         # Arrange
+        mock_dynamodb = Mock()
         mock_table = MagicMock()
         mock_table.put_item.side_effect = Exception("DynamoDB Error")
         mock_dynamodb.Table.return_value = mock_table
+        mock_get_dynamodb.return_value = mock_dynamodb
 
         # Act & Assert
         with pytest.raises(RuntimeError) as exc_info:

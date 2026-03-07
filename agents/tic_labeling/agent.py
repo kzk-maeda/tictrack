@@ -69,6 +69,8 @@ class AnalyzeRequest(BaseModel):
     episode_id: str
     child_id: str
     s3_key: str
+    bucket_name: Optional[str] = "tictrack-media-dev"
+    aws_region: Optional[str] = "us-east-1"
     video_mime_type: Optional[str] = "video/mp4"
 
 
@@ -107,12 +109,13 @@ async def analyze_tic_episode(request: AnalyzeRequest):
 Analyze the tic episode video with the following details:
 - Episode ID: {request.episode_id}
 - Child ID: {request.child_id}
+- S3 Bucket: {request.bucket_name}
 - S3 Key: {request.s3_key}
 - Video Type: {request.video_mime_type}
 
 Please:
-1. Use the analyze_video tool to examine the video
-2. Use the transcribe_audio tool to capture any vocal content
+1. Use the analyze_video tool with s3_key="{request.s3_key}" and bucket_name="{request.bucket_name}"
+2. Use the transcribe_audio tool with s3_key="{request.s3_key}" and bucket_name="{request.bucket_name}"
 3. Use the integrate_results tool to combine video and audio findings
 4. Use the apply_guardrails tool to ensure safe language
 5. Use the store_label tool to save the results to DynamoDB

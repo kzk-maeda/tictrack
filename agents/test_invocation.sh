@@ -47,6 +47,7 @@ cat <<EOF | tee /dev/tty | curl -s -X POST "$ENDPOINT/invocations" \
 {
   "episode_id": "test-episode-$(date +%s)",
   "child_id": "test-child-123",
+  "bucket_name": "$BUCKET_NAME",
   "s3_key": "$S3_KEY",
   "video_mime_type": "video/mp4"
 }

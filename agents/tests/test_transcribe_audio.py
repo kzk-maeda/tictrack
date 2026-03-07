@@ -17,13 +17,14 @@ class TestTranscribeAudio:
         self.sample_s3_key = "videos/user123/child456/episode789/video.mp4"
         self.sample_bucket = "tictrack-media-test"
 
-    @patch("tic_labeling.tools.transcribe_audio.transcribe_client")
+    @patch("tic_labeling.tools.transcribe_audio._get_transcribe_client")
     @patch("tic_labeling.tools.transcribe_audio._fetch_transcript")
-    def test_transcribe_audio_returns_transcript_text(self, mock_fetch, mock_transcribe):
+    def test_transcribe_audio_returns_transcript_text(self, mock_fetch, mock_get_client):
         """Test that transcribe_audio returns transcript text on success"""
         # Arrange
-        mock_transcribe.start_transcription_job.return_value = {}
-        mock_transcribe.get_transcription_job.return_value = {
+        mock_client = Mock()
+        mock_client.start_transcription_job.return_value = {}
+        mock_client.get_transcription_job.return_value = {
             "TranscriptionJob": {
                 "TranscriptionJobStatus": "COMPLETED",
                 "Transcript": {
@@ -31,6 +32,7 @@ class TestTranscribeAudio:
                 }
             }
         }
+        mock_get_client.return_value = mock_client
         mock_fetch.return_value = "これはテスト音声です"
 
         # Act
@@ -41,17 +43,19 @@ class TestTranscribeAudio:
         assert result["transcript"] == "これはテスト音声です"
         assert result["has_audio"] is True
 
-    @patch("tic_labeling.tools.transcribe_audio.transcribe_client")
-    def test_transcribe_audio_returns_empty_for_no_audio(self, mock_transcribe):
+    @patch("tic_labeling.tools.transcribe_audio._get_transcribe_client")
+    def test_transcribe_audio_returns_empty_for_no_audio(self, mock_get_client):
         """Test that transcribe_audio returns empty transcript for videos without audio"""
         # Arrange
-        mock_transcribe.start_transcription_job.return_value = {}
-        mock_transcribe.get_transcription_job.return_value = {
+        mock_client = Mock()
+        mock_client.start_transcription_job.return_value = {}
+        mock_client.get_transcription_job.return_value = {
             "TranscriptionJob": {
                 "TranscriptionJobStatus": "FAILED",
                 "FailureReason": "No audio detected"
             }
         }
+        mock_get_client.return_value = mock_client
 
         # Act
         result = transcribe_audio(self.sample_s3_key, self.sample_bucket)
@@ -61,13 +65,14 @@ class TestTranscribeAudio:
         assert result["has_audio"] is False
         assert result["vocal_tics_detected"] is False
 
-    @patch("tic_labeling.tools.transcribe_audio.transcribe_client")
+    @patch("tic_labeling.tools.transcribe_audio._get_transcribe_client")
     @patch("tic_labeling.tools.transcribe_audio._fetch_transcript")
-    def test_transcribe_audio_detects_vocal_tics(self, mock_fetch, mock_transcribe):
+    def test_transcribe_audio_detects_vocal_tics(self, mock_fetch, mock_get_client):
         """Test that vocal tic detection works for repetitive sounds"""
         # Arrange
-        mock_transcribe.start_transcription_job.return_value = {}
-        mock_transcribe.get_transcription_job.return_value = {
+        mock_client = Mock()
+        mock_client.start_transcription_job.return_value = {}
+        mock_client.get_transcription_job.return_value = {
             "TranscriptionJob": {
                 "TranscriptionJobStatus": "COMPLETED",
                 "Transcript": {
@@ -75,6 +80,7 @@ class TestTranscribeAudio:
                 }
             }
         }
+        mock_get_client.return_value = mock_client
         # Repetitive sounds indicating vocal tics
         mock_fetch.return_value = "ん ん ん あー"
 
@@ -84,13 +90,14 @@ class TestTranscribeAudio:
         # Assert
         assert result["vocal_tics_detected"] is True
 
-    @patch("tic_labeling.tools.transcribe_audio.transcribe_client")
+    @patch("tic_labeling.tools.transcribe_audio._get_transcribe_client")
     @patch("tic_labeling.tools.transcribe_audio._fetch_transcript")
-    def test_transcribe_audio_extracts_detected_sounds(self, mock_fetch, mock_transcribe):
+    def test_transcribe_audio_extracts_detected_sounds(self, mock_fetch, mock_get_client):
         """Test that non-speech sounds are extracted from transcript"""
         # Arrange
-        mock_transcribe.start_transcription_job.return_value = {}
-        mock_transcribe.get_transcription_job.return_value = {
+        mock_client = Mock()
+        mock_client.start_transcription_job.return_value = {}
+        mock_client.get_transcription_job.return_value = {
             "TranscriptionJob": {
                 "TranscriptionJobStatus": "COMPLETED",
                 "Transcript": {
@@ -98,6 +105,7 @@ class TestTranscribeAudio:
                 }
             }
         }
+        mock_get_client.return_value = mock_client
         mock_fetch.return_value = "これは [cough] テスト [throat clearing] です"
 
         # Act
@@ -109,17 +117,19 @@ class TestTranscribeAudio:
         assert "throat clearing" in result["detected_sounds"]
 
     @patch("tic_labeling.tools.transcribe_audio.time")
-    @patch("tic_labeling.tools.transcribe_audio.transcribe_client")
-    def test_transcribe_audio_handles_timeout(self, mock_transcribe, mock_time):
+    @patch("tic_labeling.tools.transcribe_audio._get_transcribe_client")
+    def test_transcribe_audio_handles_timeout(self, mock_get_client, mock_time):
         """Test that tool handles transcription timeout gracefully"""
         # Arrange
-        mock_transcribe.start_transcription_job.return_value = {}
+        mock_client = Mock()
+        mock_client.start_transcription_job.return_value = {}
         # Always return IN_PROGRESS to simulate timeout
-        mock_transcribe.get_transcription_job.return_value = {
+        mock_client.get_transcription_job.return_value = {
             "TranscriptionJob": {
                 "TranscriptionJobStatus": "IN_PROGRESS"
             }
         }
+        mock_get_client.return_value = mock_client
         # Mock time to trigger timeout immediately
         # First call returns 0 (start_time), second returns 301 (past timeout)
         mock_time.time.side_effect = [0, 301]
@@ -132,11 +142,13 @@ class TestTranscribeAudio:
         assert "error" in result
         assert result["has_audio"] is False
 
-    @patch("tic_labeling.tools.transcribe_audio.transcribe_client")
-    def test_transcribe_audio_handles_api_error(self, mock_transcribe):
+    @patch("tic_labeling.tools.transcribe_audio._get_transcribe_client")
+    def test_transcribe_audio_handles_api_error(self, mock_get_client):
         """Test that tool handles Transcribe API errors gracefully"""
         # Arrange
-        mock_transcribe.start_transcription_job.side_effect = Exception("API Error")
+        mock_client = Mock()
+        mock_client.start_transcription_job.side_effect = Exception("API Error")
+        mock_get_client.return_value = mock_client
 
         # Act
         result = transcribe_audio(self.sample_s3_key, self.sample_bucket)
@@ -146,13 +158,14 @@ class TestTranscribeAudio:
         assert result["has_audio"] is False
         assert "error" in result
 
-    @patch("tic_labeling.tools.transcribe_audio.transcribe_client")
+    @patch("tic_labeling.tools.transcribe_audio._get_transcribe_client")
     @patch("tic_labeling.tools.transcribe_audio._fetch_transcript")
-    def test_transcribe_audio_uses_correct_language_code(self, mock_fetch, mock_transcribe):
+    def test_transcribe_audio_uses_correct_language_code(self, mock_fetch, mock_get_client):
         """Test that default language code is ja-JP for Japanese"""
         # Arrange
-        mock_transcribe.start_transcription_job.return_value = {}
-        mock_transcribe.get_transcription_job.return_value = {
+        mock_client = Mock()
+        mock_client.start_transcription_job.return_value = {}
+        mock_client.get_transcription_job.return_value = {
             "TranscriptionJob": {
                 "TranscriptionJobStatus": "COMPLETED",
                 "Transcript": {
@@ -160,11 +173,12 @@ class TestTranscribeAudio:
                 }
             }
         }
+        mock_get_client.return_value = mock_client
         mock_fetch.return_value = "テスト"
 
         # Act
         transcribe_audio(self.sample_s3_key, self.sample_bucket)
 
         # Assert
-        call_kwargs = mock_transcribe.start_transcription_job.call_args[1]
+        call_kwargs = mock_client.start_transcription_job.call_args[1]
         assert call_kwargs["LanguageCode"] == "ja-JP"

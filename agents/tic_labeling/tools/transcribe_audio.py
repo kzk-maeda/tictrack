@@ -7,14 +7,24 @@ This tool transcribes audio from videos to capture vocal tics or contextual info
 import boto3
 import time
 import json
+import os
 from strands import tool
 from typing import Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Initialize Transcribe client
-transcribe_client = boto3.client("transcribe", region_name="us-east-1")
+# Lazy-load Transcribe client
+_transcribe_client = None
+
+def _get_transcribe_client():
+    """Get or create Transcribe client with current AWS_REGION"""
+    global _transcribe_client
+    if _transcribe_client is None:
+        region = os.getenv("AWS_REGION", "us-east-1")
+        _transcribe_client = boto3.client("transcribe", region_name=region)
+        logger.info(f"Initialized Transcribe client in region: {region}")
+    return _transcribe_client
 
 
 @tool
@@ -49,7 +59,8 @@ def transcribe_audio(
         # Start transcription job
         s3_uri = f"s3://{bucket_name}/{s3_key}"
 
-        transcribe_client.start_transcription_job(
+        transcribe = _get_transcribe_client()
+        transcribe.start_transcription_job(
             TranscriptionJobName=job_name,
             Media={"MediaFileUri": s3_uri},
             MediaFormat=_get_media_format(s3_key),
@@ -70,7 +81,7 @@ def transcribe_audio(
             if time.time() - start_time > max_wait_time:
                 raise TimeoutError(f"Transcription job {job_name} timed out")
 
-            status = transcribe_client.get_transcription_job(
+            status = transcribe.get_transcription_job(
                 TranscriptionJobName=job_name
             )
 

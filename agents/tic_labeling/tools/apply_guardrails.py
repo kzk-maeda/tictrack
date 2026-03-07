@@ -7,14 +7,24 @@ and uses only observational language.
 
 import boto3
 import json
+import os
 from strands import tool
 from typing import Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Initialize Bedrock Runtime client
-bedrock_runtime = boto3.client("bedrock-runtime", region_name="us-east-1")
+# Lazy-load Bedrock Runtime client
+_bedrock_runtime = None
+
+def _get_bedrock_client():
+    """Get or create Bedrock Runtime client with current AWS_REGION"""
+    global _bedrock_runtime
+    if _bedrock_runtime is None:
+        region = os.getenv("AWS_REGION", "us-east-1")
+        _bedrock_runtime = boto3.client("bedrock-runtime", region_name=region)
+        logger.info(f"Initialized Bedrock client in region: {region}")
+    return _bedrock_runtime
 
 # Guardrail ID and version (to be created in Step 4 implementation)
 # For now, use a placeholder - will be updated after guardrail creation
@@ -53,8 +63,9 @@ def apply_guardrails(label_data: Dict[str, Any]) -> Dict[str, Any]:
         text_to_validate = _extract_text_content(label_data)
 
         # Apply guardrails using Bedrock
+        bedrock_client = _get_bedrock_client()
         try:
-            response = bedrock_runtime.apply_guardrail(
+            response = bedrock_client.apply_guardrail(
                 guardrailIdentifier=GUARDRAIL_ID,
                 guardrailVersion=GUARDRAIL_VERSION,
                 source="INPUT",
@@ -94,9 +105,10 @@ def apply_guardrails(label_data: Dict[str, Any]) -> Dict[str, Any]:
                     "action_taken": "NONE"
                 }
 
-        except bedrock_runtime.exceptions.ResourceNotFoundException:
-            # Guardrail not configured yet - use fallback validation
-            logger.warning("Guardrail not found, using fallback validation")
+        except (bedrock_client.exceptions.ResourceNotFoundException,
+                bedrock_client.exceptions.ValidationException) as e:
+            # Guardrail not configured yet or misconfigured - use fallback validation
+            logger.warning(f"Guardrail not available ({type(e).__name__}), using fallback validation")
             return _fallback_validation(label_data)
 
     except Exception as e:

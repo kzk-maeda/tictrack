@@ -6,17 +6,47 @@ This tool analyzes tic episode videos using Nova Pro's video understanding capab
 
 import boto3
 import json
+import os
 from strands import tool
 from typing import Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Initialize Bedrock Runtime client
-bedrock_runtime = boto3.client("bedrock-runtime", region_name="us-east-1")
+# Lazy-load Bedrock Runtime client
+_bedrock_runtime = None
 
-# Nova Pro model ID
-NOVA_PRO_MODEL_ID = "us.amazon.nova-pro-v1:0"
+def _get_bedrock_client():
+    """Get or create Bedrock Runtime client with current AWS_REGION"""
+    global _bedrock_runtime
+    if _bedrock_runtime is None:
+        region = os.getenv("AWS_REGION", "us-east-1")
+        _bedrock_runtime = boto3.client("bedrock-runtime", region_name=region)
+        logger.info(f"Initialized Bedrock client in region: {region}")
+    return _bedrock_runtime
+
+def _get_nova_model_id():
+    """
+    Get Nova Pro inference profile ID based on region.
+
+    Nova Pro requires inference profiles for invocation, not direct model IDs.
+    Returns region-appropriate inference profile.
+    """
+    region = os.getenv("AWS_REGION", "us-east-1")
+
+    # APAC regions use APAC inference profile
+    apac_regions = ["ap-northeast-1", "ap-northeast-2", "ap-northeast-3",
+                    "ap-southeast-1", "ap-southeast-2", "ap-south-1"]
+    if region in apac_regions:
+        return "apac.amazon.nova-pro-v1:0"
+
+    # US regions use US inference profile
+    elif region in ["us-east-1", "us-west-2"]:
+        return "us.amazon.nova-pro-v1:0"
+
+    # Default to US profile for other regions
+    else:
+        return "us.amazon.nova-pro-v1:0"
 
 
 @tool
@@ -49,6 +79,9 @@ def analyze_video(s3_key: str, bucket_name: str = "tictrack-media-dev") -> Dict[
         # Construct S3 URI for Nova Pro
         s3_uri = f"s3://{bucket_name}/{s3_key}"
 
+        # Detect video format from file extension
+        video_format = "webm" if s3_key.lower().endswith(".webm") else "mp4"
+
         # Prepare the request for Nova Pro
         request_body = {
             "messages": [
@@ -57,7 +90,7 @@ def analyze_video(s3_key: str, bucket_name: str = "tictrack-media-dev") -> Dict[
                     "content": [
                         {
                             "video": {
-                                "format": "mp4",  # or "webm"
+                                "format": video_format,
                                 "source": {"s3Location": {"uri": s3_uri}}
                             }
                         },
@@ -103,8 +136,11 @@ Return your response as structured JSON."""
         }
 
         # Invoke Nova Pro
-        response = bedrock_runtime.invoke_model(
-            modelId=NOVA_PRO_MODEL_ID,
+        bedrock_client = _get_bedrock_client()
+        model_id = _get_nova_model_id()
+        logger.info(f"Using Nova Pro model: {model_id}")
+        response = bedrock_client.invoke_model(
+            modelId=model_id,
             body=json.dumps(request_body),
             contentType="application/json",
             accept="application/json"

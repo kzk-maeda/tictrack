@@ -28,14 +28,15 @@ class TestGuardrails:
             "confidence": 0.85
         }
 
-    @patch("tic_labeling.tools.apply_guardrails.bedrock_runtime")
-    def test_guardrails_blocks_diagnostic_language(self, mock_bedrock):
+    @patch("tic_labeling.tools.apply_guardrails._get_bedrock_client")
+    def test_guardrails_blocks_diagnostic_language(self, mock_get_client):
         """Test that guardrails blocks diagnostic statements like 'diagnosed with Tourette'"""
         # Arrange
         diagnostic_label = self.sample_label.copy()
         diagnostic_label["context"] = "Child is diagnosed with Tourette syndrome"
 
-        mock_bedrock.apply_guardrail.return_value = {
+        mock_client = Mock()
+        mock_client.apply_guardrail.return_value = {
             "action": "GUARDRAIL_INTERVENED",
             "assessments": [
                 {
@@ -51,6 +52,7 @@ class TestGuardrails:
                 }
             ]
         }
+        mock_get_client.return_value = mock_client
 
         # Act
         result = apply_guardrails(diagnostic_label)
@@ -60,14 +62,15 @@ class TestGuardrails:
         assert result["action_taken"] == "SANITIZED"
         assert len(result["blocked_content"]) > 0
 
-    @patch("tic_labeling.tools.apply_guardrails.bedrock_runtime")
-    def test_guardrails_blocks_treatment_recommendations(self, mock_bedrock):
+    @patch("tic_labeling.tools.apply_guardrails._get_bedrock_client")
+    def test_guardrails_blocks_treatment_recommendations(self, mock_get_client):
         """Test that guardrails blocks treatment advice like 'should take medication'"""
         # Arrange
         treatment_label = self.sample_label.copy()
         treatment_label["context"] = "Child should consider medication therapy"
 
-        mock_bedrock.apply_guardrail.return_value = {
+        mock_client = Mock()
+        mock_client.apply_guardrail.return_value = {
             "action": "GUARDRAIL_INTERVENED",
             "assessments": [
                 {
@@ -83,6 +86,7 @@ class TestGuardrails:
                 }
             ]
         }
+        mock_get_client.return_value = mock_client
 
         # Act
         result = apply_guardrails(treatment_label)
@@ -91,17 +95,19 @@ class TestGuardrails:
         assert result["guardrail_passed"] is False
         assert "TREATMENT" in str(result["blocked_content"])
 
-    @patch("tic_labeling.tools.apply_guardrails.bedrock_runtime")
-    def test_guardrails_allows_observational_language(self, mock_bedrock):
+    @patch("tic_labeling.tools.apply_guardrails._get_bedrock_client")
+    def test_guardrails_allows_observational_language(self, mock_get_client):
         """Test that guardrails allows safe observational language"""
         # Arrange
         safe_label = self.sample_label.copy()
         safe_label["context"] = "Movements appear to show repetitive patterns"
 
-        mock_bedrock.apply_guardrail.return_value = {
+        mock_client = Mock()
+        mock_client.apply_guardrail.return_value = {
             "action": "NONE",
             "assessments": []
         }
+        mock_get_client.return_value = mock_client
 
         # Act
         result = apply_guardrails(safe_label)
@@ -118,12 +124,14 @@ class TestGuardrails:
         diagnostic_label["context"] = "トゥレット症候群の診断"
 
         # Mock ResourceNotFoundException to trigger fallback
-        with patch("tic_labeling.tools.apply_guardrails.bedrock_runtime") as mock_bedrock:
+        with patch("tic_labeling.tools.apply_guardrails._get_bedrock_client") as mock_get_client:
             from botocore.exceptions import ClientError
-            mock_bedrock.apply_guardrail.side_effect = ClientError(
+            mock_client = Mock()
+            mock_client.apply_guardrail.side_effect = ClientError(
                 {"Error": {"Code": "ResourceNotFoundException"}},
                 "apply_guardrail"
             )
+            mock_get_client.return_value = mock_client
 
             # Act
             result = apply_guardrails(diagnostic_label)
@@ -138,12 +146,14 @@ class TestGuardrails:
         safe_label = self.sample_label.copy()
 
         # Mock ResourceNotFoundException to trigger fallback
-        with patch("tic_labeling.tools.apply_guardrails.bedrock_runtime") as mock_bedrock:
+        with patch("tic_labeling.tools.apply_guardrails._get_bedrock_client") as mock_get_client:
             from botocore.exceptions import ClientError
-            mock_bedrock.apply_guardrail.side_effect = ClientError(
+            mock_client = Mock()
+            mock_client.apply_guardrail.side_effect = ClientError(
                 {"Error": {"Code": "ResourceNotFoundException"}},
                 "apply_guardrail"
             )
+            mock_get_client.return_value = mock_client
 
             # Act
             result = apply_guardrails(safe_label)
@@ -152,14 +162,15 @@ class TestGuardrails:
             assert result["guardrail_passed"] is True
             assert result["action_taken"] == "NONE"
 
-    @patch("tic_labeling.tools.apply_guardrails.bedrock_runtime")
-    def test_guardrails_sanitizes_blocked_content(self, mock_bedrock):
+    @patch("tic_labeling.tools.apply_guardrails._get_bedrock_client")
+    def test_guardrails_sanitizes_blocked_content(self, mock_get_client):
         """Test that sanitization replaces diagnostic terms with observational language"""
         # Arrange
         diagnostic_label = self.sample_label.copy()
         diagnostic_label["context"] = "Child is diagnosed with Tourette"
 
-        mock_bedrock.apply_guardrail.return_value = {
+        mock_client = Mock()
+        mock_client.apply_guardrail.return_value = {
             "action": "GUARDRAIL_INTERVENED",
             "assessments": [
                 {
@@ -175,6 +186,7 @@ class TestGuardrails:
                 }
             ]
         }
+        mock_get_client.return_value = mock_client
 
         # Act
         result = apply_guardrails(diagnostic_label)

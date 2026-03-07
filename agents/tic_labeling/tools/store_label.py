@@ -5,15 +5,37 @@ This tool stores AI-generated labels in DynamoDB (AILabels and Episodes tables).
 """
 
 import boto3
+import os
 from datetime import datetime, timezone
+from decimal import Decimal
 from strands import tool
 from typing import Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Initialize DynamoDB client
-dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
+# Lazy-load DynamoDB resource
+_dynamodb = None
+
+def _get_dynamodb():
+    """Get or create DynamoDB resource with current AWS_REGION"""
+    global _dynamodb
+    if _dynamodb is None:
+        region = os.getenv("AWS_REGION", "us-east-1")
+        _dynamodb = boto3.resource("dynamodb", region_name=region)
+        logger.info(f"Initialized DynamoDB in region: {region}")
+    return _dynamodb
+
+
+def convert_floats_to_decimal(obj):
+    """Convert float values to Decimal for DynamoDB compatibility"""
+    if isinstance(obj, float):
+        return Decimal(str(obj))
+    elif isinstance(obj, dict):
+        return {k: convert_floats_to_decimal(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_floats_to_decimal(item) for item in obj]
+    return obj
 
 
 @tool
@@ -48,10 +70,11 @@ def store_label(
         logger.info(f"Storing label for episode {episode_id}")
 
         # Get table names from environment (will be set by Lambda/Amplify)
-        # For now, use placeholders
-        ai_labels_table_name = "AILabels-dev"
-        episodes_table_name = "Episodes-dev"
+        # For local testing, use actual sandbox table names
+        ai_labels_table_name = os.getenv("AI_LABELS_TABLE", "AILabels")
+        episodes_table_name = os.getenv("EPISODES_TABLE", "Episodes")
 
+        dynamodb = _get_dynamodb()
         ai_labels_table = dynamodb.Table(ai_labels_table_name)
         episodes_table = dynamodb.Table(episodes_table_name)
 
@@ -76,11 +99,27 @@ def store_label(
             "createdAt": datetime.now(timezone.utc).isoformat(),
         }
 
+        # Convert floats to Decimal for DynamoDB
+        label_item = convert_floats_to_decimal(label_item)
+
         # Save to AILabels table
         ai_labels_table.put_item(Item=label_item)
         logger.info(f"Saved AI label: {ai_label_id}")
 
         # Update Episodes table
+        update_values = {
+            ":status": "ai_suggested",
+            ":label": {
+                "type": label_data.get("type"),
+                "severity": label_data.get("severity"),
+                "context": label_data.get("context"),
+                "confidence": label_data.get("confidence"),
+            },
+            ":updatedAt": datetime.now(timezone.utc).isoformat(),
+        }
+        # Convert floats to Decimal
+        update_values = convert_floats_to_decimal(update_values)
+
         episodes_table.update_item(
             Key={"episodeId": episode_id},
             UpdateExpression=(
@@ -88,16 +127,7 @@ def store_label(
                 "originalAILabel = :label, "
                 "updatedAt = :updatedAt"
             ),
-            ExpressionAttributeValues={
-                ":status": "ai_suggested",
-                ":label": {
-                    "type": label_data.get("type"),
-                    "severity": label_data.get("severity"),
-                    "context": label_data.get("context"),
-                    "confidence": label_data.get("confidence"),
-                },
-                ":updatedAt": datetime.now(timezone.utc).isoformat(),
-            }
+            ExpressionAttributeValues=update_values
         )
         logger.info(f"Updated episode {episode_id} with AI label")
 
