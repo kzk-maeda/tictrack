@@ -2,6 +2,7 @@ import { Construct } from "constructs";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 export interface ApiConstructProps {
   /** Cognito User Pool for authorization */
@@ -10,14 +11,17 @@ export interface ApiConstructProps {
   apiHandlerFn: lambda.IFunction;
   /** CORS allowed origin (e.g. https://main.d123.amplifyapp.com or *) */
   corsOrigin: string;
+  /** AgentCore Proxy Lambda (optional, for AI labeling integration) */
+  agentCoreProxyFn?: lambda.IFunction;
 }
 
 /**
  * ApiConstruct — REST API with Cognito Authorizer
  *
  * Routes:
- *   /{proxy+}        ANY  → api-handler (Cognito auth)
- *   /shared/{proxy+}  ANY  → api-handler (no auth, public shared reports/videos)
+ *   /{proxy+}              ANY   → api-handler (Cognito auth)
+ *   /shared/{proxy+}       ANY   → api-handler (no auth, public shared reports/videos)
+ *   /analyze/{episodeId}   POST  → agentcore-proxy Lambda (Cognito auth, Step 4+)
  *
  * CORS preflight handled by defaultCorsPreflightOptions.
  */
@@ -27,7 +31,7 @@ export class ApiConstruct extends Construct {
   constructor(scope: Construct, id: string, props: ApiConstructProps) {
     super(scope, id);
 
-    const { userPool, apiHandlerFn, corsOrigin } = props;
+    const { userPool, apiHandlerFn, corsOrigin, agentCoreProxyFn } = props;
 
     // --- REST API ---
     this.restApi = new apigateway.RestApi(this, "RestApi", {
@@ -69,5 +73,25 @@ export class ApiConstruct extends Construct {
     sharedProxy.addMethod("ANY", lambdaIntegration, {
       authorizationType: apigateway.AuthorizationType.NONE,
     });
+
+    // --- AgentCore Proxy Integration: /analyze/{episodeId} (Step 4+) ---
+    if (agentCoreProxyFn) {
+      const agentCoreProxyIntegration = new apigateway.LambdaIntegration(
+        agentCoreProxyFn,
+        {
+          proxy: true, // Lambda proxy integration
+        }
+      );
+
+      // POST /analyze/{episodeId}
+      const analyzeResource = this.restApi.root
+        .addResource("analyze")
+        .addResource("{episodeId}");
+
+      analyzeResource.addMethod("POST", agentCoreProxyIntegration, {
+        authorizationType: apigateway.AuthorizationType.COGNITO,
+        authorizer: cognitoAuthorizer,
+      });
+    }
   }
 }
