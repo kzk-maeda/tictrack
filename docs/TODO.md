@@ -6,6 +6,7 @@
 - [] AWS Lambda Node.js 20.x サポート終了対応
 - [] MIME type対応拡充
 - [] モバイル対応
+- [] 優しいカラーデザインへの変更
 
 ## Step 4: AI Labeling ✅ 完了（2026-03-08）
 - [x] Tic Labeling Agent 実装・テスト完了

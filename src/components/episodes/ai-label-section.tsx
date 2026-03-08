@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Brain, ThumbsUp, ThumbsDown, AlertCircle, Edit, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Brain, ThumbsUp, ThumbsDown, AlertCircle, Edit, Loader2, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { triggerAIAnalysis, submitAILabelFeedback } from "@/lib/api";
+import { triggerAIAnalysis, submitAILabelFeedback, getAILabel } from "@/lib/api";
 import type { Episode, AILabel } from "@/lib/types";
 import outputs from "../../../amplify_outputs.json";
 
@@ -21,17 +21,57 @@ interface AILabelSectionProps {
 
 export function AILabelSection({
   episode,
-  aiLabel,
+  aiLabel: initialAILabel,
   onAnalysisComplete,
   onFeedbackSubmit,
 }: AILabelSectionProps) {
   const t = useTranslations("aiLabel");
   const tCommon = useTranslations("common");
   const { toast } = useToast();
+  const [aiLabel, setAILabel] = useState<AILabel | undefined>(initialAILabel);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isLoadingLabel, setIsLoadingLabel] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackDetails, setFeedbackDetails] = useState("");
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
+
+  // Sync with parent prop changes
+  useEffect(() => {
+    setAILabel(initialAILabel);
+  }, [initialAILabel]);
+
+  // Load AI label if episode has ai_suggested status but no label provided
+  useEffect(() => {
+    if (
+      !aiLabel &&
+      episode.labelStatus === "ai_suggested" &&
+      episode.videoS3Key &&
+      !isLoadingLabel
+    ) {
+      loadAILabel();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [episode.episodeId, episode.labelStatus]);
+
+  const loadAILabel = async () => {
+    setIsLoadingLabel(true);
+    try {
+      const label = await getAILabel(episode.childId, episode.episodeId);
+      setAILabel(label as AILabel);
+    } catch (error) {
+      console.error("Failed to load AI label:", error);
+      // Don't show error toast for missing labels (404 is expected)
+      if (error instanceof Error && !error.message.includes("404")) {
+        toast({
+          variant: "destructive",
+          title: t("loadError"),
+          description: error.message,
+        });
+      }
+    } finally {
+      setIsLoadingLabel(false);
+    }
+  };
 
   const handleTriggerAnalysis = async () => {
     if (!episode.videoS3Key) {
@@ -58,6 +98,12 @@ export function AILabelSection({
           title: t("analysisComplete"),
           description: t("analysisCompleteDescription"),
         });
+
+        // Wait a bit for the label to be saved, then load it
+        setTimeout(() => {
+          loadAILabel();
+        }, 1000);
+
         onAnalysisComplete?.();
       } else {
         throw new Error(result.error || "Analysis failed");
@@ -139,6 +185,20 @@ export function AILabelSection({
     );
   }
 
+  // Loading AI label
+  if (isLoadingLabel) {
+    return (
+      <Card className="mt-3">
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm text-muted-foreground">{tCommon("loading")}</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // AI label exists - show analysis results
   if (!aiLabel) return null;
 
@@ -157,10 +217,32 @@ export function AILabelSection({
   return (
     <Card className="mt-3">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <Brain className="h-4 w-4" />
-          {t("title")}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Brain className="h-4 w-4" />
+            {t("title")}
+          </CardTitle>
+          {aiLabel && episode.videoS3Key && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleTriggerAnalysis}
+              disabled={isAnalyzing}
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                  {t("analyzing")}
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-3 w-3" />
+                  {t("reanalyze")}
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Type and Severity */}

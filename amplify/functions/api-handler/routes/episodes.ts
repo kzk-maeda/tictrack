@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent } from "aws-lambda";
-import { PutCommand, GetCommand, QueryCommand, DeleteCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, GetCommand, QueryCommand, DeleteCommand, UpdateCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { ulid } from "ulid";
 import type { RouteResult, Episode } from "../types.js";
 import { getUserId } from "../lib/auth.js";
@@ -220,4 +220,65 @@ export async function submitEpisodeFeedback(
   );
 
   return ok({ message: "Feedback submitted successfully" });
+}
+
+export async function getEpisodeAILabel(
+  event: APIGatewayProxyEvent,
+  params: Record<string, string>,
+): Promise<RouteResult> {
+  const userId = getUserId(event);
+  const childId = params.childId;
+  const episodeId = params.episodeId;
+
+  await verifyChildOwnership(childId, userId);
+
+  // Get the episode to verify ownership
+  const episodeResult = await docClient.send(
+    new GetCommand({
+      TableName: TableNames.EPISODES,
+      Key: { episodeId },
+    }),
+  );
+
+  if (!episodeResult.Item) {
+    throw new NotFoundError("Episode not found");
+  }
+
+  if (episodeResult.Item.childId !== childId) {
+    throw new ForbiddenError("Episode does not belong to this child");
+  }
+
+  // Query AI labels for this episode (get latest version)
+  const aiLabelsResult = await docClient.send(
+    new QueryCommand({
+      TableName: TableNames.AI_LABELS,
+      KeyConditionExpression: "episodeId = :episodeId",
+      ExpressionAttributeValues: {
+        ":episodeId": episodeId,
+      },
+      ScanIndexForward: false, // Descending order (latest version first)
+      Limit: 1,
+    }),
+  );
+
+  if (!aiLabelsResult.Items || aiLabelsResult.Items.length === 0) {
+    throw new NotFoundError("AI label not found");
+  }
+
+  const aiLabel = aiLabelsResult.Items[0];
+
+  // Parse rawOutput if it's a JSON string
+  let parsedOutput = aiLabel.rawOutput;
+  if (typeof aiLabel.rawOutput === "string") {
+    try {
+      parsedOutput = JSON.parse(aiLabel.rawOutput);
+    } catch {
+      // Keep as string if not valid JSON
+    }
+  }
+
+  return ok({
+    ...aiLabel,
+    rawOutput: parsedOutput,
+  });
 }

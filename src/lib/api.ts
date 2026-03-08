@@ -97,3 +97,29 @@ export async function submitAILabelFeedback(
     }
   );
 }
+
+export interface AILabelResponse {
+  episodeId: string;
+  version: number;
+  modelId: string;
+  rawOutput: unknown;
+  suggestedType: "motor" | "vocal" | "both";
+  suggestedSeverity: number;
+  suggestedContext?: string;
+  confidence?: number;
+  observations?: Array<{
+    timestamp?: string;
+    description: string;
+    intensity?: "low" | "medium" | "high";
+  }>;
+  createdAt: string;
+}
+
+export async function getAILabel(
+  childId: string,
+  episodeId: string
+): Promise<AILabelResponse> {
+  return apiClient<AILabelResponse>(
+    `/children/${childId}/episodes/${episodeId}/ai-label`
+  );
+}
