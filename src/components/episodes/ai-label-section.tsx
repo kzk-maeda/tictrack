@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { triggerAIAnalysis, submitAILabelFeedback } from "@/lib/api";
 import type { Episode, AILabel } from "@/lib/types";
+import outputs from "../../../amplify_outputs.json";
 
 interface AILabelSectionProps {
   episode: Episode;
@@ -44,9 +45,11 @@ export function AILabelSection({
 
     setIsAnalyzing(true);
     try {
+      const bucketName = outputs.storage.bucket_name;
       const result = await triggerAIAnalysis(episode.episodeId, {
         childId: episode.childId,
         s3Key: episode.videoS3Key,
+        bucketName,
         videoMimeType: episode.videoMimeType,
       });
 

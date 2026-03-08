@@ -50,7 +50,10 @@ export const handler = async (
     if (!episodeId) {
       return {
         statusCode: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
         body: JSON.stringify({ error: "Missing episodeId in path" }),
       };
     }
@@ -60,7 +63,10 @@ export const handler = async (
     if (!body.childId || !body.s3Key || !body.bucketName) {
       return {
         statusCode: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
         body: JSON.stringify({
           error: "Missing required fields: childId, s3Key, bucketName",
         }),
