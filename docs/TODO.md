@@ -7,18 +7,28 @@
 - [] MIME type対応拡充
 - [] モバイル対応
 
-## Step 4: AI Labeling（継続タスク）
+## Step 4: AI Labeling ✅ 完了（2026-03-08）
 - [x] Tic Labeling Agent 実装・テスト完了
+  - Nova Pro ビデオ分析（6 tools: analyze_video, transcribe_audio, integrate_results, apply_guardrails, store_label, get_child_info）
+  - Strands Agents SDK + FastAPI
+  - Docker ARM64 コンテナ
 - [x] Docker + ECR セットアップ
 - [x] AgentCore Runtime デプロイ完了
+  - IAM Execution Role（Bedrock, Transcribe, DynamoDB, S3, CloudWatch Logs）
+  - 環境変数: EPISODES_TABLE, AI_LABELS_TABLE, CHILDREN_TABLE, S3_MEDIA_BUCKET
 - [x] Lambda Proxy 実装完了（API Gateway → Lambda → AgentCore）
-  - Lambda 関数: agentcore-proxy (Node.js 20, @aws-sdk/client-bedrock-agentcore)
+  - Lambda 関数: agentcore-proxy (Node.js 20, @aws-sdk/client-bedrock-agentcore v3.716.0)
   - API ルート: POST /analyze/{episodeId} (Cognito 認証)
-  - IAM 権限: bedrock-agentcore:InvokeAgentRuntime
-  - 環境変数: AGENTCORE_RUNTIME_ARN, DynamoDB テーブル
+  - IAM 権限: bedrock-agentcore:InvokeAgentRuntime, DynamoDB GetItem/UpdateItem
+  - SDK invocation with DEFAULT qualifier
+- [x] エンドツーエンドテスト完了（Frontend → API → Lambda → AgentCore → Tools → DynamoDB）
+  - 実際の S3 ビデオファイルで分析成功
+  - AI ラベル DynamoDB 保存確認
+- [x] `"error": "Agent did not return a result"` の解消
+  - 修正: AgentCore Runtime ARN フォーマット（`runtime/` not `agent-runtime/`）
+  - 修正: イベントストリーミングパターン（`event["result"]` extraction）
+  - 修正: ログ出力（`print()` for AgentCore Runtime）
 - [ ] AI ラベル UI 実装（フィードバック機能含む）
-- [ ] エンドツーエンドテスト（Frontend → API → Lambda → AgentCore → DynamoDB）
-- [ ] `"error": "Agent did not return a result"` の解消
 
 ## Step 5: マッチング機能
 - [ ] 類似エピソード検索 API 実装
