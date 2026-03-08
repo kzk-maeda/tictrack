@@ -1,12 +1,11 @@
-- [] MIME type対応拡充
-- [] モバイル対応
-
 ## 環境管理
 - [ ] Amplify Branch Environments への移行（Step 6-7 完了後 or コンペ提出前）
   - Production 環境デプロイ: `npx ampx pipeline-deploy --branch main`
   - ローカル接続先切り替え対応（run_local.sh に AMPLIFY_BRANCH 追加）
   - データ移行スクリプト作成（必要な場合）
 - [] AWS Lambda Node.js 20.x サポート終了対応
+- [] MIME type対応拡充
+- [] モバイル対応
 
 ## Step 4: AI Labeling（継続タスク）
 - [x] Tic Labeling Agent 実装・テスト完了
@@ -19,6 +18,7 @@
   - 環境変数: AGENTCORE_RUNTIME_ARN, DynamoDB テーブル
 - [ ] AI ラベル UI 実装（フィードバック機能含む）
 - [ ] エンドツーエンドテスト（Frontend → API → Lambda → AgentCore → DynamoDB）
+- [ ] `"error": "Agent did not return a result"` の解消
 
 ## Step 5: マッチング機能
 - [ ] 類似エピソード検索 API 実装

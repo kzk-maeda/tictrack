@@ -31,11 +31,16 @@ export class AgentCoreConstruct extends Construct {
     props: {
       agentsRepository: ecr.Repository;
       imageTag?: string;
+      environmentVariables?: { [key: string]: string };
     }
   ) {
     super(scope, id);
 
-    const { agentsRepository, imageTag = "latest" } = props;
+    const {
+      agentsRepository,
+      imageTag = "latest",
+      environmentVariables = {},
+    } = props;
     const stack = cdk.Stack.of(this);
 
     // --- CloudWatch Logs for Agent Runtime ---
@@ -84,12 +89,16 @@ export class AgentCoreConstruct extends Construct {
       })
     );
 
-    // CloudWatch Logs permissions
+    // CloudWatch Logs permissions (required for AgentCore Runtime)
     this.agentExecutionRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
-        actions: ["logs:CreateLogStream", "logs:PutLogEvents"],
-        resources: [this.logGroup.logGroupArn],
+        actions: [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams", // Required for log stream management
+        ],
+        resources: [`${this.logGroup.logGroupArn}:*`],
       })
     );
 
@@ -116,13 +125,19 @@ export class AgentCoreConstruct extends Construct {
       environmentVariables: {
         LOG_LEVEL: "INFO",
         AWS_REGION: stack.region,
+        ...environmentVariables,
       },
       protocolConfiguration: "HTTP",
+      // Note: loggingConfiguration not available in current CDK types
+      // Logs should be accessible via CloudWatch Console or AWS CLI
     });
 
     // Runtime depends on role and log group
     this.runtime.node.addDependency(this.agentExecutionRole);
     this.runtime.node.addDependency(this.logGroup);
+
+    // Note: DEFAULT endpoint is automatically created when Runtime is deployed
+    // No need to explicitly create CfnRuntimeEndpoint
 
     // --- Outputs ---
     new cdk.CfnOutput(this, "AgentRuntimeArn", {
@@ -195,11 +210,11 @@ export class AgentCoreConstruct extends Construct {
 
   /**
    * Get the runtime ARN
-   * Format: arn:aws:bedrock:region:account:agent-runtime/runtime-id
+   * Format: arn:aws:bedrock-agentcore:region:account:runtime/runtime-id
    */
   public get runtimeArn(): string {
     const stack = cdk.Stack.of(this);
-    return `arn:aws:bedrock:${stack.region}:${stack.account}:agent-runtime/${this.runtime.attrAgentRuntimeId}`;
+    return `arn:aws:bedrock-agentcore:${stack.region}:${stack.account}:runtime/${this.runtime.attrAgentRuntimeId}`;
   }
 
   /**

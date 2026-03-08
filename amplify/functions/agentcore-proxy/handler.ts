@@ -36,10 +36,12 @@ export const handler = async (
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> => {
-  console.log("AgentCore Proxy invoked", {
+  // CODE VERSION: v4.0 - SDK WITH EXPLICIT DEFAULT QUALIFIER
+  console.log("🔄 AgentCore Proxy v4.0 invoked (SDK + DEFAULT endpoint)", {
     path: event.path,
     episodeId: event.pathParameters?.episodeId,
     requestId: context.awsRequestId,
+    timestamp: new Date().toISOString(),
   });
 
   try {
@@ -80,29 +82,30 @@ export const handler = async (
       videoMimeType: body.videoMimeType || "video/webm",
     };
 
-    console.log("Invoking AgentCore Runtime", {
+    console.log("Invoking AgentCore Runtime via SDK", {
       agentRuntimeArn,
       episodeId,
       sessionId: context.awsRequestId,
     });
 
-    // Invoke AgentCore Runtime
+    // Invoke AgentCore Runtime using SDK (correct approach per AWS docs)
     const command = new InvokeAgentRuntimeCommand({
       agentRuntimeArn,
       runtimeSessionId: context.awsRequestId,
       payload: new TextEncoder().encode(JSON.stringify(payload)),
-      qualifier: "DEFAULT",
+      contentType: "application/json",
+      qualifier: "DEFAULT", // Required to target the DEFAULT endpoint
     });
 
     const response = await agentCoreClient.send(command);
 
-    // Decode response
-    // Note: Response structure may vary; adapt based on actual AgentCore response
+    // Decode response using transformToString (per AWS SDK docs)
     const responseText = response.response
-      ? new TextDecoder().decode(
-          response.response as unknown as Uint8Array
-        )
+      ? await response.response.transformToString()
       : JSON.stringify({ status: "completed", episodeId });
+
+    console.log("Raw response from AgentCore:", responseText);
+
     const result = JSON.parse(responseText);
 
     console.log("AgentCore Runtime response received", {

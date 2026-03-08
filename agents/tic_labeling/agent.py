@@ -6,13 +6,18 @@ including type (motor/vocal), severity (1-3), and context.
 """
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from strands import Agent
 from typing import Optional
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging to stdout (for AgentCore Runtime)
+import sys
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
 logger = logging.getLogger(__name__)
 
 # Import tools (to be implemented)
@@ -66,12 +71,14 @@ Always be cautious and humble about limitations of AI analysis.
 # Request/Response models
 class AnalyzeRequest(BaseModel):
     """Request body for video analysis"""
-    episode_id: str
-    child_id: str
-    s3_key: str
-    bucket_name: Optional[str] = "tictrack-media-dev"
-    aws_region: Optional[str] = "us-east-1"
-    video_mime_type: Optional[str] = "video/mp4"
+    model_config = {"populate_by_name": True}
+
+    episode_id: str = Field(alias="episodeId")
+    child_id: str = Field(alias="childId")
+    s3_key: str = Field(alias="s3Key")
+    bucket_name: Optional[str] = Field(default="tictrack-media-dev", alias="bucketName")
+    aws_region: Optional[str] = Field(default="ap-northeast-1", alias="awsRegion")
+    video_mime_type: Optional[str] = Field(default="video/webm", alias="videoMimeType")
 
 
 class AnalyzeResponse(BaseModel):
@@ -101,7 +108,7 @@ async def analyze_tic_episode(request: AnalyzeRequest):
     4. Store results in DynamoDB
     """
     try:
-        logger.info(f"Starting analysis for episode {request.episode_id}")
+        print(f">>> Starting analysis for episode {request.episode_id}", flush=True)
 
         # Construct prompt for the agent (prepend instructions)
         prompt = f"""{AGENT_INSTRUCTIONS}
@@ -122,24 +129,60 @@ Please:
 
 Return a structured analysis with type, severity, and context."""
 
-        # Stream agent response
-        result = None
+        # Stream agent response (following Strands SDK pattern)
+        final_event = None
         async for event in agent.stream_async(prompt):
-            if event.get("type") == "agent_finish":
-                result = event.get("data", {})
-                logger.info(f"Agent finished: {result}")
+            # Log the full event structure to understand what we're receiving
+            print(f">>> Agent event (full): {event}", flush=True)
+            print(f">>> Agent event type: {type(event)}", flush=True)
 
-        if not result:
+            # The final event contains the result
+            final_event = event
+
+        if not final_event:
+            print(">>> Agent did not produce any events", flush=True)
             raise ValueError("Agent did not return a result")
+
+        # Extract result from final event (following Strands SDK pattern)
+        if "result" not in final_event:
+            print(f">>> Final event does not contain 'result' key: {final_event}", flush=True)
+            raise ValueError("Agent streaming completed without producing a result event")
+
+        agent_result = final_event["result"]
+        print(f">>> Agent result extracted: {agent_result}", flush=True)
+        print(f">>> Agent result type: {type(agent_result)}", flush=True)
+
+        # Try to extract structured result or text
+        result_data = None
+        if isinstance(agent_result, dict):
+            # If result is already a dict, use it directly
+            result_data = agent_result
+        elif hasattr(agent_result, "structured_output") and agent_result.structured_output:
+            result_data = agent_result.structured_output
+        elif hasattr(agent_result, "text") and agent_result.text:
+            # Try to parse text as JSON
+            import json
+            try:
+                result_data = json.loads(agent_result.text)
+            except json.JSONDecodeError:
+                result_data = {"raw_text": agent_result.text}
+        else:
+            # Fallback: convert AgentResult to dict
+            result_data = {
+                "stop_reason": getattr(agent_result, "stop_reason", "unknown"),
+                "text": str(agent_result),
+            }
 
         return AnalyzeResponse(
             episode_id=request.episode_id,
             status="completed",
-            label=result,
+            label=result_data,
         )
 
     except Exception as e:
-        logger.error(f"Error analyzing episode {request.episode_id}: {str(e)}")
+        print(f">>> Error analyzing episode {request.episode_id}: {str(e)}", flush=True)
+        import traceback
+        print(f">>> Traceback: {traceback.format_exc()}", flush=True)
         return AnalyzeResponse(
             episode_id=request.episode_id,
             status="failed",

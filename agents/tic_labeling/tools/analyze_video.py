@@ -21,6 +21,24 @@ def _get_bedrock_client():
     global _bedrock_runtime
     if _bedrock_runtime is None:
         region = os.getenv("AWS_REGION", "us-east-1")
+
+        # Debug: Log credential environment variables
+        logger.info(f"AWS_REGION: {region}")
+        logger.info(f"AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: {os.getenv('AWS_CONTAINER_CREDENTIALS_RELATIVE_URI', 'NOT SET')}")
+        logger.info(f"AWS_ACCESS_KEY_ID exists: {bool(os.getenv('AWS_ACCESS_KEY_ID'))}")
+
+        try:
+            # Try to get credentials explicitly
+            import boto3.session
+            session = boto3.session.Session()
+            credentials = session.get_credentials()
+            if credentials:
+                logger.info(f"Credentials found: Access Key starts with {credentials.access_key[:10]}...")
+            else:
+                logger.error("No credentials found!")
+        except Exception as e:
+            logger.error(f"Error getting credentials: {e}")
+
         _bedrock_runtime = boto3.client("bedrock-runtime", region_name=region)
         logger.info(f"Initialized Bedrock client in region: {region}")
     return _bedrock_runtime

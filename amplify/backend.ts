@@ -113,6 +113,13 @@ const agentCoreStack = backend.createStack("agentcore-stack");
 const agentCore = new AgentCoreConstruct(agentCoreStack, "AgentCore", {
   agentsRepository: foundation.agentsRepository,
   imageTag: "latest",
+  environmentVariables: {
+    EPISODES_TABLE: database.episodesTable.tableName,
+    AI_LABELS_TABLE: database.aiLabelsTable.tableName,
+    CHILDREN_TABLE: database.childrenTable.tableName,
+    S3_MEDIA_BUCKET: backend.storage.resources.bucket.bucketName,
+    CODE_VERSION: "v9-fix-result-extraction", // Fix result extraction from event["result"]
+  },
 });
 
 // Grant agent permissions to access DynamoDB tables

@@ -6,4 +6,8 @@ export const agentcoreProxy = defineFunction({
   runtime: 20,
   timeoutSeconds: 900, // 15 minutes max for streaming
   memoryMB: 512,
+  environment: {
+    // Force update - correct response decode with transformToString
+    CODE_VERSION: "v4.1-transform-to-string",
+  },
 });
