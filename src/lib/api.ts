@@ -50,3 +50,50 @@ export async function apiClient<T>(
   if (response.status === 204) return undefined as T;
   return response.json();
 }
+
+// AI Label API functions
+export interface TriggerAIAnalysisRequest {
+  childId: string;
+  s3Key: string;
+  bucketName?: string;
+  videoMimeType?: string;
+}
+
+export interface TriggerAIAnalysisResponse {
+  episode_id: string;
+  status: "completed" | "failed";
+  label?: {
+    stop_reason: string;
+    text: string;
+  };
+  error?: string;
+}
+
+export async function triggerAIAnalysis(
+  episodeId: string,
+  request: TriggerAIAnalysisRequest
+): Promise<TriggerAIAnalysisResponse> {
+  return apiClient<TriggerAIAnalysisResponse>(`/analyze/${episodeId}`, {
+    method: "POST",
+    body: request,
+  });
+}
+
+export interface SubmitFeedbackRequest {
+  feedbackType: "useful" | "not_useful" | "incorrect" | "needs_edit";
+  feedbackDetails?: string;
+}
+
+export async function submitAILabelFeedback(
+  childId: string,
+  episodeId: string,
+  feedback: SubmitFeedbackRequest
+): Promise<void> {
+  return apiClient<void>(
+    `/children/${childId}/episodes/${episodeId}/feedback`,
+    {
+      method: "PUT",
+      body: feedback,
+    }
+  );
+}

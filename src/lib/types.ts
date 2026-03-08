@@ -50,6 +50,26 @@ export interface Episode {
   videoFileSize?: number;
   videoDuration?: number;
   uploadStatus?: "pending" | "completed" | "failed";
+  originalAILabel?: string; // JSON string of original AI label (for edited episodes)
+  feedbackType?: "useful" | "not_useful" | "incorrect" | "needs_edit";
+  feedbackDetails?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AILabel {
+  episodeId: string;
+  version: number;
+  modelId: string;
+  rawOutput: string; // JSON string
+  suggestedType: "motor" | "vocal" | "both";
+  suggestedSeverity: number; // 1-3
+  suggestedContext?: string;
+  confidence?: number; // 0.0-1.0
+  observations?: Array<{
+    timestamp?: string;
+    description: string;
+    intensity?: "low" | "medium" | "high";
+  }>;
+  createdAt: string;
 }

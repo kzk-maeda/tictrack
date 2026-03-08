@@ -106,6 +106,41 @@
     "selectVideo": "動画を選択"
   },
   "episodes": {},
+  "aiLabel": {
+    "title": "AI分析結果",
+    "notAnalyzed": "まだAI分析されていません",
+    "analyzeVideo": "AI分析を開始",
+    "analyzing": "分析中...",
+    "noVideoError": "エラー",
+    "noVideoErrorDescription": "分析する動画がありません",
+    "analysisComplete": "分析完了",
+    "analysisCompleteDescription": "AI分析が完了しました",
+    "analysisError": "分析エラー",
+    "typeMotor": "運動性",
+    "typeVocal": "音声性",
+    "typeBoth": "運動性 + 音声性",
+    "severity": "強度",
+    "confidence": "信頼度",
+    "context": "状況",
+    "observations": "観察内容",
+    "helpful": "この分析は役に立ちましたか？",
+    "yes": "はい",
+    "no": "いいえ",
+    "tellUsMore": "詳しく教えてください",
+    "feedbackPlaceholder": "どのような点が役に立たなかったか、または改善できるか教えてください...",
+    "notUseful": "役に立たなかった",
+    "incorrect": "間違っている",
+    "needsEdit": "修正が必要",
+    "feedbackSuccess": "送信しました",
+    "feedbackSuccessDescription": "フィードバックをありがとうございます",
+    "feedbackError": "送信エラー",
+    "feedback": {
+      "useful": "役に立った",
+      "not_useful": "役に立たなかった",
+      "incorrect": "間違っている",
+      "needs_edit": "修正が必要"
+    }
+  },
   "settings": {
     "title": "設定"
   },

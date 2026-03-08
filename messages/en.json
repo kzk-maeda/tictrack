@@ -106,6 +106,41 @@
     "selectVideo": "Select Video"
   },
   "episodes": {},
+  "aiLabel": {
+    "title": "AI Analysis Results",
+    "notAnalyzed": "Not yet analyzed by AI",
+    "analyzeVideo": "Start AI Analysis",
+    "analyzing": "Analyzing...",
+    "noVideoError": "Error",
+    "noVideoErrorDescription": "No video available for analysis",
+    "analysisComplete": "Analysis Complete",
+    "analysisCompleteDescription": "AI analysis completed successfully",
+    "analysisError": "Analysis Error",
+    "typeMotor": "Motor",
+    "typeVocal": "Vocal",
+    "typeBoth": "Motor + Vocal",
+    "severity": "Severity",
+    "confidence": "Confidence",
+    "context": "Context",
+    "observations": "Observations",
+    "helpful": "Was this analysis helpful?",
+    "yes": "Yes",
+    "no": "No",
+    "tellUsMore": "Tell us more",
+    "feedbackPlaceholder": "Please tell us what was not helpful or how we can improve...",
+    "notUseful": "Not useful",
+    "incorrect": "Incorrect",
+    "needsEdit": "Needs edit",
+    "feedbackSuccess": "Feedback sent",
+    "feedbackSuccessDescription": "Thank you for your feedback",
+    "feedbackError": "Feedback error",
+    "feedback": {
+      "useful": "Useful",
+      "not_useful": "Not useful",
+      "incorrect": "Incorrect",
+      "needs_edit": "Needs edit"
+    }
+  },
   "settings": {
     "title": "Settings"
   },

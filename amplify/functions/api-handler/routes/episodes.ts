@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent } from "aws-lambda";
-import { PutCommand, GetCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, GetCommand, QueryCommand, DeleteCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { ulid } from "ulid";
 import type { RouteResult, Episode } from "../types.js";
 import { getUserId } from "../lib/auth.js";
@@ -167,4 +167,57 @@ export async function deleteEpisode(
   );
 
   return noContent();
+}
+
+export async function submitEpisodeFeedback(
+  event: APIGatewayProxyEvent,
+  params: Record<string, string>,
+): Promise<RouteResult> {
+  const userId = getUserId(event);
+  const childId = params.childId;
+  const episodeId = params.episodeId;
+  const body = parseJsonBody(event.body);
+
+  await verifyChildOwnership(childId, userId);
+
+  // Validate feedback type
+  const feedbackType = body.feedbackType as string;
+  const validFeedbackTypes = ["useful", "not_useful", "incorrect", "needs_edit"];
+  if (!validFeedbackTypes.includes(feedbackType)) {
+    throw new ForbiddenError(`feedbackType must be one of: ${validFeedbackTypes.join(", ")}`);
+  }
+
+  // Get the episode to verify ownership
+  const getResult = await docClient.send(
+    new GetCommand({
+      TableName: TableNames.EPISODES,
+      Key: { episodeId },
+    }),
+  );
+
+  if (!getResult.Item) {
+    throw new NotFoundError("Episode not found");
+  }
+
+  if (getResult.Item.childId !== childId) {
+    throw new ForbiddenError("Episode does not belong to this child");
+  }
+
+  // Update episode with feedback
+  const now = new Date().toISOString();
+  await docClient.send(
+    new UpdateCommand({
+      TableName: TableNames.EPISODES,
+      Key: { episodeId },
+      UpdateExpression:
+        "SET feedbackType = :feedbackType, feedbackDetails = :feedbackDetails, updatedAt = :updatedAt",
+      ExpressionAttributeValues: {
+        ":feedbackType": feedbackType,
+        ":feedbackDetails": body.feedbackDetails || null,
+        ":updatedAt": now,
+      },
+    }),
+  );
+
+  return ok({ message: "Feedback submitted successfully" });
 }
