@@ -3,7 +3,7 @@ import type { RouteDefinition, RouteResult } from "./types.js";
 import { listChildren, createChild, updateChild, deleteChild, setDefaultChild } from "./routes/children.js";
 import { getMe, updateMe } from "./routes/users.js";
 import { listTicCards, createTicCard, updateTicCard, deleteTicCard } from "./routes/tic-cards.js";
-import { listEpisodes, createEpisode, deleteEpisode, submitEpisodeFeedback, getEpisodeAILabel } from "./routes/episodes.js";
+import { listEpisodes, createEpisode, deleteEpisode, submitEpisodeFeedback, getEpisodeAILabel, getAnalysisStatus } from "./routes/episodes.js";
 import { handleVideoUploadUrl, handleVideoUploadComplete, handleVideoPlaybackUrl } from "./routes/videos.js";
 import { NotFoundError } from "./lib/errors.js";
 
@@ -59,6 +59,11 @@ const routes: RouteDefinition[] = [
     method: "GET",
     pattern: /^\/children\/([^/]+)\/episodes\/([^/]+)\/ai-label$/,
     handler: (e, p) => getEpisodeAILabel(e, p),
+  },
+  {
+    method: "GET",
+    pattern: /^\/children\/([^/]+)\/episodes\/([^/]+)\/analysis-status$/,
+    handler: (e, p) => getAnalysisStatus(e, p),
   },
 
   // Video Upload

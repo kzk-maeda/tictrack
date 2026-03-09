@@ -2,7 +2,12 @@ import { Construct } from "constructs";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as lambdaNodejs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import { Duration } from "aws-cdk-lib";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
 export interface ApiConstructProps {
   /** Cognito User Pool for authorization */
@@ -13,6 +18,12 @@ export interface ApiConstructProps {
   corsOrigin: string;
   /** AgentCore Proxy Lambda (optional, for AI labeling integration) */
   agentCoreProxyFn?: lambda.IFunction;
+  /** Step Functions State Machine ARN (optional, for async AI analysis) */
+  stateMachineArn?: string;
+  /** Episodes DynamoDB table (optional, for async AI analysis) */
+  episodesTable?: dynamodb.ITable;
+  /** AWS Region */
+  region?: string;
 }
 
 /**
@@ -31,7 +42,11 @@ export class ApiConstruct extends Construct {
   constructor(scope: Construct, id: string, props: ApiConstructProps) {
     super(scope, id);
 
-    const { userPool, apiHandlerFn, corsOrigin, agentCoreProxyFn } = props;
+    // ES module equivalent of __dirname
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+
+    const { userPool, apiHandlerFn, corsOrigin, agentCoreProxyFn, stateMachineArn, episodesTable, region } = props;
 
     // --- REST API ---
     this.restApi = new apigateway.RestApi(this, "RestApi", {
@@ -74,10 +89,44 @@ export class ApiConstruct extends Construct {
       authorizationType: apigateway.AuthorizationType.NONE,
     });
 
-    // --- AgentCore Proxy Integration: /analyze/{episodeId} (Step 4+) ---
-    if (agentCoreProxyFn) {
-      const agentCoreProxyIntegration = new apigateway.LambdaIntegration(
-        agentCoreProxyFn,
+    // --- Start Analysis Integration: /analyze/{episodeId} (Step Functions) ---
+    if (stateMachineArn && episodesTable) {
+      // Get current file's directory path (ES module compatible)
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = dirname(__filename);
+
+      // Create startAnalysis Lambda directly in this stack to avoid circular dependency
+      const startAnalysisLambda = new lambdaNodejs.NodejsFunction(
+        this,
+        "StartAnalysisFunction",
+        {
+          functionName: "start-analysis",
+          runtime: lambda.Runtime.NODEJS_20_X,
+          entry: join(__dirname, "../../functions/start-analysis/handler.ts"),
+          handler: "handler",
+          timeout: Duration.seconds(10),
+          memorySize: 256,
+          environment: {
+            STATE_MACHINE_ARN: stateMachineArn,
+            EPISODES_TABLE: episodesTable.tableName,
+            // AWS_REGION is automatically provided by Lambda runtime
+          },
+        }
+      );
+
+      // Grant permissions to start Step Functions execution
+      startAnalysisLambda.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ["states:StartExecution"],
+          resources: [stateMachineArn],
+        })
+      );
+
+      // Grant permissions to update Episodes table
+      episodesTable.grantWriteData(startAnalysisLambda);
+
+      const startAnalysisIntegration = new apigateway.LambdaIntegration(
+        startAnalysisLambda,
         {
           proxy: true, // Lambda proxy integration
         }
@@ -88,7 +137,7 @@ export class ApiConstruct extends Construct {
         .addResource("analyze")
         .addResource("{episodeId}");
 
-      analyzeResource.addMethod("POST", agentCoreProxyIntegration, {
+      analyzeResource.addMethod("POST", startAnalysisIntegration, {
         authorizationType: apigateway.AuthorizationType.COGNITO,
         authorizer: cognitoAuthorizer,
       });

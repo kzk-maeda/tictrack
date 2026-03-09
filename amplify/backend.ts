@@ -17,6 +17,7 @@ import { DatabaseConstruct } from "./custom/database/index";
 import { FoundationConstruct } from "./custom/foundation/index";
 import { ApiConstruct } from "./custom/api/index";
 import { AgentCoreConstruct } from "./custom/agentcore/index";
+import { OrchestrationConstruct } from "./custom/orchestration/index";
 
 // =====================================================================
 // Step 0-1: Currently active
@@ -136,15 +137,26 @@ agentCore.grantS3Access([
 ]);
 
 // =====================================================================
-// Custom Stack — Step 1: API Gateway
+// Custom Stack — Step 4: Backend Integration (Orchestration + API)
 // =====================================================================
 
-const apiStack = backend.createStack("api-stack");
-const api = new ApiConstruct(apiStack, "Api", {
+const backendIntegrationStack = backend.createStack("backend-integration-stack");
+
+// Create orchestration (Step Functions State Machine)
+const orchestration = new OrchestrationConstruct(backendIntegrationStack, "Orchestration", {
+  invokeAgentCoreLambda: backend.agentcoreProxy.resources.lambda,
+  episodesTable: database.episodesTable,
+  aiLabelsTable: database.aiLabelsTable,
+});
+
+// Create API Gateway with all integrations
+const api = new ApiConstruct(backendIntegrationStack, "Api", {
   userPool: backend.auth.resources.userPool,
   apiHandlerFn: backend.apiHandler.resources.lambda,
-  corsOrigin: "*", // Override with Amplify domain after first deploy
-  agentCoreProxyFn: backend.agentcoreProxy.resources.lambda,
+  corsOrigin: "*",
+  stateMachineArn: orchestration.stateMachine.stateMachineArn,
+  episodesTable: database.episodesTable,
+  region: Stack.of(backendIntegrationStack).region,
 });
 
 // =====================================================================
@@ -264,13 +276,23 @@ backend.agentcoreProxy.resources.lambda.addToRolePolicy(
 // DynamoDB: Read episodes, write AI labels
 backend.agentcoreProxy.resources.lambda.addToRolePolicy(
   new PolicyStatement({
-    actions: ["dynamodb:GetItem", "dynamodb:UpdateItem"],
+    actions: ["dynamodb:GetItem", "dynamodb:UpdateItem", "dynamodb:PutItem"],
     resources: [
       database.episodesTable.tableArn,
       database.aiLabelsTable.tableArn,
     ],
   })
 );
+
+// =====================================================================
+// Lambda environment variables — start-analysis
+// =====================================================================
+// Removed: startAnalysis is now created directly in api-stack
+
+// =====================================================================
+// IAM grants — start-analysis
+// =====================================================================
+// Removed: startAnalysis IAM grants are now handled in ApiConstruct
 
 // =====================================================================
 // Outputs

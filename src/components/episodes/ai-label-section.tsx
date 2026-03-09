@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Brain, ThumbsUp, ThumbsDown, AlertCircle, Edit, Loader2, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { triggerAIAnalysis, submitAILabelFeedback, getAILabel } from "@/lib/api";
+import { triggerAIAnalysis, submitAILabelFeedback, getAILabel, getAnalysisStatus } from "@/lib/api";
 import type { Episode, AILabel } from "@/lib/types";
 import outputs from "../../../amplify_outputs.json";
 
@@ -34,6 +34,10 @@ export function AILabelSection({
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackDetails, setFeedbackDetails] = useState("");
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
+
+  // Refs to store polling interval and timeout IDs
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync with parent prop changes
   useEffect(() => {
@@ -93,20 +97,14 @@ export function AILabelSection({
         videoMimeType: episode.videoMimeType,
       });
 
-      if (result.status === "completed") {
+      if (result.status === "analyzing") {
         toast({
-          title: t("analysisComplete"),
-          description: t("analysisCompleteDescription"),
+          title: t("analysisStarted"),
+          description: t("analysisStartedDescription"),
         });
 
-        // Wait a bit for the label to be saved, then load it
-        setTimeout(() => {
-          loadAILabel();
-        }, 1000);
-
-        onAnalysisComplete?.();
-      } else {
-        throw new Error(result.error || "Analysis failed");
+        // Start polling for status
+        startPolling();
       }
     } catch (error) {
       console.error("Analysis error:", error);
@@ -115,10 +113,78 @@ export function AILabelSection({
         title: t("analysisError"),
         description: error instanceof Error ? error.message : tCommon("error"),
       });
-    } finally {
       setIsAnalyzing(false);
     }
   };
+
+  const stopPolling = () => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+    if (pollTimeoutRef.current) {
+      clearTimeout(pollTimeoutRef.current);
+      pollTimeoutRef.current = null;
+    }
+  };
+
+  const startPolling = () => {
+    // Clear any existing polling
+    stopPolling();
+
+    pollIntervalRef.current = setInterval(async () => {
+      try {
+        const status = await getAnalysisStatus(episode.childId, episode.episodeId);
+
+        if (status.status === "ai_suggested") {
+          stopPolling();
+          setIsAnalyzing(false);
+
+          if (status.aiLabel) {
+            setAILabel(status.aiLabel);
+          }
+
+          toast({
+            title: t("analysisComplete"),
+            description: t("analysisCompleteDescription"),
+          });
+
+          onAnalysisComplete?.();
+        } else if (status.status === "failed") {
+          stopPolling();
+          setIsAnalyzing(false);
+
+          toast({
+            variant: "destructive",
+            title: t("analysisFailed"),
+            description: status.error || t("analysisFailedDescription"),
+          });
+        }
+      } catch (error) {
+        console.error("Polling error:", error);
+        // Continue polling on error
+      }
+    }, 2000); // Poll every 2 seconds
+
+    // Timeout after 60 seconds (30 polls)
+    pollTimeoutRef.current = setTimeout(() => {
+      stopPolling();
+      setIsAnalyzing(false);
+
+      toast({
+        variant: "destructive",
+        title: t("analysisTimeout"),
+        description: t("analysisTimeoutDescription"),
+      });
+    }, 60000);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopPolling();
+    };
+  }, []);
 
   const handleSubmitFeedback = async (feedbackType: "useful" | "not_useful" | "incorrect" | "needs_edit") => {
     setSubmittingFeedback(true);
@@ -153,7 +219,8 @@ export function AILabelSection({
   }
 
   // No AI label but video exists - show trigger button
-  if (!aiLabel && episode.labelStatus === "pending") {
+  // Show for pending, undefined (old episodes), or any non-completed status
+  if (!aiLabel && episode.labelStatus !== "ai_suggested" && episode.labelStatus !== "analyzing") {
     return (
       <Card className="mt-3">
         <CardContent className="pt-4">
@@ -179,6 +246,20 @@ export function AILabelSection({
                 </>
               )}
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show analyzing state
+  if (episode.labelStatus === "analyzing" && !aiLabel) {
+    return (
+      <Card className="mt-3">
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm text-muted-foreground">{t("analyzing")}</span>
           </div>
         </CardContent>
       </Card>

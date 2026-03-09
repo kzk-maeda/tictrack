@@ -282,3 +282,93 @@ export async function getEpisodeAILabel(
     rawOutput: parsedOutput,
   });
 }
+
+export async function getAnalysisStatus(
+  event: APIGatewayProxyEvent,
+  params: Record<string, string>,
+): Promise<RouteResult> {
+  const userId = getUserId(event);
+  const childId = params.childId;
+  const episodeId = params.episodeId;
+
+  await verifyChildOwnership(childId, userId);
+
+  // Get the episode
+  const episodeResult = await docClient.send(
+    new GetCommand({
+      TableName: TableNames.EPISODES,
+      Key: { episodeId },
+    }),
+  );
+
+  if (!episodeResult.Item) {
+    throw new NotFoundError("Episode not found");
+  }
+
+  if (episodeResult.Item.childId !== childId) {
+    throw new ForbiddenError("Episode does not belong to this child");
+  }
+
+  const episode = episodeResult.Item;
+  const response: Record<string, unknown> = {
+    episodeId,
+    status: episode.labelStatus || "pending",
+  };
+
+  // Add executionArn if available
+  if (episode.executionArn) {
+    response.executionArn = episode.executionArn;
+  }
+
+  // Add timestamps
+  if (episode.updatedAt) {
+    response.updatedAt = episode.updatedAt;
+  }
+
+  // If analysis is complete, fetch the AI label
+  if (episode.labelStatus === "ai_suggested") {
+    const aiLabelsResult = await docClient.send(
+      new QueryCommand({
+        TableName: TableNames.AI_LABELS,
+        KeyConditionExpression: "episodeId = :episodeId",
+        ExpressionAttributeValues: {
+          ":episodeId": episodeId,
+        },
+        ScanIndexForward: false, // Descending order (latest version first)
+        Limit: 1,
+      }),
+    );
+
+    if (aiLabelsResult.Items && aiLabelsResult.Items.length > 0) {
+      const aiLabel = aiLabelsResult.Items[0];
+
+      // Parse rawOutput if it's a JSON string
+      let parsedOutput = aiLabel.rawOutput;
+      if (typeof aiLabel.rawOutput === "string") {
+        try {
+          parsedOutput = JSON.parse(aiLabel.rawOutput);
+        } catch {
+          // Keep as string if not valid JSON
+        }
+      }
+
+      // Parse observations if it's a JSON string
+      let parsedObservations = aiLabel.observations;
+      if (typeof aiLabel.observations === "string") {
+        try {
+          parsedObservations = JSON.parse(aiLabel.observations);
+        } catch {
+          // Keep as string if not valid JSON
+        }
+      }
+
+      response.aiLabel = {
+        ...aiLabel,
+        rawOutput: parsedOutput,
+        observations: parsedObservations,
+      };
+    }
+  }
+
+  return ok(response);
+}

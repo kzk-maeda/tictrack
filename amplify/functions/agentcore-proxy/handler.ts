@@ -13,6 +13,7 @@ const agentCoreClient = new BedrockAgentCoreClient({
 });
 
 interface AnalyzeRequest {
+  episodeId?: string; // Added for Step Functions direct invocation
   childId: string;
   s3Key: string;
   bucketName: string;
@@ -32,34 +33,58 @@ interface AnalyzeRequest {
  * - EPISODES_TABLE: DynamoDB episodes table name
  * - AI_LABELS_TABLE: DynamoDB AI labels table name
  */
+interface StepFunctionsResponse {
+  episodeId: string;
+  status: string;
+  label?: Record<string, unknown>;
+  error?: string;
+}
+
 export const handler = async (
-  event: APIGatewayProxyEvent,
+  event: APIGatewayProxyEvent | AnalyzeRequest,
   context: Context
-): Promise<APIGatewayProxyResult> => {
-  // CODE VERSION: v4.0 - SDK WITH EXPLICIT DEFAULT QUALIFIER
-  console.log("🔄 AgentCore Proxy v4.0 invoked (SDK + DEFAULT endpoint)", {
-    path: event.path,
-    episodeId: event.pathParameters?.episodeId,
+): Promise<APIGatewayProxyResult | StepFunctionsResponse> => {
+  // CODE VERSION: v5.0 - Support both API Gateway and Step Functions invocation
+  const isAPIGateway = "path" in event;
+
+  console.log("🔄 AgentCore Proxy v5.0 invoked", {
+    invocationType: isAPIGateway ? "API Gateway" : "Step Functions",
+    path: isAPIGateway ? event.path : "N/A",
     requestId: context.awsRequestId,
     timestamp: new Date().toISOString(),
   });
 
   try {
-    // Extract episodeId from path
-    const episodeId = event.pathParameters?.episodeId;
-    if (!episodeId) {
-      return {
-        statusCode: 400,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-        body: JSON.stringify({ error: "Missing episodeId in path" }),
-      };
-    }
+    let episodeId: string;
+    let body: AnalyzeRequest;
 
-    // Parse request body
-    const body: AnalyzeRequest = JSON.parse(event.body || "{}");
+    if (isAPIGateway) {
+      // API Gateway invocation
+      const apiEvent = event as APIGatewayProxyEvent;
+      episodeId = apiEvent.pathParameters?.episodeId || "";
+
+      if (!episodeId) {
+        return {
+          statusCode: 400,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+          body: JSON.stringify({ error: "Missing episodeId in path" }),
+        };
+      }
+
+      body = JSON.parse(apiEvent.body || "{}");
+    } else {
+      // Step Functions direct invocation
+      const sfnEvent = event as AnalyzeRequest;
+      episodeId = sfnEvent.episodeId || "";
+      body = sfnEvent;
+
+      if (!episodeId) {
+        throw new Error("Missing episodeId in Step Functions payload");
+      }
+    }
     if (!body.childId || !body.s3Key || !body.bucketName) {
       return {
         statusCode: 400,
@@ -117,16 +142,29 @@ export const handler = async (
     console.log("AgentCore Runtime response received", {
       episodeId,
       status: result.status,
+      hasLabel: !!result.label,
     });
 
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify(result),
-    };
+    // Return format depends on invocation type
+    if (isAPIGateway) {
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify(result),
+      };
+    } else {
+      // Step Functions expects direct object (not API Gateway response format)
+      // Pass through the complete result from AgentCore
+      return {
+        episodeId,
+        status: result.status,
+        label: result.label || {},
+        error: result.error,
+      };
+    }
   } catch (error) {
     console.error("AgentCore Proxy error", error);
 

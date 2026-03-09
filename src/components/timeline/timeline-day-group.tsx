@@ -49,6 +49,7 @@ export function TimelineDayGroup({
               episode={episode}
               ticCard={ticCard}
               onDelete={onRefresh}
+              onUpdate={onRefresh}
             />
           );
         })}

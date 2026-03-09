@@ -60,13 +60,9 @@ export interface TriggerAIAnalysisRequest {
 }
 
 export interface TriggerAIAnalysisResponse {
-  episode_id: string;
-  status: "completed" | "failed";
-  label?: {
-    stop_reason: string;
-    text: string;
-  };
-  error?: string;
+  episodeId: string;
+  status: "analyzing";
+  executionArn: string;
 }
 
 export async function triggerAIAnalysis(
@@ -121,5 +117,23 @@ export async function getAILabel(
 ): Promise<AILabelResponse> {
   return apiClient<AILabelResponse>(
     `/children/${childId}/episodes/${episodeId}/ai-label`
+  );
+}
+
+export interface AnalysisStatusResponse {
+  episodeId: string;
+  status: "pending" | "analyzing" | "ai_suggested" | "failed";
+  executionArn?: string;
+  updatedAt?: string;
+  aiLabel?: AILabelResponse;
+  error?: string;
+}
+
+export async function getAnalysisStatus(
+  childId: string,
+  episodeId: string
+): Promise<AnalysisStatusResponse> {
+  return apiClient<AnalysisStatusResponse>(
+    `/children/${childId}/episodes/${episodeId}/analysis-status`
   );
 }
