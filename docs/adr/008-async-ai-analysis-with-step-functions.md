@@ -4,6 +4,10 @@
 
 承認済み（2026-03-09）
 
+**更新**: ADR 009（2026-03-10）により、ワークフローの一部を変更：
+- `StoreAILabel` ステートを削除（Agent の `store_label` ツールが直接保存）
+- `UpdateEpisode` は `originalAILabel` を更新しない（`store_label` ツールが既に更新済み）
+
 ## 背景
 
 AI 分析処理（AgentCore Runtime）が長時間かかり、API Gateway の 29 秒タイムアウトに引っかかる問題が発生。
@@ -60,14 +64,20 @@ StartAnalysis Lambda (202 Accepted)
   ↓ StartExecution
 Step Functions Workflow
   ├─ InvokeAgentCore Lambda (retry: 3 times)
-  ├─ StoreAILabel (DynamoDB)
-  ├─ UpdateEpisode (labelStatus = "ai_suggested")
+  │    └─ Agent calls store_label tool
+  │         ├─ AILabels テーブルに保存
+  │         └─ Episodes.originalAILabel を更新
+  ├─ UpdateEpisode (labelStatus = "ai_suggested" のみ更新)
   └─ MarkAsFailed (on error)
 
-Frontend → GET /analysis-status (polling: 2 sec interval)
+Frontend → GET /analysis-status (polling: 3 sec interval)
   ↓
 Episodes Table (labelStatus: analyzing / ai_suggested / failed)
 ```
+
+**注**: 2026-03-10 の ADR 009 により、`StoreAILabel` ステートを削除。
+Agent の `store_label` ツールが AILabels と Episodes の両方を更新するため、
+Step Functions での重複書き込みを排除。
 
 ### 実装詳細
 
@@ -78,8 +88,10 @@ Episodes Table (labelStatus: analyzing / ai_suggested / failed)
 
 2. **Step Functions ワークフロー**:
    - InvokeAgentCore: AgentCore Runtime 呼び出し（リトライ 3 回）
-   - StoreAILabel: AILabels テーブルに結果を保存
-   - UpdateEpisode: labelStatus を "ai_suggested" に更新
+     - Agent が `store_label` ツールを呼び出し
+     - AILabels テーブルと Episodes.originalAILabel を更新
+   - UpdateEpisode: labelStatus を "ai_suggested", updatedAt を更新
+     - **注**: originalAILabel は更新しない（store_label が既に更新済み）
    - MarkAsFailed: エラー時に labelStatus を "failed" に更新
 
 3. **GetAnalysisStatus エンドポイント**:
@@ -141,3 +153,4 @@ Episodes Table (labelStatus: analyzing / ai_suggested / failed)
 
 - [ADR 001: Strands Agents SDK + AgentCore Runtime の採用](./001-adopt-strands-agents-sdk.md)
 - [ADR 002: Amplify Gen 2 + CDK への移行](./002-migrate-to-amplify-gen2-cdk.md)
+- [ADR 009: AI ラベルデータ構造の修正と後方互換性](./009-ai-label-backward-compatibility.md) - ワークフロー改善
