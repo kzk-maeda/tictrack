@@ -4,9 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* React Day Picker styles */
-@import 'react-day-picker/dist/style.css';
-
 @layer base {
   :root {
     /* Gentle Guardian - Warm, Reassuring Healthcare Design */

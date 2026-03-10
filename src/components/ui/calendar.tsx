@@ -19,8 +19,8 @@ function Calendar({
       className={cn("p-3", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center mb-2",
+        month: "space-y-3 w-full",
+        caption: "flex justify-center pt-1 relative items-center mb-3",
         caption_label: "text-base font-semibold",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
@@ -29,23 +29,23 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse",
-        head_row: "flex w-full",
+        table: "w-full border-collapse table-fixed",
+        head_row: "",
         head_cell:
-          "text-muted-foreground rounded-md flex-1 font-medium text-xs sm:text-sm text-center",
-        row: "flex w-full mt-2",
-        cell: "flex-1 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent/20 first:[&:has([aria-selected])]:rounded-l-lg last:[&:has([aria-selected])]:rounded-r-lg focus-within:relative focus-within:z-20",
+          "text-muted-foreground font-medium text-xs sm:text-sm text-center w-10 sm:w-12 pb-2",
+        row: "",
+        cell: "text-center p-0 relative",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-full sm:h-10 p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-secondary/40 transition-all"
+          "h-10 w-10 sm:h-12 sm:w-12 p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-secondary/40 transition-all mx-auto"
         ),
         day_range_end: "day-range-end",
         day_selected:
           "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground shadow-soft",
-        day_today: "bg-secondary/50 text-secondary-foreground font-semibold",
+        day_today: "bg-secondary/50 text-secondary-foreground font-semibold ring-2 ring-secondary",
         day_outside:
-          "day-outside text-muted-foreground/40 opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-        day_disabled: "text-muted-foreground/30 opacity-30 line-through",
+          "day-outside text-muted-foreground/40 opacity-40",
+        day_disabled: "text-muted-foreground/20 opacity-20 cursor-not-allowed",
         day_range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
