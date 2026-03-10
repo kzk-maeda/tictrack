@@ -242,4 +242,4 @@ agents/.venv/
 agents/~/.cache/
 
 # uv cache (root-level, created during uv operations)
-~/.cache/
+~/.cache/tsconfig.tsbuildinfo

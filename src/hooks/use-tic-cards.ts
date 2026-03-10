@@ -34,10 +34,14 @@ export function useTicCards(childId: string | null) {
 
   const createTicCard = useCallback(
     async (data: {
-      label: string;
       type: "motor" | "vocal";
+      complexity: "simple" | "complex";
+      symptomId?: string;
+      customSymptom?: string;
       severity: number;
       description?: string;
+      // Legacy field for backward compatibility
+      label?: string;
     }) => {
       if (!childId) throw new Error("No child selected");
       const card = await apiClient<TicCard>(`/children/${childId}/tic-cards`, {
@@ -54,11 +58,15 @@ export function useTicCards(childId: string | null) {
     async (
       cardId: string,
       data: {
-        label?: string;
         type?: "motor" | "vocal";
+        complexity?: "simple" | "complex";
+        symptomId?: string;
+        customSymptom?: string;
         severity?: number;
         description?: string;
         isActive?: boolean;
+        // Legacy field for backward compatibility
+        label?: string;
       },
     ) => {
       if (!childId) throw new Error("No child selected");

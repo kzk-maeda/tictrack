@@ -63,10 +63,17 @@
   "version": "1.4",
   "custom": {
     "API": {
-      "endpoint": "https://pfc0e4eobj.execute-api.ap-northeast-1.amazonaws.com/dev/",
+      "endpoint": "https://1vp46gd1wh.execute-api.ap-northeast-1.amazonaws.com/dev/",
       "region": "ap-northeast-1"
     },
     "KnowledgeBucket": "amplify-awsaideascompetit-foundationknowledgebucke-ohydxmvs2y3b",
-    "AgentsECR": "728291782722.dkr.ecr.ap-northeast-1.amazonaws.com/amplify-awsaideascompetition-kazukimaeda-sandbox-79195a0cd8-foundationstack908c88ba-8y7gmdzt3foy-foundationagentsrepo6fc60767-la5zvp6ov0hc"
+    "AgentsECR": "728291782722.dkr.ecr.ap-northeast-1.amazonaws.com/amplify-awsaideascompetition-kazukimaeda-sandbox-79195a0cd8-foundationstack908c88ba-8y7gmdzt3foy-foundationagentsrepo6fc60767-la5zvp6ov0hc",
+    "AgentCore": {
+      "runtimeArn": "arn:aws:bedrock-agentcore:ap-northeast-1:728291782722:runtime/tic_labeling_agent-IHsKOJHq9b",
+      "runtimeId": "tic_labeling_agent-IHsKOJHq9b",
+      "runtimeEndpoint": "https://tic_labeling_agent-IHsKOJHq9b.runtime.bedrock-agentcore.ap-northeast-1.amazonaws.com",
+      "executionRoleArn": "arn:aws:iam::728291782722:role/amplify-awsaideascompetit-AgentCoreAgentExecutionRo-3SiY3MqdyAXn",
+      "logGroupName": "/aws/bedrock/agentcore/tic_labeling_agent"
+    }
   }
 }

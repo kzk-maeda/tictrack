@@ -1505,3 +1505,26 @@ Action: AI パイプライン変更時に Guardrails テストスイートを自
 | O-6 | プライバシー | COPPA 考慮が皆無 | **対応済み** | §11.5 に COPPA 考慮事項を追加。保護者確認、データ最小化、プライバシーポリシーの方針を定義 |
 | O-7 | AI | Nova Pro 672×672 リサイズの微細チック検出への影響 | **対応済み** | §8.2 に AI 精度の限界とユーザー向けガイダンスの方針を記載 |
 | O-8 | フロントエンド | Amplify Gen 2 バックエンド定義方法の記載がない | **対応済み** | §4.3 に Amplify Gen 2 のバックエンド構成（ディレクトリ構造、リソース定義方法）を追加 |
+
+
+---
+
+## 補足: 実装時の簡略化（2026-03-07 更新）
+
+### Step 4 AI Labeling の実装方針変更
+
+**変更内容**: Lambda Proxy を廃止し、API Gateway から AgentCore Runtime へ直接統合
+
+**変更理由**:
+- プロトタイプ開発の高速化
+- レイテンシ・コスト削減
+- 実装量削減
+
+**アーキテクチャ変更**:
+- Before: API Gateway → Lambda Proxy → AgentCore Runtime
+- After: API Gateway → AgentCore Runtime (HTTP Integration)
+
+DynamoDB 更新は Agent 内部で実行（既に実装済み）。
+
+詳細は `docs/design/api_agentcore_integration.md` を参照。
+

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Video } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -20,9 +20,11 @@ import { useTicCards } from "@/hooks/use-tic-cards";
 import { useEpisodes } from "@/hooks/use-episodes";
 import { toast } from "@/hooks/use-toast";
 import type { TicCard } from "@/lib/types";
+import { getSymptomName } from "@/lib/tic-symptoms";
 
 export function TicCardsList() {
   const router = useRouter();
+  const locale = useLocale() as "ja" | "en";
   const t = useTranslations("ticCards");
   const tChildren = useTranslations("children");
   const tCommon = useTranslations("common");
@@ -72,6 +74,14 @@ export function TicCardsList() {
   const [editingCard, setEditingCard] = useState<TicCard | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<TicCard | null>(null);
 
+  // Helper to get display label from card
+  const getCardLabel = (card: TicCard): string => {
+    if (card.symptomId) {
+      return getSymptomName(card.symptomId, locale);
+    }
+    return card.customSymptom || card.label || "";
+  };
+
   const handleEdit = (card: TicCard) => {
     setEditingCard(card);
     setFormOpen(true);
@@ -83,7 +93,7 @@ export function TicCardsList() {
       setDeleteConfirm(null);
       toast({
         title: t("toast.deleted"),
-        description: t("toast.deletedDescription", { label: card.label }),
+        description: t("toast.deletedDescription", { label: getCardLabel(card) }),
       });
     } else {
       setDeleteConfirm(card);
@@ -101,7 +111,7 @@ export function TicCardsList() {
       });
       toast({
         title: t("toast.logged"),
-        description: t("toast.loggedDescription", { label: card.label }),
+        description: t("toast.loggedDescription", { label: getCardLabel(card) }),
       });
     } catch (e) {
       toast({
@@ -113,23 +123,30 @@ export function TicCardsList() {
   };
 
   const handleSubmit = async (data: {
-    label: string;
     type: "motor" | "vocal";
+    complexity: "simple" | "complex";
+    symptomId?: string;
+    customSymptom?: string;
     severity: number;
     description?: string;
     isActive?: boolean;
   }) => {
+    // Generate display label for toast
+    const label = data.symptomId
+      ? getSymptomName(data.symptomId, locale)
+      : data.customSymptom || "";
+
     if (editingCard) {
       await updateTicCard(editingCard.cardId, data);
       toast({
         title: t("toast.updated"),
-        description: t("toast.updatedDescription", { label: data.label }),
+        description: t("toast.updatedDescription", { label }),
       });
     } else {
       await createTicCard(data);
       toast({
         title: t("toast.created"),
-        description: t("toast.createdDescription", { label: data.label }),
+        description: t("toast.createdDescription", { label }),
       });
     }
   };
@@ -224,7 +241,7 @@ export function TicCardsList() {
 
       {deleteConfirm && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-destructive text-destructive-foreground px-4 py-2 rounded-md text-sm">
-          {tChildren("deleteConfirm", { name: deleteConfirm.label })}
+          {tChildren("deleteConfirm", { name: getCardLabel(deleteConfirm) })}
         </div>
       )}
 

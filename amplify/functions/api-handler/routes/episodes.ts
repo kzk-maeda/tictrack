@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent } from "aws-lambda";
-import { PutCommand, GetCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, GetCommand, QueryCommand, DeleteCommand, UpdateCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { ulid } from "ulid";
 import type { RouteResult, Episode } from "../types.js";
 import { getUserId } from "../lib/auth.js";
@@ -46,6 +46,17 @@ async function verifyTicCardOwnership(
   if (result.Item.childId !== childId) {
     throw new ForbiddenError("Tic card does not belong to this child");
   }
+}
+
+function normalizeAILabelForResponse(aiLabel: Record<string, unknown>) {
+  return {
+    ...aiLabel,
+    severity: aiLabel.severity ?? aiLabel.suggestedSeverity,
+    suggestedType: aiLabel.suggestedType ?? aiLabel.type,
+    suggestedSeverity: aiLabel.suggestedSeverity ?? aiLabel.severity,
+    suggestedContext: aiLabel.suggestedContext ?? aiLabel.context,
+    confidence: aiLabel.confidence,
+  };
 }
 
 export async function listEpisodes(
@@ -167,4 +178,208 @@ export async function deleteEpisode(
   );
 
   return noContent();
+}
+
+export async function submitEpisodeFeedback(
+  event: APIGatewayProxyEvent,
+  params: Record<string, string>,
+): Promise<RouteResult> {
+  const userId = getUserId(event);
+  const childId = params.childId;
+  const episodeId = params.episodeId;
+  const body = parseJsonBody(event.body);
+
+  await verifyChildOwnership(childId, userId);
+
+  // Validate feedback type
+  const feedbackType = body.feedbackType as string;
+  const validFeedbackTypes = ["useful", "not_useful", "incorrect", "needs_edit"];
+  if (!validFeedbackTypes.includes(feedbackType)) {
+    throw new ForbiddenError(`feedbackType must be one of: ${validFeedbackTypes.join(", ")}`);
+  }
+
+  // Get the episode to verify ownership
+  const getResult = await docClient.send(
+    new GetCommand({
+      TableName: TableNames.EPISODES,
+      Key: { episodeId },
+    }),
+  );
+
+  if (!getResult.Item) {
+    throw new NotFoundError("Episode not found");
+  }
+
+  if (getResult.Item.childId !== childId) {
+    throw new ForbiddenError("Episode does not belong to this child");
+  }
+
+  // Update episode with feedback
+  const now = new Date().toISOString();
+  await docClient.send(
+    new UpdateCommand({
+      TableName: TableNames.EPISODES,
+      Key: { episodeId },
+      UpdateExpression:
+        "SET feedbackType = :feedbackType, feedbackDetails = :feedbackDetails, updatedAt = :updatedAt",
+      ExpressionAttributeValues: {
+        ":feedbackType": feedbackType,
+        ":feedbackDetails": body.feedbackDetails || null,
+        ":updatedAt": now,
+      },
+    }),
+  );
+
+  return ok({ message: "Feedback submitted successfully" });
+}
+
+export async function getEpisodeAILabel(
+  event: APIGatewayProxyEvent,
+  params: Record<string, string>,
+): Promise<RouteResult> {
+  const userId = getUserId(event);
+  const childId = params.childId;
+  const episodeId = params.episodeId;
+
+  await verifyChildOwnership(childId, userId);
+
+  // Get the episode to verify ownership
+  const episodeResult = await docClient.send(
+    new GetCommand({
+      TableName: TableNames.EPISODES,
+      Key: { episodeId },
+    }),
+  );
+
+  if (!episodeResult.Item) {
+    throw new NotFoundError("Episode not found");
+  }
+
+  if (episodeResult.Item.childId !== childId) {
+    throw new ForbiddenError("Episode does not belong to this child");
+  }
+
+  // Query AI labels for this episode (get latest version)
+  const aiLabelsResult = await docClient.send(
+    new QueryCommand({
+      TableName: TableNames.AI_LABELS,
+      KeyConditionExpression: "episodeId = :episodeId",
+      ExpressionAttributeValues: {
+        ":episodeId": episodeId,
+      },
+      ScanIndexForward: false, // Descending order (latest version first)
+      Limit: 1,
+    }),
+  );
+
+  if (!aiLabelsResult.Items || aiLabelsResult.Items.length === 0) {
+    throw new NotFoundError("AI label not found");
+  }
+
+  const aiLabel = aiLabelsResult.Items[0];
+
+  // Parse rawOutput if it's a JSON string
+  let parsedOutput = aiLabel.rawOutput;
+  if (typeof aiLabel.rawOutput === "string") {
+    try {
+      parsedOutput = JSON.parse(aiLabel.rawOutput);
+    } catch {
+      // Keep as string if not valid JSON
+    }
+  }
+
+  return ok(normalizeAILabelForResponse({
+    ...aiLabel,
+    rawOutput: parsedOutput,
+  }));
+}
+
+export async function getAnalysisStatus(
+  event: APIGatewayProxyEvent,
+  params: Record<string, string>,
+): Promise<RouteResult> {
+  const userId = getUserId(event);
+  const childId = params.childId;
+  const episodeId = params.episodeId;
+
+  await verifyChildOwnership(childId, userId);
+
+  // Get the episode
+  const episodeResult = await docClient.send(
+    new GetCommand({
+      TableName: TableNames.EPISODES,
+      Key: { episodeId },
+    }),
+  );
+
+  if (!episodeResult.Item) {
+    throw new NotFoundError("Episode not found");
+  }
+
+  if (episodeResult.Item.childId !== childId) {
+    throw new ForbiddenError("Episode does not belong to this child");
+  }
+
+  const episode = episodeResult.Item;
+  const response: Record<string, unknown> = {
+    episodeId,
+    status: episode.labelStatus || "pending",
+  };
+
+  // Add executionArn if available
+  if (episode.executionArn) {
+    response.executionArn = episode.executionArn;
+  }
+
+  // Add timestamps
+  if (episode.updatedAt) {
+    response.updatedAt = episode.updatedAt;
+  }
+
+  // If analysis is complete, fetch the AI label
+  if (episode.labelStatus === "ai_suggested") {
+    const aiLabelsResult = await docClient.send(
+      new QueryCommand({
+        TableName: TableNames.AI_LABELS,
+        KeyConditionExpression: "episodeId = :episodeId",
+        ExpressionAttributeValues: {
+          ":episodeId": episodeId,
+        },
+        ScanIndexForward: false, // Descending order (latest version first)
+        Limit: 1,
+      }),
+    );
+
+    if (aiLabelsResult.Items && aiLabelsResult.Items.length > 0) {
+      const aiLabel = aiLabelsResult.Items[0];
+
+      // Parse rawOutput if it's a JSON string
+      let parsedOutput = aiLabel.rawOutput;
+      if (typeof aiLabel.rawOutput === "string") {
+        try {
+          parsedOutput = JSON.parse(aiLabel.rawOutput);
+        } catch {
+          // Keep as string if not valid JSON
+        }
+      }
+
+      // Parse observations if it's a JSON string
+      let parsedObservations = aiLabel.observations;
+      if (typeof aiLabel.observations === "string") {
+        try {
+          parsedObservations = JSON.parse(aiLabel.observations);
+        } catch {
+          // Keep as string if not valid JSON
+        }
+      }
+
+      response.aiLabel = normalizeAILabelForResponse({
+        ...aiLabel,
+        rawOutput: parsedOutput,
+        observations: parsedObservations,
+      });
+    }
+  }
+
+  return ok(response);
 }

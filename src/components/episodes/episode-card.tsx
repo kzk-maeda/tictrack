@@ -10,15 +10,19 @@ import { formatTime } from "@/lib/date-utils";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useEpisodes } from "@/hooks/use-episodes";
-import type { Episode, TicCard } from "@/lib/types";
+import type { Episode, TicCard, AILabel } from "@/lib/types";
+import { AILabelSection } from "./ai-label-section";
+import { getSymptomName } from "@/lib/tic-symptoms";
 
 interface EpisodeCardProps {
   episode: Episode;
   ticCard?: TicCard;
+  aiLabel?: AILabel;
   onDelete?: () => void;
+  onUpdate?: () => void;
 }
 
-export function EpisodeCard({ episode, ticCard, onDelete }: EpisodeCardProps) {
+export function EpisodeCard({ episode, ticCard, aiLabel, onDelete, onUpdate }: EpisodeCardProps) {
   const locale = useLocale();
   const t = useTranslations("timeline");
   const tCommon = useTranslations("common");
@@ -102,7 +106,11 @@ export function EpisodeCard({ episode, ticCard, onDelete }: EpisodeCardProps) {
             </div>
             {ticCard ? (
               <p className="text-sm">
-                <span className="font-semibold">{ticCard.label}</span>
+                <span className="font-semibold">
+                  {ticCard.symptomId
+                    ? getSymptomName(ticCard.symptomId, locale as "ja" | "en")
+                    : ticCard.customSymptom || ticCard.label}
+                </span>
                 {episode.context && episode.context !== "unknown" && (
                   <span className="text-muted-foreground ml-2">
                     - {contextLabel}
@@ -154,6 +162,14 @@ export function EpisodeCard({ episode, ticCard, onDelete }: EpisodeCardProps) {
             )}
           </div>
         )}
+
+        {/* AI Label Section */}
+        <AILabelSection
+          episode={episode}
+          aiLabel={aiLabel}
+          onAnalysisComplete={onUpdate}
+          onFeedbackSubmit={onUpdate}
+        />
       </CardContent>
     </Card>
   );

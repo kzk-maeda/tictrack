@@ -12,9 +12,12 @@ function cfn(construct: any): { addPropertyOverride(path: string, value: unknown
 import { auth } from "./auth/resource";
 import { storage } from "./storage/resource";
 import { apiHandler } from "./functions/api-handler/resource";
+import { agentcoreProxy } from "./functions/agentcore-proxy/resource";
 import { DatabaseConstruct } from "./custom/database/index";
 import { FoundationConstruct } from "./custom/foundation/index";
 import { ApiConstruct } from "./custom/api/index";
+import { AgentCoreConstruct } from "./custom/agentcore/index";
+import { OrchestrationConstruct } from "./custom/orchestration/index";
 
 // =====================================================================
 // Step 0-1: Currently active
@@ -24,6 +27,7 @@ const backend = defineBackend({
   auth,
   storage,
   apiHandler,
+  agentcoreProxy,
 });
 
 // =====================================================================
@@ -103,14 +107,56 @@ const foundationStack = backend.createStack("foundation-stack");
 const foundation = new FoundationConstruct(foundationStack, "Foundation");
 
 // =====================================================================
-// Custom Stack — Step 1: API Gateway
+// Custom Stack — Step 4: AgentCore Runtime
 // =====================================================================
 
-const apiStack = backend.createStack("api-stack");
-const api = new ApiConstruct(apiStack, "Api", {
+const agentCoreStack = backend.createStack("agentcore-stack");
+const agentCore = new AgentCoreConstruct(agentCoreStack, "AgentCore", {
+  agentsRepository: foundation.agentsRepository,
+  imageTag: "latest",
+  environmentVariables: {
+    EPISODES_TABLE: database.episodesTable.tableName,
+    AI_LABELS_TABLE: database.aiLabelsTable.tableName,
+    CHILDREN_TABLE: database.childrenTable.tableName,
+    S3_MEDIA_BUCKET: backend.storage.resources.bucket.bucketName,
+    CODE_VERSION: "v9-fix-result-extraction", // Fix result extraction from event["result"]
+  },
+});
+
+// Grant agent permissions to access DynamoDB tables
+agentCore.grantDynamoDBAccess([
+  database.episodesTable.tableArn,
+  database.aiLabelsTable.tableArn,
+  database.childrenTable.tableArn,
+]);
+
+// Grant agent permissions to access S3 buckets
+agentCore.grantS3Access([
+  backend.storage.resources.bucket.bucketArn,
+  foundation.knowledgeBucket.bucketArn,
+]);
+
+// =====================================================================
+// Custom Stack — Step 4: Backend Integration (Orchestration + API)
+// =====================================================================
+
+const backendIntegrationStack = backend.createStack("backend-integration-stack");
+
+// Create orchestration (Step Functions State Machine)
+const orchestration = new OrchestrationConstruct(backendIntegrationStack, "Orchestration", {
+  invokeAgentCoreLambda: backend.agentcoreProxy.resources.lambda,
+  episodesTable: database.episodesTable,
+  aiLabelsTable: database.aiLabelsTable,
+});
+
+// Create API Gateway with all integrations
+const api = new ApiConstruct(backendIntegrationStack, "Api", {
   userPool: backend.auth.resources.userPool,
   apiHandlerFn: backend.apiHandler.resources.lambda,
-  corsOrigin: "*", // Override with Amplify domain after first deploy
+  corsOrigin: "*",
+  stateMachineArn: orchestration.stateMachine.stateMachineArn,
+  episodesTable: database.episodesTable,
+  region: Stack.of(backendIntegrationStack).region,
 });
 
 // =====================================================================
@@ -195,6 +241,60 @@ backend.apiHandler.resources.lambda.addToRolePolicy(
 );
 
 // =====================================================================
+// Lambda environment variables — agentcore-proxy
+// =====================================================================
+
+backend.agentcoreProxy.addEnvironment(
+  "AGENTCORE_RUNTIME_ARN",
+  agentCore.runtimeArn
+);
+backend.agentcoreProxy.addEnvironment(
+  "EPISODES_TABLE",
+  database.episodesTable.tableName
+);
+backend.agentcoreProxy.addEnvironment(
+  "AI_LABELS_TABLE",
+  database.aiLabelsTable.tableName
+);
+backend.agentcoreProxy.addEnvironment(
+  "REGION",
+  Stack.of(backend.agentcoreProxy.resources.lambda).region
+);
+
+// =====================================================================
+// IAM grants — agentcore-proxy
+// =====================================================================
+
+// Bedrock AgentCore: Invoke Runtime
+backend.agentcoreProxy.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    actions: ["bedrock-agentcore:InvokeAgentRuntime"],
+    resources: [agentCore.runtimeArn, `${agentCore.runtimeArn}/*`],
+  })
+);
+
+// DynamoDB: Read episodes, write AI labels
+backend.agentcoreProxy.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    actions: ["dynamodb:GetItem", "dynamodb:UpdateItem", "dynamodb:PutItem"],
+    resources: [
+      database.episodesTable.tableArn,
+      database.aiLabelsTable.tableArn,
+    ],
+  })
+);
+
+// =====================================================================
+// Lambda environment variables — start-analysis
+// =====================================================================
+// Removed: startAnalysis is now created directly in api-stack
+
+// =====================================================================
+// IAM grants — start-analysis
+// =====================================================================
+// Removed: startAnalysis IAM grants are now handled in ApiConstruct
+
+// =====================================================================
 // Outputs
 // =====================================================================
 
@@ -206,34 +306,47 @@ backend.addOutput({
     },
     KnowledgeBucket: foundation.knowledgeBucket.bucketName,
     AgentsECR: foundation.agentsRepository.repositoryUri,
+    AgentCore: {
+      runtimeArn: agentCore.runtimeArn,
+      runtimeId: agentCore.runtimeId,
+      runtimeEndpoint: agentCore.runtimeEndpoint,
+      executionRoleArn: agentCore.agentExecutionRole.roleArn,
+      logGroupName: agentCore.logGroup.logGroupName,
+    },
   },
 });
 
 // =====================================================================
-// Step 4: AI Labeling (uncomment when ready)
+// Step 4: AI Labeling — AgentCore Runtime (ACTIVE)
 // =====================================================================
+//
+// ✅ AgentCore Runtime deployed (see agentcore-stack above)
+//
+// TODO: Lambda Proxy (uncomment when ready)
 //
 // import { aiProxy } from './functions/ai-proxy/resource';
 //
 // Add aiProxy to defineBackend({...})
 //
-// const aiStack = backend.createStack('ai-stack');
-// const ai = new AiConstruct(aiStack, 'Ai', { ... });
-//
 // backend.aiProxy.addEnvironment('EPISODES_TABLE', database.episodesTable.tableName);
 // backend.aiProxy.addEnvironment('AI_LABELS_TABLE', database.aiLabelsTable.tableName);
-// backend.aiProxy.addEnvironment('AGENTCORE_ENDPOINT', 'PLACEHOLDER');
-// backend.aiProxy.addEnvironment('REGION', Stack.of(...).region);
+// backend.aiProxy.addEnvironment('AGENTCORE_RUNTIME_ARN', agentCore.runtimeArn);
+// backend.aiProxy.addEnvironment('REGION', Stack.of(agentCoreStack).region);
 //
 // backend.aiProxy.resources.lambda.addToRolePolicy(new PolicyStatement({
-//   actions: ['dynamodb:UpdateItem', 'dynamodb:GetItem'],
+//   actions: [
+//     'dynamodb:UpdateItem',
+//     'dynamodb:GetItem',
+//     'bedrock:InvokeAgent', // To call AgentCore
+//   ],
 //   resources: [
 //     database.episodesTable.tableArn,
 //     database.aiLabelsTable.tableArn,
+//     agentCore.agentRuntimeArn,
 //   ],
 // }));
 //
-// Add /analyze/{proxy+} route to ApiConstruct (or extend it)
+// Add /analyze/{proxy+} route to ApiConstruct
 
 // =====================================================================
 // Step 6: Weekly Reports (uncomment when ready)
