@@ -17,7 +17,8 @@ def integrate_results(
     audio_transcription: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
-    Integrate video analysis and audio transcription results into a unified label.
+    Integrate video analysis and audio transcription results into a unified label
+    using 2-axis classification (type × complexity).
 
     Args:
         video_analysis: Results from analyze_video tool
@@ -26,19 +27,33 @@ def integrate_results(
     Returns:
         Integrated label:
         {
-            "type": "motor|vocal|both",
-            "severity": 1-3,
-            "context": "description",
-            "observations": [...],
-            "confidence": 0.0-1.0
+            "primaryTic": {
+                "type": "motor|vocal",
+                "complexity": "simple|complex",
+                "symptomId": "motor_simple_eye_blinking" or null,
+                "customSymptom": "description" or null,
+                "confidence": 0.0-1.0
+            },
+            "secondaryTics": [...],  # Optional
+            "severity": 1-5,
+            "observations": [
+                {
+                    "timestamp": 1.5,
+                    "description": "...",
+                    "intensity": "low|medium|high"
+                }
+            ]
         }
     """
     try:
-        logger.info("Integrating video and audio analysis results")
+        logger.info("Integrating video and audio analysis results (2-axis classification)")
 
         # Extract video analysis results
         video_type = video_analysis.get("suggested_type", "motor")
-        video_severity = video_analysis.get("suggested_severity", 2)
+        video_complexity = video_analysis.get("suggested_complexity", "simple")
+        video_symptom_id = video_analysis.get("symptom_id")
+        video_custom_symptom = video_analysis.get("custom_symptom")
+        video_severity = video_analysis.get("suggested_severity", 3)
         video_observations = video_analysis.get("observations", [])
         video_confidence = video_analysis.get("confidence", 0.7)
 
@@ -46,41 +61,48 @@ def integrate_results(
         has_vocal_tics = audio_transcription.get("vocal_tics_detected", False)
         transcript = audio_transcription.get("transcript", "")
         detected_sounds = audio_transcription.get("detected_sounds", [])
+        audio_symptom_id = audio_transcription.get("symptom_id")
 
-        # Determine final type
-        final_type = _determine_type(video_type, has_vocal_tics)
+        # Determine primary tic
+        primary_tic = {
+            "type": video_type if not has_vocal_tics else "vocal",
+            "complexity": video_complexity,
+            "symptomId": video_symptom_id or audio_symptom_id,
+            "customSymptom": video_custom_symptom if not (video_symptom_id or audio_symptom_id) else None,
+            "confidence": round(video_confidence, 2)
+        }
 
-        # Determine final severity
-        final_severity = _determine_severity(
+        # Determine secondary tics (if both motor and vocal detected)
+        secondary_tics = []
+        if video_type == "motor" and has_vocal_tics:
+            secondary_tics.append({
+                "type": "vocal",
+                "complexity": "simple",  # Most audio tics are simple
+                "symptomId": audio_symptom_id,
+                "customSymptom": None if audio_symptom_id else ", ".join(detected_sounds),
+                "confidence": 0.6
+            })
+
+        # Determine final severity (1-5 scale)
+        final_severity = _determine_severity_v2(
             video_severity,
             len(video_observations),
-            has_vocal_tics
+            has_vocal_tics,
+            bool(secondary_tics)
         )
 
-        # Generate context description
-        context = _generate_context(
-            video_observations,
-            transcript,
-            detected_sounds
-        )
-
-        # Calculate overall confidence
-        confidence = _calculate_confidence(
-            video_confidence,
-            len(video_observations),
-            bool(transcript)
-        )
+        # Format observations with timestamps and intensity
+        formatted_observations = _format_observations(video_observations)
 
         integrated_label = {
-            "type": final_type,
+            "primaryTic": primary_tic,
+            "secondaryTics": secondary_tics if secondary_tics else None,
             "severity": final_severity,
-            "context": context,
-            "observations": video_observations,
-            "transcript": transcript if has_vocal_tics else "",
-            "confidence": round(confidence, 2),
+            "observations": formatted_observations,
             "metadata": {
                 "video_analysis": {
                     "type": video_type,
+                    "complexity": video_complexity,
                     "severity": video_severity,
                     "observation_count": len(video_observations)
                 },
@@ -92,7 +114,7 @@ def integrate_results(
             }
         }
 
-        logger.info(f"Integration complete: type={final_type}, severity={final_severity}")
+        logger.info(f"Integration complete: type={primary_tic['type']}, complexity={primary_tic['complexity']}, severity={final_severity}")
         return integrated_label
 
     except Exception as e:
@@ -118,24 +140,40 @@ def _determine_severity(
     has_vocal_tics: bool
 ) -> int:
     """
+    DEPRECATED: Use _determine_severity_v2 instead
+    """
+    return _determine_severity_v2(video_severity, observation_count, has_vocal_tics, False)
+
+
+def _determine_severity_v2(
+    video_severity: int,
+    observation_count: int,
+    has_vocal_tics: bool,
+    has_secondary_tics: bool
+) -> int:
+    """
     Determine final severity based on multiple factors
 
-    Severity scale:
-    1 = Mild: Subtle, infrequent, minimal impact
-    2 = Moderate: Noticeable, somewhat frequent
-    3 = Severe: Intense, very frequent, significant impact
+    Severity scale (1-5):
+    1 = Very Mild: Subtle, barely noticeable, rare occurrences
+    2 = Mild: Noticeable but infrequent, minimal disruption
+    3 = Moderate: Clearly visible/audible, moderate frequency
+    4 = Moderately Severe: Frequent, noticeable disruption
+    5 = Severe: Very frequent, intense, significant impact
     """
     severity = video_severity
 
-    # Increase severity if multiple observations
+    # Increase severity if multiple observations (frequency indicator)
     if observation_count >= 5:
-        severity = min(3, severity + 1)
+        severity = min(5, severity + 1)
+    if observation_count >= 8:
+        severity = min(5, severity + 1)
 
-    # Increase severity if both motor and vocal
-    if has_vocal_tics and video_severity >= 1:
-        severity = min(3, severity + 1)
+    # Increase severity if multiple tic types detected
+    if has_secondary_tics:
+        severity = min(5, severity + 1)
 
-    return max(1, min(3, severity))
+    return max(1, min(5, severity))
 
 
 def _generate_context(
@@ -197,3 +235,39 @@ def _calculate_confidence(
         confidence = min(1.0, confidence + 0.05)
 
     return confidence
+
+
+def _format_observations(observations: list) -> list:
+    """
+    Format observations to include timestamp and intensity
+
+    Args:
+        observations: Raw observations from video analysis
+
+    Returns:
+        Formatted observations with timestamp (seconds) and intensity
+    """
+    formatted = []
+    for i, obs in enumerate(observations):
+        # Extract or generate timestamp (in seconds)
+        timestamp = obs.get("timestamp")
+        if timestamp is None:
+            # Estimate based on observation index (assume evenly distributed)
+            # For a typical 10-second video
+            timestamp = round((i + 1) * 2.0, 1)
+
+        # Determine intensity from description or severity
+        description = obs.get("description", "")
+        intensity = "medium"  # Default
+        if any(word in description.lower() for word in ["subtle", "slight", "mild", "small"]):
+            intensity = "low"
+        elif any(word in description.lower() for word in ["strong", "intense", "severe", "pronounced", "marked"]):
+            intensity = "high"
+
+        formatted.append({
+            "timestamp": timestamp,
+            "description": description,
+            "intensity": intensity
+        })
+
+    return formatted

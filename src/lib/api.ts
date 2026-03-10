@@ -98,13 +98,13 @@ export interface AILabelResponse {
   episodeId: string;
   version: number;
   modelId: string;
-  rawOutput: unknown;
+  rawOutput: string;
   suggestedType: "motor" | "vocal" | "both";
   suggestedSeverity: number;
   suggestedContext?: string;
   confidence?: number;
   observations?: Array<{
-    timestamp?: string;
+    timestamp?: number;
     description: string;
     intensity?: "low" | "medium" | "high";
   }>;

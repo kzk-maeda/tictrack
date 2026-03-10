@@ -48,6 +48,17 @@ async function verifyTicCardOwnership(
   }
 }
 
+function normalizeAILabelForResponse(aiLabel: Record<string, unknown>) {
+  return {
+    ...aiLabel,
+    severity: aiLabel.severity ?? aiLabel.suggestedSeverity,
+    suggestedType: aiLabel.suggestedType ?? aiLabel.type,
+    suggestedSeverity: aiLabel.suggestedSeverity ?? aiLabel.severity,
+    suggestedContext: aiLabel.suggestedContext ?? aiLabel.context,
+    confidence: aiLabel.confidence,
+  };
+}
+
 export async function listEpisodes(
   event: APIGatewayProxyEvent,
   params: Record<string, string>,
@@ -277,10 +288,10 @@ export async function getEpisodeAILabel(
     }
   }
 
-  return ok({
+  return ok(normalizeAILabelForResponse({
     ...aiLabel,
     rawOutput: parsedOutput,
-  });
+  }));
 }
 
 export async function getAnalysisStatus(
@@ -362,11 +373,11 @@ export async function getAnalysisStatus(
         }
       }
 
-      response.aiLabel = {
+      response.aiLabel = normalizeAILabelForResponse({
         ...aiLabel,
         rawOutput: parsedOutput,
         observations: parsedObservations,
-      };
+      });
     }
   }
 

@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEpisodes } from "@/hooks/use-episodes";
 import type { Episode, TicCard, AILabel } from "@/lib/types";
 import { AILabelSection } from "./ai-label-section";
+import { getSymptomName } from "@/lib/tic-symptoms";
 
 interface EpisodeCardProps {
   episode: Episode;
@@ -105,7 +106,11 @@ export function EpisodeCard({ episode, ticCard, aiLabel, onDelete, onUpdate }: E
             </div>
             {ticCard ? (
               <p className="text-sm">
-                <span className="font-semibold">{ticCard.label}</span>
+                <span className="font-semibold">
+                  {ticCard.symptomId
+                    ? getSymptomName(ticCard.symptomId, locale as "ja" | "en")
+                    : ticCard.customSymptom || ticCard.label}
+                </span>
                 {episode.context && episode.context !== "unknown" && (
                   <span className="text-muted-foreground ml-2">
                     - {contextLabel}

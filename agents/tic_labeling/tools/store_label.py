@@ -61,7 +61,8 @@ def store_label(
     Returns:
         Storage result:
         {
-            "ai_label_id": "...",
+            "episode_id": "...",
+            "version": 1,
             "episode_updated": true/false,
             "status": "completed"
         }
@@ -78,21 +79,28 @@ def store_label(
         ai_labels_table = dynamodb.Table(ai_labels_table_name)
         episodes_table = dynamodb.Table(episodes_table_name)
 
-        # Generate AI label ID
-        ai_label_id = f"{episode_id}-v1"
+        # Prepare label item for AILabels table (new 2-axis classification structure)
+        primary_tic = label_data.get("primaryTic", {})
 
-        # Prepare label item for AILabels table
         label_item = {
-            "labelId": ai_label_id,
             "episodeId": episode_id,
-            "childId": child_id,
             "version": 1,
-            "type": label_data.get("type", "motor"),
-            "severity": label_data.get("severity", 2),
-            "context": label_data.get("context", ""),
+            "childId": child_id,
+            "modelId": "nova-pro-v1",  # Model used for analysis
+            "rawOutput": str(label_data),  # Store full result as string
+
+            # New 2-axis classification structure
+            "primaryTic": primary_tic,
+            "secondaryTics": label_data.get("secondaryTics"),
+            "severity": label_data.get("severity", 3),
             "observations": label_data.get("observations", []),
-            "transcript": label_data.get("transcript", ""),
-            "confidence": label_data.get("confidence", 0.7),
+
+            # Legacy fields for backward compatibility
+            "suggestedType": primary_tic.get("type", "motor"),
+            "suggestedSeverity": label_data.get("severity", 3),
+            "confidence": primary_tic.get("confidence", 0.7),
+
+            # Metadata
             "metadata": label_data.get("metadata", {}),
             "guardrailPassed": guardrail_result.get("guardrail_passed", False),
             "guardrailAction": guardrail_result.get("action_taken", "NONE"),
@@ -104,16 +112,16 @@ def store_label(
 
         # Save to AILabels table
         ai_labels_table.put_item(Item=label_item)
-        logger.info(f"Saved AI label: {ai_label_id}")
+        logger.info(f"Saved AI label: {episode_id} v1")
 
-        # Update Episodes table
+        # Update Episodes table with new structure
         update_values = {
             ":status": "ai_suggested",
             ":label": {
-                "type": label_data.get("type"),
+                "primaryTic": primary_tic,
+                "secondaryTics": label_data.get("secondaryTics"),
                 "severity": label_data.get("severity"),
-                "context": label_data.get("context"),
-                "confidence": label_data.get("confidence"),
+                "observations": label_data.get("observations", [])[:3],  # Store first 3 observations
             },
             ":updatedAt": datetime.now(timezone.utc).isoformat(),
         }
@@ -132,7 +140,8 @@ def store_label(
         logger.info(f"Updated episode {episode_id} with AI label")
 
         return {
-            "ai_label_id": ai_label_id,
+            "episode_id": episode_id,
+            "version": 1,
             "episode_updated": True,
             "status": "completed",
             "label": label_item

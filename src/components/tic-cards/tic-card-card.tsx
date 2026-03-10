@@ -1,11 +1,12 @@
 "use client";
 
 import { Pencil, Trash2, Zap } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TicCard } from "@/lib/types";
+import { getSymptomName } from "@/lib/tic-symptoms";
 
 interface TicCardCardProps {
   card: TicCard;
@@ -22,15 +23,22 @@ export function TicCardCard({
 }: TicCardCardProps) {
   const t = useTranslations("ticCards");
   const tForm = useTranslations("ticCards.form");
+  const locale = useLocale() as "ja" | "en";
+
+  // Get display label: symptom name or custom symptom or legacy label
+  const displayLabel = card.symptomId
+    ? getSymptomName(card.symptomId, locale)
+    : card.customSymptom || card.label || "";
 
   const typeLabel = card.type === "motor" ? tForm("typeMotor") : tForm("typeVocal");
-  const severityLabel = [tForm("severityMild"), tForm("severityModerate"), tForm("severitySevere")][card.severity - 1] || "";
+  const complexityLabel = card.complexity === "simple" ? tForm("complexitySimple") : tForm("complexityComplex");
+  const severityLabel = tForm(`severity${card.severity}` as any);
 
   return (
     <Card className={card.isActive ? "" : "opacity-50"}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-2">
-          <CardTitle className="text-lg">{card.label}</CardTitle>
+          <CardTitle className="text-lg">{displayLabel}</CardTitle>
           {!card.isActive && (
             <Badge variant="outline" className="text-xs">
               {t("inactive")}
@@ -57,8 +65,9 @@ export function TicCardCard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex gap-2 mb-2">
+        <div className="flex flex-wrap gap-2 mb-2">
           <Badge variant="secondary">{typeLabel}</Badge>
+          <Badge variant="outline">{complexityLabel}</Badge>
           <Badge variant="outline">{severityLabel}</Badge>
         </div>
         {card.description && (

@@ -71,31 +71,8 @@ export class OrchestrationConstruct extends Construct {
             },
           ],
           ResultPath: "$.agentResult",
-          Next: "StoreAILabel",
-        },
-        StoreAILabel: {
-          Type: "Task",
-          Resource: "arn:aws:states:::dynamodb:putItem",
-          Parameters: {
-            TableName: props.aiLabelsTable.tableName,
-            Item: {
-              "episodeId": { "S.$": "$.episodeId" },
-              "version": { "N": "1" },
-              "modelId": { "S": "amazon.nova-pro-v1:0" },
-              "rawOutput": { "S.$": "States.JsonToString($.agentResult.Payload)" },
-              "createdAt": { "S.$": "$$.State.EnteredTime" },
-            },
-          },
-          Comment: "Store complete agentResult.Payload object as JSON in rawOutput field",
-          Catch: [
-            {
-              ErrorEquals: ["States.ALL"],
-              ResultPath: "$.error",
-              Next: "MarkAsFailed",
-            },
-          ],
-          ResultPath: "$.storeResult",
           Next: "UpdateEpisode",
+          Comment: "Agent's store_label tool has already saved to AILabels and Episodes tables",
         },
         UpdateEpisode: {
           Type: "Task",
@@ -110,6 +87,7 @@ export class OrchestrationConstruct extends Construct {
               ":status": { "S": "ai_suggested" },
               ":updatedAt": { "S.$": "$$.State.EnteredTime" },
             },
+            // Note: originalAILabel is already updated by store_label tool in the agent
           },
           Catch: [
             {

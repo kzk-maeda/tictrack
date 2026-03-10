@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Brain, ThumbsUp, ThumbsDown, AlertCircle, Edit, Loader2, RefreshCw } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { triggerAIAnalysis, submitAILabelFeedback, getAILabel, getAnalysisStatus } from "@/lib/api";
 import type { Episode, AILabel } from "@/lib/types";
+import { getSymptomName } from "@/lib/tic-symptoms";
 import outputs from "../../../amplify_outputs.json";
 
 interface AILabelSectionProps {
@@ -27,6 +28,7 @@ export function AILabelSection({
 }: AILabelSectionProps) {
   const t = useTranslations("aiLabel");
   const tCommon = useTranslations("common");
+  const locale = useLocale() as "ja" | "en";
   const { toast } = useToast();
   const [aiLabel, setAILabel] = useState<AILabel | undefined>(initialAILabel);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -43,6 +45,17 @@ export function AILabelSection({
   useEffect(() => {
     setAILabel(initialAILabel);
   }, [initialAILabel]);
+
+  // Update analyzing state based on episode status
+  useEffect(() => {
+    if (episode.labelStatus === "analyzing") {
+      setIsAnalyzing(true);
+      // Start polling if not already polling
+      if (!pollIntervalRef.current) {
+        startPolling();
+      }
+    }
+  }, [episode.labelStatus]);
 
   // Load AI label if episode has ai_suggested status but no label provided
   useEffect(() => {
@@ -164,19 +177,19 @@ export function AILabelSection({
         console.error("Polling error:", error);
         // Continue polling on error
       }
-    }, 2000); // Poll every 2 seconds
+    }, 3000); // Poll every 3 seconds
 
-    // Timeout after 60 seconds (30 polls)
+    // Timeout after 5 minutes (100 polls) - AI analysis can take time
     pollTimeoutRef.current = setTimeout(() => {
       stopPolling();
-      setIsAnalyzing(false);
+      // Don't set isAnalyzing to false - keep showing analyzing state
+      // User can refresh the page to check status
 
       toast({
-        variant: "destructive",
-        title: t("analysisTimeout"),
-        description: t("analysisTimeoutDescription"),
+        title: t("analysisInProgress"),
+        description: t("analysisInProgressDescription"),
       });
-    }, 60000);
+    }, 300000); // 5 minutes
   };
 
   // Cleanup on unmount
@@ -283,17 +296,44 @@ export function AILabelSection({
   // AI label exists - show analysis results
   if (!aiLabel) return null;
 
-  const severityColor = aiLabel.suggestedSeverity === 1
-    ? "bg-green-100 text-green-800"
-    : aiLabel.suggestedSeverity === 2
-    ? "bg-yellow-100 text-yellow-800"
-    : "bg-red-100 text-red-800";
+  // Debug logging
+  console.log("=== AI Label Debug ===");
+  console.log("Full aiLabel:", JSON.stringify(aiLabel, null, 2));
+  console.log("primaryTic:", aiLabel.primaryTic);
+  console.log("severity:", aiLabel.severity);
+  console.log("suggestedType:", aiLabel.suggestedType);
 
-  const typeLabel = aiLabel.suggestedType === "motor"
-    ? t("typeMotor")
-    : aiLabel.suggestedType === "vocal"
-    ? t("typeVocal")
-    : t("typeBoth");
+  // Use new structure (primaryTic) or fall back to legacy fields
+  const primaryTic = aiLabel.primaryTic;
+  const severity = aiLabel.severity || aiLabel.suggestedSeverity || 3;
+
+  // Severity color (1-5 scale)
+  const severityColor = severity <= 2
+    ? "bg-green-100 text-green-800"
+    : severity === 3
+    ? "bg-yellow-100 text-yellow-800"
+    : "bg-orange-100 text-orange-800";
+
+  // Type label
+  const typeLabel = primaryTic
+    ? (primaryTic.type === "motor" ? t("typeMotor") : t("typeVocal"))
+    : (aiLabel.suggestedType === "motor"
+      ? t("typeMotor")
+      : aiLabel.suggestedType === "vocal"
+      ? t("typeVocal")
+      : t("typeBoth"));
+
+  // Complexity label
+  const complexityLabel = primaryTic
+    ? (primaryTic.complexity === "simple" ? t("complexitySimple") : t("complexityComplex"))
+    : null;
+
+  // Symptom name
+  const symptomLabel = primaryTic
+    ? (primaryTic.symptomId
+        ? getSymptomName(primaryTic.symptomId, locale)
+        : primaryTic.customSymptom)
+    : null;
 
   return (
     <Card className="mt-3">
@@ -326,24 +366,46 @@ export function AILabelSection({
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Type and Severity */}
-        <div className="flex items-center gap-2">
+        {/* Symptom Name (Primary) */}
+        {symptomLabel && (
+          <div className="text-base font-semibold">
+            {symptomLabel}
+          </div>
+        )}
+
+        {/* Type, Complexity, and Severity */}
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">{typeLabel}</Badge>
+          {complexityLabel && (
+            <Badge variant="outline">{complexityLabel}</Badge>
+          )}
           <Badge className={severityColor}>
-            {t("severity")} {aiLabel.suggestedSeverity}/3
+            {t("severity")} {severity}/5
           </Badge>
-          {aiLabel.confidence && (
+          {(primaryTic?.confidence || aiLabel.confidence) && (
             <Badge variant="secondary">
-              {t("confidence")} {Math.round(aiLabel.confidence * 100)}%
+              {t("confidence")} {Math.round((primaryTic?.confidence || aiLabel.confidence || 0) * 100)}%
             </Badge>
           )}
         </div>
 
-        {/* Context */}
-        {aiLabel.suggestedContext && (
-          <p className="text-sm text-muted-foreground">
-            <strong>{t("context")}:</strong> {aiLabel.suggestedContext}
-          </p>
+        {/* Secondary Tics */}
+        {aiLabel.secondaryTics && aiLabel.secondaryTics.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-sm font-semibold">{t("secondaryTics")}:</p>
+            <div className="flex flex-wrap gap-2">
+              {aiLabel.secondaryTics.map((tic, idx) => {
+                const secondarySymptom = tic.symptomId
+                  ? getSymptomName(tic.symptomId, locale)
+                  : tic.customSymptom;
+                return (
+                  <Badge key={idx} variant="secondary" className="text-xs">
+                    {secondarySymptom || `${tic.type} (${tic.complexity})`}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
         )}
 
         {/* Observations */}
@@ -353,7 +415,9 @@ export function AILabelSection({
             <ul className="space-y-1">
               {aiLabel.observations.map((obs, idx) => (
                 <li key={idx} className="text-sm text-muted-foreground">
-                  {obs.timestamp && <span className="font-mono">{obs.timestamp}</span>}
+                  {obs.timestamp && (
+                    <span className="font-mono">{typeof obs.timestamp === 'number' ? `${obs.timestamp}s` : obs.timestamp}</span>
+                  )}
                   {" "}{obs.description}
                   {obs.intensity && (
                     <Badge variant="outline" className="ml-2 text-xs">
@@ -364,6 +428,13 @@ export function AILabelSection({
               ))}
             </ul>
           </div>
+        )}
+
+        {/* Legacy Context (if no observations) */}
+        {!aiLabel.observations && aiLabel.suggestedContext && (
+          <p className="text-sm text-muted-foreground">
+            <strong>{t("context")}:</strong> {aiLabel.suggestedContext}
+          </p>
         )}
 
         {/* Feedback Section */}

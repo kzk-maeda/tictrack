@@ -28,6 +28,7 @@ Architecture Decision Record (ADR) は、アーキテクチャ上の重要な判
 | 006 | [Serwist を PWA に採用](./006-adopt-serwist-for-pwa.md) | 承認済み | 2026-03-06 |
 | 007 | [next-intl を i18n に採用](./007-adopt-next-intl-for-i18n.md) | 承認済み | 2026-03-08 |
 | 008 | [Step Functions による AI 分析の非同期化](./008-async-ai-analysis-with-step-functions.md) | 承認済み | 2026-03-09 |
+| 009 | [AI ラベルデータ構造の修正と後方互換性](./009-ai-label-backward-compatibility.md) | 承認済み | 2026-03-10 |
 
 ## ADR の作成ルール
 

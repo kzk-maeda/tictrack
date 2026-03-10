@@ -64,10 +64,54 @@ export function validateSeverity(value: unknown): number {
   if (!Number.isInteger(value)) {
     throw new ValidationError("severity must be an integer");
   }
-  if (value < 1 || value > 3) {
-    throw new ValidationError("severity must be 1, 2, or 3");
+  if (value < 1 || value > 5) {
+    throw new ValidationError("severity must be between 1 and 5");
   }
   return value;
+}
+
+export function validateComplexity(value: unknown): "simple" | "complex" {
+  if (typeof value !== "string") {
+    throw new ValidationError("complexity must be a string");
+  }
+  if (value !== "simple" && value !== "complex") {
+    throw new ValidationError("complexity must be 'simple' or 'complex'");
+  }
+  return value;
+}
+
+export function validateSymptomId(value: unknown): string | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw new ValidationError("symptomId must be a string");
+  }
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  if (trimmed.length > 100) {
+    throw new ValidationError("symptomId must be 100 characters or fewer");
+  }
+  return trimmed;
+}
+
+export function validateCustomSymptom(value: unknown): string | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw new ValidationError("customSymptom must be a string");
+  }
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  if (trimmed.length > 100) {
+    throw new ValidationError("customSymptom must be 100 characters or fewer");
+  }
+  return trimmed;
 }
 
 export function validateISODateTime(value: unknown): string {

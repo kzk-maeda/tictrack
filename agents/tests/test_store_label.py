@@ -17,17 +17,22 @@ class TestStoreLabel:
         self.sample_episode_id = "episode-123"
         self.sample_child_id = "child-456"
         self.sample_label = {
-            "type": "motor",
+            "primaryTic": {
+                "type": "motor",
+                "complexity": "simple",
+                "symptomId": "motor_simple_eye_blinking",
+                "customSymptom": None,
+                "confidence": 0.85
+            },
+            "secondaryTics": None,
             "severity": 2,
-            "context": "Eye blinking movements",
             "observations": [
                 {
-                    "timestamp": "0:05",
+                    "timestamp": 1.5,
                     "description": "Repetitive blinking",
                     "intensity": "medium"
                 }
             ],
-            "confidence": 0.85,
             "metadata": {}
         }
         self.sample_guardrail_result = {
@@ -59,9 +64,14 @@ class TestStoreLabel:
 
         assert item["episodeId"] == self.sample_episode_id
         assert item["childId"] == self.sample_child_id
-        assert item["type"] == "motor"
+        assert item["primaryTic"]["type"] == "motor"
+        assert item["primaryTic"]["complexity"] == "simple"
+        assert item["primaryTic"]["symptomId"] == "motor_simple_eye_blinking"
         assert item["severity"] == 2
         assert item["version"] == 1
+        # Legacy fields for backward compatibility
+        assert item["suggestedType"] == "motor"
+        assert item["suggestedSeverity"] == 2
 
     @patch("tic_labeling.tools.store_label._get_dynamodb")
     def test_store_label_updates_episodes_table(self, mock_get_dynamodb):
@@ -132,14 +142,17 @@ class TestStoreLabel:
         assert ":label" in update_call["ExpressionAttributeValues"]
         original_label = update_call["ExpressionAttributeValues"][":label"]
 
-        assert original_label["type"] == "motor"
+        # New structure with primaryTic
+        assert "primaryTic" in original_label
+        assert original_label["primaryTic"]["type"] == "motor"
+        assert original_label["primaryTic"]["complexity"] == "simple"
+        assert original_label["primaryTic"]["symptomId"] == "motor_simple_eye_blinking"
         assert original_label["severity"] == 2
-        assert "context" in original_label
-        assert "confidence" in original_label
+        assert "observations" in original_label
 
     @patch("tic_labeling.tools.store_label._get_dynamodb")
-    def test_store_label_generates_versioned_label_id(self, mock_get_dynamodb):
-        """Test that labelId is generated as episodeId-v1"""
+    def test_store_label_returns_episode_id_and_version(self, mock_get_dynamodb):
+        """Test that function returns episodeId and version"""
         # Arrange
         mock_dynamodb = Mock()
         mock_table = MagicMock()
@@ -155,7 +168,8 @@ class TestStoreLabel:
         )
 
         # Assert
-        assert result["ai_label_id"] == f"{self.sample_episode_id}-v1"
+        assert result["episode_id"] == self.sample_episode_id
+        assert result["version"] == 1
 
     @patch("tic_labeling.tools.store_label._get_dynamodb")
     def test_store_label_returns_completed_status(self, mock_get_dynamodb):

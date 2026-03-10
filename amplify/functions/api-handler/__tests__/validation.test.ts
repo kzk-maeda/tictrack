@@ -161,13 +161,22 @@ describe("validateSeverity", () => {
     expect(validateSeverity(3)).toBe(3);
   });
 
-  it("throws ValidationError for severity 0", () => {
-    expect(() => validateSeverity(0)).toThrow(ValidationError);
-    expect(() => validateSeverity(0)).toThrow("must be 1, 2, or 3");
+  it("returns valid severity 4", () => {
+    expect(validateSeverity(4)).toBe(4);
   });
 
-  it("throws ValidationError for severity 4", () => {
-    expect(() => validateSeverity(4)).toThrow(ValidationError);
+  it("returns valid severity 5", () => {
+    expect(validateSeverity(5)).toBe(5);
+  });
+
+  it("throws ValidationError for severity 0", () => {
+    expect(() => validateSeverity(0)).toThrow(ValidationError);
+    expect(() => validateSeverity(0)).toThrow("must be between 1 and 5");
+  });
+
+  it("throws ValidationError for severity 6", () => {
+    expect(() => validateSeverity(6)).toThrow(ValidationError);
+    expect(() => validateSeverity(6)).toThrow("must be between 1 and 5");
   });
 
   it("throws ValidationError for non-number value", () => {

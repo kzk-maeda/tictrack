@@ -9,7 +9,8 @@
     "delete": "Delete",
     "update": "Update",
     "saving": "Saving...",
-    "noData": "No data available"
+    "noData": "No data available",
+    "error": "An error occurred"
   },
   "auth": {
     "title": "TicTrack",
@@ -52,19 +53,28 @@
     "form": {
       "titleAdd": "Add Tic Card",
       "titleEdit": "Edit Tic Card",
-      "label": "Label",
-      "labelPlaceholder": "e.g., Head shake",
       "type": "Type",
-      "typeMotor": "Motor",
-      "typeVocal": "Vocal",
-      "severity": "Severity",
-      "severityMild": "Mild",
-      "severityModerate": "Moderate",
-      "severitySevere": "Severe",
-      "description": "Description (optional)",
-      "descriptionPlaceholder": "e.g., Shakes head left and right",
+      "typeMotor": "Motor Tic",
+      "typeVocal": "Vocal Tic",
+      "complexity": "Complexity",
+      "complexitySimple": "Simple Tic (instantaneous, <1 sec)",
+      "complexityComplex": "Complex Tic (slower movements, meaningful)",
+      "symptom": "Specific Symptom",
+      "symptomPlaceholder": "Please select a symptom",
+      "symptomCustom": "Other (Custom Input)",
+      "customSymptomLabel": "Custom Symptom Name",
+      "customSymptomPlaceholder": "e.g., Unique neck movement",
+      "severity": "Intensity",
+      "severity1": "1 - Very Mild",
+      "severity2": "2 - Mild",
+      "severity3": "3 - Moderate",
+      "severity4": "4 - Moderately Severe",
+      "severity5": "5 - Severe",
+      "description": "Additional Notes (Optional)",
+      "descriptionPlaceholder": "e.g., Occurs frequently in the evening",
       "active": "Active",
-      "errorLabelRequired": "Please enter a label"
+      "errorSymptomRequired": "Please select a symptom",
+      "errorCustomSymptomRequired": "Please enter a custom symptom name"
     },
     "toast": {
       "created": "Added",
@@ -121,10 +131,13 @@
     "typeMotor": "Motor",
     "typeVocal": "Vocal",
     "typeBoth": "Motor + Vocal",
+    "complexitySimple": "Simple",
+    "complexityComplex": "Complex",
     "severity": "Severity",
     "confidence": "Confidence",
     "context": "Context",
     "observations": "Observations",
+    "secondaryTics": "Secondary Tics",
     "helpful": "Was this analysis helpful?",
     "yes": "Yes",
     "no": "No",
@@ -147,7 +160,9 @@
     "analysisFailed": "Analysis Failed",
     "analysisFailedDescription": "AI analysis failed",
     "analysisTimeout": "Timeout",
-    "analysisTimeoutDescription": "Analysis is taking longer than expected. Please refresh the page later"
+    "analysisTimeoutDescription": "Analysis is taking longer than expected. Please refresh the page later",
+    "analysisInProgress": "Analysis In Progress",
+    "analysisInProgressDescription": "The analysis is still running. Please wait and the results will appear automatically when complete."
   },
   "settings": {
     "title": "Settings"

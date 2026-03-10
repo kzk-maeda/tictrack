@@ -36,6 +36,7 @@ app = FastAPI(
 
 # Initialize Strands Agent with tools
 agent = Agent(
+    model_id="anthropic.claude-sonnet-4-5-20250929-v1:0",  # Claude Sonnet 4.5 (supports tool calling)
     tools=[
         analyze_video,
         transcribe_audio,
@@ -47,7 +48,7 @@ agent = Agent(
 )
 
 # System instructions to be prepended to each prompt
-AGENT_INSTRUCTIONS = """You are an AI assistant that analyzes videos of tic episodes.
+AGENT_INSTRUCTIONS = """You are an AI assistant that analyzes videos of tic episodes using a structured 2-axis classification system.
 
 Your task is to:
 1. Analyze the video using Nova Pro to detect tic movements and behaviors
@@ -56,13 +57,66 @@ Your task is to:
 4. Apply Bedrock Guardrails to ensure safe, non-diagnostic language
 5. Store the structured label in DynamoDB
 
+CLASSIFICATION SYSTEM (2-axis):
+
+**Type Axis:**
+- motor: Physical movements (eye blinking, head shaking, shoulder shrugging, etc.)
+- vocal: Sounds or words (throat clearing, sniffing, grunting, words, etc.)
+
+**Complexity Axis:**
+- simple: Instantaneous, brief movements or sounds (<1 second)
+- complex: Slower, more coordinated movements or meaningful vocalizations
+
+**Severity Scale (1-5):**
+1. Very Mild: Subtle, barely noticeable, rare occurrences
+2. Mild: Noticeable but infrequent, minimal disruption
+3. Moderate: Clearly visible/audible, moderate frequency
+4. Moderately Severe: Frequent, noticeable disruption
+5. Severe: Very frequent, intense, significant impact
+
+**Common Symptoms (reference for symptomId):**
+
+Motor Simple:
+- motor_simple_eye_blinking: Eye blinking
+- motor_simple_eye_rolling: Eye rolling
+- motor_simple_head_shaking: Head shaking/jerking
+- motor_simple_shoulder_shrugging: Shoulder shrugging
+- motor_simple_nose_twitching: Nose twitching
+- motor_simple_facial_grimacing: Facial grimacing
+- motor_simple_mouth_movements: Mouth movements
+- motor_simple_arm_jerking: Arm/hand jerking
+
+Motor Complex:
+- motor_complex_jumping: Jumping/hopping
+- motor_complex_touching: Touching objects/self
+- motor_complex_smelling: Smelling objects
+- motor_complex_repetitive_movements: Repetitive movements
+- motor_complex_body_bending: Body bending/twisting
+- motor_complex_complex_gestures: Complex gestures
+- motor_complex_imitative_movements: Imitating others
+- motor_complex_self_harm: Self-injurious movements
+
+Vocal Simple:
+- vocal_simple_throat_clearing: Throat clearing
+- vocal_simple_sniffing: Sniffing
+- vocal_simple_coughing: Coughing
+- vocal_simple_grunting: Grunting/snorting
+- vocal_simple_squeaking: Squeaking sounds
+
+Vocal Complex:
+- vocal_complex_words: Repeating words
+- vocal_complex_phrases: Repeating phrases
+- vocal_complex_echolalia: Repeating others' words
+- vocal_complex_palilalia: Repeating own words
+
+If the observed tic doesn't match any symptomId, provide a customSymptom description.
+
 Important guidelines:
 - Use observational language only (e.g., "appears to show", "may indicate")
 - NEVER provide medical diagnoses or treatment recommendations
 - Focus on observable behaviors and movements
-- Classify tics as motor (physical movements) or vocal (sounds/words)
-- Rate severity on a scale of 1-3 based on intensity and frequency
-- Identify context if possible (time of day, activity, environment)
+- Provide timestamp-based observations when possible
+- Rate confidence (0.0-1.0) based on video quality and clarity
 
 Always be cautious and humble about limitations of AI analysis.
 """
@@ -127,7 +181,27 @@ Please:
 4. Use the apply_guardrails tool to ensure safe language
 5. Use the store_label tool to save the results to DynamoDB
 
-Return a structured analysis with type, severity, and context."""
+Return a structured analysis in this format:
+{{
+    "primaryTic": {{
+        "type": "motor" or "vocal",
+        "complexity": "simple" or "complex",
+        "symptomId": "motor_simple_eye_blinking" (or null if custom),
+        "customSymptom": "description" (only if symptomId is null),
+        "confidence": 0.0-1.0
+    }},
+    "secondaryTics": [
+        {{same structure as primaryTic}} (optional, if multiple tics detected)
+    ],
+    "severity": 1-5 (overall severity rating),
+    "observations": [
+        {{
+            "timestamp": 1.5 (seconds in video),
+            "description": "Observable behavior",
+            "intensity": "low", "medium", or "high"
+        }}
+    ]
+}}"""
 
         # Stream agent response (following Strands SDK pattern)
         final_event = None
@@ -135,42 +209,69 @@ Return a structured analysis with type, severity, and context."""
             # Log the full event structure to understand what we're receiving
             print(f">>> Agent event (full): {event}", flush=True)
             print(f">>> Agent event type: {type(event)}", flush=True)
-
-            # The final event contains the result
             final_event = event
 
         if not final_event:
             print(">>> Agent did not produce any events", flush=True)
             raise ValueError("Agent did not return a result")
 
-        # Extract result from final event (following Strands SDK pattern)
-        if "result" not in final_event:
-            print(f">>> Final event does not contain 'result' key: {final_event}", flush=True)
-            raise ValueError("Agent streaming completed without producing a result event")
+        print(">>> Agent execution completed", flush=True)
 
-        agent_result = final_event["result"]
-        print(f">>> Agent result extracted: {agent_result}", flush=True)
-        print(f">>> Agent result type: {type(agent_result)}", flush=True)
+        # After agent completes, retrieve the label from DynamoDB
+        # The store_label tool has already saved it, so we just need to fetch it
+        import boto3
+        import os
+        from decimal import Decimal
 
-        # Try to extract structured result or text
-        result_data = None
-        if isinstance(agent_result, dict):
-            # If result is already a dict, use it directly
-            result_data = agent_result
-        elif hasattr(agent_result, "structured_output") and agent_result.structured_output:
-            result_data = agent_result.structured_output
-        elif hasattr(agent_result, "text") and agent_result.text:
-            # Try to parse text as JSON
-            import json
-            try:
-                result_data = json.loads(agent_result.text)
-            except json.JSONDecodeError:
-                result_data = {"raw_text": agent_result.text}
-        else:
-            # Fallback: convert AgentResult to dict
+        dynamodb = boto3.resource('dynamodb')
+        ai_labels_table_name = os.getenv("AI_LABELS_TABLE", "AILabels")
+        ai_labels_table = dynamodb.Table(ai_labels_table_name)
+
+        # Query for the label that was just stored
+        print(f">>> Retrieving stored label: {request.episode_id} v1", flush=True)
+
+        try:
+            response = ai_labels_table.get_item(Key={
+                "episodeId": request.episode_id,
+                "version": 1
+            })
+            if "Item" in response:
+                item = response["Item"]
+                print(f">>> Found stored label in DynamoDB", flush=True)
+
+                # Convert Decimal to float for JSON serialization
+                def decimal_to_float(obj):
+                    if isinstance(obj, Decimal):
+                        return float(obj)
+                    elif isinstance(obj, dict):
+                        return {k: decimal_to_float(v) for k, v in obj.items()}
+                    elif isinstance(obj, list):
+                        return [decimal_to_float(item) for item in obj]
+                    return obj
+
+                # Extract the label structure
+                result_data = {
+                    "primaryTic": decimal_to_float(item.get("primaryTic")),
+                    "secondaryTics": decimal_to_float(item.get("secondaryTics")),
+                    "severity": int(item.get("severity", 3)),
+                    "observations": decimal_to_float(item.get("observations", [])),
+                }
+                print(f">>> Extracted label data: {result_data}", flush=True)
+            else:
+                print(f">>> Label not found in DynamoDB, using fallback", flush=True)
+                # Fallback to empty structure
+                result_data = {
+                    "primaryTic": None,
+                    "severity": 3,
+                    "observations": [],
+                }
+        except Exception as e:
+            print(f">>> Error retrieving label from DynamoDB: {str(e)}", flush=True)
+            # Fallback
             result_data = {
-                "stop_reason": getattr(agent_result, "stop_reason", "unknown"),
-                "text": str(agent_result),
+                "primaryTic": None,
+                "severity": 3,
+                "observations": [],
             }
 
         return AnalyzeResponse(

@@ -16,8 +16,11 @@ import {
   validateDisplayName,
   validateTicType,
   validateSeverity,
+  validateComplexity,
+  validateSymptomId,
+  validateCustomSymptom,
 } from "../lib/validation.js";
-import { ForbiddenError, NotFoundError } from "../lib/errors.js";
+import { ForbiddenError, NotFoundError, ValidationError } from "../lib/errors.js";
 
 async function verifyChildOwnership(
   childId: string,
@@ -68,25 +71,49 @@ export async function createTicCard(
   const childId = params.childId;
   const body = parseJsonBody(event.body);
 
+  // Debug log
+  console.log("createTicCard body:", JSON.stringify(body));
+  console.log("body.label:", body.label, "type:", typeof body.label);
+
   await verifyChildOwnership(childId, userId);
 
-  const label = validateDisplayName(body.label);
+  // Validate required fields
   const type = validateTicType(body.type);
+  const complexity = validateComplexity(body.complexity);
   const severity = validateSeverity(body.severity);
+
+  // Validate optional fields
+  const symptomId = validateSymptomId(body.symptomId);
+  const customSymptom = validateCustomSymptom(body.customSymptom);
   const description = typeof body.description === "string" ? body.description : undefined;
+
+  // Legacy field for backward compatibility - only validate if it's a non-empty string
+  const label = body.label && typeof body.label === "string" && body.label.trim()
+    ? validateDisplayName(body.label)
+    : undefined;
+
+  // Validate symptom requirement: must have either symptomId or customSymptom
+  if (!symptomId && !customSymptom && !label) {
+    throw new ValidationError("Either symptomId, customSymptom, or label is required");
+  }
 
   const now = new Date().toISOString();
   const card: TicCard = {
     cardId: ulid(),
     childId,
-    label,
     type,
-    description,
+    complexity,
     severity,
     isActive: true,
     createdAt: now,
     updatedAt: now,
   };
+
+  // Add optional fields only if they exist
+  if (label) card.label = label;
+  if (symptomId) card.symptomId = symptomId;
+  if (customSymptom) card.customSymptom = customSymptom;
+  if (description) card.description = description;
 
   await docClient.send(
     new PutCommand({
@@ -133,7 +160,8 @@ export async function updateTicCard(
   const names: Record<string, string> = {};
   const values: Record<string, unknown> = {};
 
-  if (body.label !== undefined) {
+  // Legacy field for backward compatibility - only validate if it's a non-empty string
+  if (body.label !== undefined && typeof body.label === "string" && body.label.trim()) {
     const label = validateDisplayName(body.label);
     updates.push("#label = :label");
     names["#label"] = "label";
@@ -145,6 +173,27 @@ export async function updateTicCard(
     updates.push("#type = :type");
     names["#type"] = "type";
     values[":type"] = type;
+  }
+
+  if (body.complexity !== undefined) {
+    const complexity = validateComplexity(body.complexity);
+    updates.push("#complexity = :complexity");
+    names["#complexity"] = "complexity";
+    values[":complexity"] = complexity;
+  }
+
+  if (body.symptomId !== undefined) {
+    const symptomId = validateSymptomId(body.symptomId);
+    updates.push("#symptomId = :symptomId");
+    names["#symptomId"] = "symptomId";
+    values[":symptomId"] = symptomId;
+  }
+
+  if (body.customSymptom !== undefined) {
+    const customSymptom = validateCustomSymptom(body.customSymptom);
+    updates.push("#customSymptom = :customSymptom");
+    names["#customSymptom"] = "customSymptom";
+    values[":customSymptom"] = customSymptom;
   }
 
   if (body.description !== undefined) {
