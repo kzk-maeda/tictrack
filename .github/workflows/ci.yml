@@ -149,10 +149,15 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build
-          path: |
-            .next/
-            public/
+          name: nextjs-build
+          path: .next/
+          retention-days: 1
+
+      - name: Upload public artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-files
+          path: public/
           retention-days: 1
 
   e2e:
@@ -185,11 +190,17 @@ jobs:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Download build artifacts
+      - name: Download Next.js build
         uses: actions/download-artifact@v4
         with:
-          name: build
-          path: .
+          name: nextjs-build
+          path: .next/
+
+      - name: Download public files
+        uses: actions/download-artifact@v4
+        with:
+          name: public-files
+          path: public/
 
       - name: Run E2E tests
         run: npm run test:e2e
