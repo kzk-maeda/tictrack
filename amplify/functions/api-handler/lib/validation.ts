@@ -129,3 +129,40 @@ export function validateISODateTime(value: unknown): string {
   }
   return value;
 }
+
+export function validateMedicationType(value: unknown): "antipsychotic" | "alpha2_agonist" | "other" {
+  if (typeof value !== "string") {
+    throw new ValidationError("medicationType must be a string");
+  }
+  if (value !== "antipsychotic" && value !== "alpha2_agonist" && value !== "other") {
+    throw new ValidationError("medicationType must be 'antipsychotic', 'alpha2_agonist', or 'other'");
+  }
+  return value;
+}
+
+export function validateDosage(value: unknown): number {
+  if (typeof value !== "number") {
+    throw new ValidationError("dosage must be a number");
+  }
+  if (value <= 0) {
+    throw new ValidationError("dosage must be greater than 0");
+  }
+  return value;
+}
+
+export function validateFrequency(value: unknown): string | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw new ValidationError("frequency must be a string");
+  }
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  if (trimmed.length > 100) {
+    throw new ValidationError("frequency must be 100 characters or fewer");
+  }
+  return trimmed;
+}

@@ -21,6 +21,7 @@
   "nav": {
     "timeline": "Timeline",
     "ticCards": "Tic Cards",
+    "medications": "Medications",
     "settings": "Settings",
     "logout": "Logout"
   },
@@ -165,6 +166,50 @@
     "analysisTimeoutDescription": "Analysis is taking longer than expected. Please refresh the page later",
     "analysisInProgress": "Analysis In Progress",
     "analysisInProgressDescription": "The analysis is still running. Please wait and the results will appear automatically when complete."
+  },
+  "medications": {
+    "title": "Medication Management",
+    "add": "Add Medication",
+    "quickLog": "Log Dose",
+    "logging": "Logging...",
+    "inactive": "Inactive",
+    "noMedications": "No medications registered",
+    "inactiveMedications": "Inactive Medications",
+    "dosage": "Dosage",
+    "frequency": "Frequency",
+    "form": {
+      "titleAdd": "Add Medication",
+      "titleEdit": "Edit Medication",
+      "medication": "Medication",
+      "medicationPlaceholder": "Select a medication",
+      "medicationCustom": "Other (Custom)",
+      "medicationName": "Medication Name",
+      "medicationNamePlaceholder": "e.g., Risperidone (Risperdal)",
+      "dosage": "Dosage",
+      "commonDosages": "Common dosages",
+      "frequency": "Frequency",
+      "frequencyPlaceholder": "e.g., Twice daily, morning & evening",
+      "notes": "Notes",
+      "notesPlaceholder": "e.g., Take after meals, side effect notes, etc.",
+      "active": "Active",
+      "errorNameRequired": "Please enter medication name",
+      "errorDosageRequired": "Please enter dosage",
+      "errorGeneral": "An error occurred"
+    },
+    "toast": {
+      "created": "Added",
+      "createdDescription": "Added \"{name}\"",
+      "updated": "Updated",
+      "updatedDescription": "Updated \"{name}\"",
+      "deleted": "Deleted",
+      "deletedDescription": "Deleted \"{name}\"",
+      "logged": "Logged",
+      "loggedDescription": "Logged dose for \"{name}\"",
+      "errorLog": "Error",
+      "errorLogDescription": "Failed to log medication",
+      "errorDelete": "Delete Error",
+      "errorDeleteDescription": "Failed to delete medication"
+    }
   },
   "settings": {
     "title": "Settings"

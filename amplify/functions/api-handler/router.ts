@@ -3,6 +3,7 @@ import type { RouteDefinition, RouteResult } from "./types.js";
 import { listChildren, createChild, updateChild, deleteChild, setDefaultChild } from "./routes/children.js";
 import { getMe, updateMe } from "./routes/users.js";
 import { listTicCards, createTicCard, updateTicCard, deleteTicCard } from "./routes/tic-cards.js";
+import { listMedicationCards, createMedicationCard, updateMedicationCard, deleteMedicationCard, listMedicationLogs, createMedicationLog, deleteMedicationLog } from "./routes/medications.js";
 import { listEpisodes, createEpisode, deleteEpisode, submitEpisodeFeedback, getEpisodeAILabel, getAnalysisStatus } from "./routes/episodes.js";
 import { handleVideoUploadUrl, handleVideoUploadComplete, handleVideoPlaybackUrl } from "./routes/videos.js";
 import { NotFoundError } from "./lib/errors.js";
@@ -40,6 +41,31 @@ const routes: RouteDefinition[] = [
     method: "DELETE",
     pattern: /^\/children\/([^/]+)\/tic-cards\/([^/]+)$/,
     handler: (e, p) => deleteTicCard(e, p),
+  },
+
+  // Medications
+  { method: "GET", pattern: /^\/children\/([^/]+)\/medications$/, handler: (e, p) => listMedicationCards(e, p) },
+  { method: "POST", pattern: /^\/children\/([^/]+)\/medications$/, handler: (e, p) => createMedicationCard(e, p) },
+  {
+    method: "PUT",
+    pattern: /^\/children\/([^/]+)\/medications\/([^/]+)$/,
+    handler: (e, p) => updateMedicationCard(e, p),
+  },
+  {
+    method: "DELETE",
+    pattern: /^\/children\/([^/]+)\/medications\/([^/]+)$/,
+    handler: (e, p) => deleteMedicationCard(e, p),
+  },
+  { method: "GET", pattern: /^\/children\/([^/]+)\/medication-logs$/, handler: (e, p) => listMedicationLogs(e, p) },
+  {
+    method: "POST",
+    pattern: /^\/children\/([^/]+)\/medications\/([^/]+)\/logs$/,
+    handler: (e, p) => createMedicationLog(e, p),
+  },
+  {
+    method: "DELETE",
+    pattern: /^\/children\/([^/]+)\/medication-logs\/([^/]+)$/,
+    handler: (e, p) => deleteMedicationLog(e, p),
   },
 
   // Episodes
@@ -99,6 +125,8 @@ export async function route(
     if (match[1]) params.childId = match[1];
     if (match[2]) params.cardId = match[2];
     if (match[2]) params.episodeId = match[2];
+    if (match[2]) params.medicationId = match[2];
+    if (match[2]) params.logId = match[2];
 
     // Set pathParameters on event so handlers can access them
     event.pathParameters = params;

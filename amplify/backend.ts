@@ -176,8 +176,16 @@ backend.apiHandler.addEnvironment(
   database.ticCardsTable.tableName
 );
 backend.apiHandler.addEnvironment(
+  "MEDICATION_CARDS_TABLE",
+  database.medicationCardsTable.tableName
+);
+backend.apiHandler.addEnvironment(
   "EPISODES_TABLE",
   database.episodesTable.tableName
+);
+backend.apiHandler.addEnvironment(
+  "MEDICATION_LOGS_TABLE",
+  database.medicationLogsTable.tableName
 );
 backend.apiHandler.addEnvironment(
   "AI_LABELS_TABLE",
