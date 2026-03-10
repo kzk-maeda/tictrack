@@ -2,7 +2,7 @@
 
 import { ProtectedLayout } from "@/components/auth/protected-layout";
 
-export default function SettingsLayout({
+export default function CaptureLayout({
   children,
 }: {
   children: React.ReactNode;

@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { Video, ChevronLeft } from "lucide-react";
+import { Video, ChevronLeft, ChevronRight } from "lucide-react";
 import { TimelineDayGroup } from "./timeline-day-group";
 import { useChildren } from "@/hooks/use-children";
 import { useEpisodes } from "@/hooks/use-episodes";
@@ -40,6 +40,7 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [showCalendar, setShowCalendar] = useState(true);
+  const [month, setMonth] = useState<Date>(new Date());
 
   const handleRecordVideo = async () => {
     if (!selectedChildId) return;
@@ -161,11 +162,41 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
           {/* Calendar View */}
           {showCalendar && (
             <Card className="p-4 animate-fade-in-up">
-              <h2 className="text-lg font-semibold mb-4">{t("selectDate")}</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">{t("selectDate")}</h2>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
+                      const newMonth = new Date(month);
+                      newMonth.setMonth(month.getMonth() - 1);
+                      setMonth(newMonth);
+                    }}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
+                      const newMonth = new Date(month);
+                      newMonth.setMonth(month.getMonth() + 1);
+                      setMonth(newMonth);
+                    }}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={handleDateSelect}
+                month={month}
+                onMonthChange={setMonth}
                 className="mx-auto"
                 modifiers={{
                   hasEpisodes: datesWithEpisodes,

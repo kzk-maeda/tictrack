@@ -20,35 +20,34 @@ function Calendar({
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-3 w-full",
-        caption: "flex justify-center pt-1 relative items-center mb-3",
+        caption: "flex justify-between pt-1 items-center mb-3",
         caption_label: "text-base font-semibold",
-        nav: "space-x-1 flex items-center",
+        nav: "hidden",
         nav_button: cn(
           buttonVariants({ variant: "ghost" }),
           "h-8 w-8 bg-transparent p-0 hover:bg-muted/60 transition-all rounded-lg"
         ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
-        table: "w-full",
-        head_row: "flex",
-        head_cell:
-          "text-muted-foreground font-medium text-xs sm:text-sm flex-1 flex items-center justify-center pb-2",
-        row: "flex w-full mt-1",
-        cell: "flex-1 p-0 relative flex items-center justify-center",
-        day: cn(
+        nav_button_previous: "",
+        nav_button_next: "",
+        month_grid: "w-full border-collapse",
+        weekdays: "",
+        weekday:
+          "text-muted-foreground font-medium text-xs sm:text-sm text-center pb-2 w-[14.28%]",
+        week: "",
+        day_button: cn(
           buttonVariants({ variant: "ghost" }),
           "h-10 w-10 sm:h-12 sm:w-12 p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-secondary/40 transition-all"
         ),
-        day_range_end: "day-range-end",
-        day_selected:
+        range_end: "day-range-end",
+        selected:
           "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground shadow-soft",
-        day_today: "bg-secondary/50 text-secondary-foreground font-semibold ring-2 ring-secondary",
-        day_outside:
+        today: "bg-secondary/50 text-secondary-foreground font-semibold ring-2 ring-secondary",
+        outside:
           "day-outside text-muted-foreground/40 opacity-40",
-        day_disabled: "text-muted-foreground/20 opacity-20 cursor-not-allowed",
-        day_range_middle:
+        disabled: "text-muted-foreground opacity-50 cursor-not-allowed",
+        range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
-        day_hidden: "invisible",
+        hidden: "invisible",
         ...classNames,
       }}
       {...props}

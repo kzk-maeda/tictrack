@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Nav } from "@/components/layout/nav";
 import { Timeline } from "@/components/timeline/timeline";
 import { useChildren } from "@/hooks/use-children";
 
@@ -22,15 +21,12 @@ export default function TimelinePage() {
   }, [selectedChildId, children]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Nav />
-      <main className="container max-w-2xl mx-auto py-8 px-4">
+    <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">{t("title")}</h1>
-        <Timeline
-          selectedChildId={selectedChildId}
-          onSelectChild={setSelectedChildId}
-        />
-      </main>
+      <Timeline
+        selectedChildId={selectedChildId}
+        onSelectChild={setSelectedChildId}
+      />
     </div>
   );
 }

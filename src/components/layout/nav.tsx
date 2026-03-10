@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthenticator } from "@aws-amplify/ui-react";
 import { LogOut, Home, CreditCard, Settings, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,15 @@ import {
 
 export function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, signOut } = useAuthenticator((context) => [context.user]);
   const t = useTranslations("nav");
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/auth");
+  };
 
   const navItems = [
     { href: "/tic-cards", label: t("ticCards"), icon: CreditCard },
@@ -92,7 +98,7 @@ export function Nav() {
                     className="w-full justify-start"
                     onClick={() => {
                       handleNavClick();
-                      signOut();
+                      handleSignOut();
                     }}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
@@ -112,7 +118,7 @@ export function Nav() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={signOut}
+              onClick={handleSignOut}
               className="hidden md:flex hover:bg-muted/60 transition-all"
             >
               <LogOut className="h-4 w-4 mr-2" />
