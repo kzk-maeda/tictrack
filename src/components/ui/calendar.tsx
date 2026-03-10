@@ -29,15 +29,15 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse table-fixed",
-        head_row: "",
+        table: "w-full",
+        head_row: "flex",
         head_cell:
-          "text-muted-foreground font-medium text-xs sm:text-sm text-center w-10 sm:w-12 pb-2",
-        row: "",
-        cell: "text-center p-0 relative",
+          "text-muted-foreground font-medium text-xs sm:text-sm flex-1 flex items-center justify-center pb-2",
+        row: "flex w-full mt-1",
+        cell: "flex-1 p-0 relative flex items-center justify-center",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 sm:h-12 sm:w-12 p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-secondary/40 transition-all mx-auto"
+          "h-10 w-10 sm:h-12 sm:w-12 p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-secondary/40 transition-all"
         ),
         day_range_end: "day-range-end",
         day_selected:
