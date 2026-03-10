@@ -29,15 +29,15 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-y-1",
-        head_row: "flex justify-between",
+        table: "w-full border-collapse",
+        head_row: "flex w-full",
         head_cell:
-          "text-muted-foreground rounded-md w-9 sm:w-10 font-medium text-xs sm:text-sm",
-        row: "flex w-full mt-1 justify-between",
-        cell: "h-9 w-9 sm:h-10 sm:w-10 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent/20 first:[&:has([aria-selected])]:rounded-l-lg last:[&:has([aria-selected])]:rounded-r-lg focus-within:relative focus-within:z-20",
+          "text-muted-foreground rounded-md flex-1 font-medium text-xs sm:text-sm text-center",
+        row: "flex w-full mt-2",
+        cell: "flex-1 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent/20 first:[&:has([aria-selected])]:rounded-l-lg last:[&:has([aria-selected])]:rounded-r-lg focus-within:relative focus-within:z-20",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 sm:h-10 sm:w-10 p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-secondary/40 transition-all"
+          "h-9 w-full sm:h-10 p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-secondary/40 transition-all"
         ),
         day_range_end: "day-range-end",
         day_selected:
