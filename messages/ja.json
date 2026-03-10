@@ -93,6 +93,8 @@
     "title": "タイムライン",
     "noRecords": "まだ記録がありません",
     "today": "今日",
+    "selectDate": "日付を選択",
+    "backToCalendar": "カレンダーに戻る",
     "recordCount": "({count}件)",
     "recordTypeQuick": "ワンタップ",
     "recordTypeVideo": "動画",
