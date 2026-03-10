@@ -11,6 +11,7 @@
 - [x] チックの種類を症例に合わせて修正
 - [] デモ用ダミーデータの投入
 - [] デモモードの実装
+- [] CIの効率化（テストとE2Eがシリアルで実行され、それぞれに顕教セットアップが必要なので時間がかかる）
 
 ## Step 4: AI Labeling ✅ 完了（2026-03-08）
 - [x] Tic Labeling Agent 実装・テスト完了
@@ -33,8 +34,8 @@
   - 修正: AgentCore Runtime ARN フォーマット（`runtime/` not `agent-runtime/`）
   - 修正: イベントストリーミングパターン（`event["result"]` extraction）
   - 修正: ログ出力（`print()` for AgentCore Runtime）
-- [ ] AI ラベル UI 実装（フィードバック機能含む）
-- [ ] LLMモデルの最新化
+- [x] AI ラベル UI 実装（フィードバック機能含む）
+- [x] LLMモデルの最新化
 
 ## Step 5: マッチング機能
 - [ ] 類似エピソード検索 API 実装

@@ -24,7 +24,7 @@ export function Nav() {
     <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50 shadow-soft">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-serif font-semibold tracking-tight bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+          <h1 className="text-2xl font-semibold tracking-tight text-primary">
             TicTrack
           </h1>
           <div className="flex items-center gap-4">
