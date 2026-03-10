@@ -20,10 +20,12 @@ export default function Home() {
   }, [authStatus, router]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">TicTrack</h1>
-        <p className="text-muted-foreground">{tCommon("loading")}</p>
+    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gradient-to-br from-background via-secondary/20 to-background">
+      <div className="text-center animate-fade-in-up">
+        <h1 className="text-5xl font-serif font-semibold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-breathe">
+          TicTrack
+        </h1>
+        <p className="text-muted-foreground text-lg">{tCommon("loading")}</p>
       </div>
     </main>
   );

@@ -26,10 +26,12 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body>
+      <body className="antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AmplifyProvider>
-            {children}
+            <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+              {children}
+            </div>
             <Toaster />
           </AmplifyProvider>
         </NextIntlClientProvider>

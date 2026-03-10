@@ -1,51 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
+    /* Gentle Guardian - Warm, Reassuring Healthcare Design */
+
+    /* Base: Soft cream instead of stark white */
+    --background: 42 45% 97%;
+    --foreground: 220 15% 20%;
+
+    /* Cards: Slightly elevated warmth with soft shadows */
+    --card: 40 40% 98.5%;
+    --card-foreground: 220 15% 20%;
+
+    /* Popover: Clean but warm */
+    --popover: 40 40% 98.5%;
+    --popover-foreground: 220 15% 20%;
+
+    /* Primary: Soft sage green - calm, growth, health */
+    --primary: 145 25% 52%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Muted lavender - soothing, trust */
+    --secondary: 250 20% 88%;
+    --secondary-foreground: 250 25% 25%;
+
+    /* Muted: Gentle earth tone backgrounds */
+    --muted: 40 25% 93%;
+    --muted-foreground: 220 10% 45%;
+
+    /* Accent: Warm terracotta - gentle energy, care */
+    --accent: 15 55% 70%;
+    --accent-foreground: 15 40% 20%;
+
+    /* Destructive: Softened coral red - alert but not harsh */
+    --destructive: 5 65% 62%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success: Natural green - positive reinforcement */
+    --success: 145 45% 48%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning: Gentle amber - caution without alarm */
+    --warning: 35 85% 62%;
+    --warning-foreground: 35 60% 15%;
+
+    /* Borders: Barely-there, organic boundaries */
+    --border: 40 20% 88%;
+    --input: 40 20% 88%;
+    --ring: 145 25% 52%;
+
+    /* Generous radius for soft, approachable feel */
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    /* Dark mode: Deep, calm nighttime palette */
+    --background: 220 20% 12%;
+    --foreground: 40 30% 92%;
+
+    --card: 220 18% 15%;
+    --card-foreground: 40 30% 92%;
+
+    --popover: 220 18% 15%;
+    --popover-foreground: 40 30% 92%;
+
+    --primary: 145 30% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 250 15% 22%;
+    --secondary-foreground: 250 25% 85%;
+
+    --muted: 220 15% 18%;
+    --muted-foreground: 220 10% 60%;
+
+    --accent: 15 50% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 5 60% 52%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 145 40% 42%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 35 75% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
+    --ring: 145 30% 48%;
   }
 }
 
@@ -53,7 +99,66 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-feature-settings: 'liga' 1, 'kern' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  /* Soft elevation shadows for cards and modals */
+  .shadow-soft {
+    box-shadow:
+      0 1px 3px hsla(220, 15%, 20%, 0.06),
+      0 4px 12px hsla(220, 15%, 20%, 0.04);
+  }
+
+  .shadow-soft-lg {
+    box-shadow:
+      0 4px 8px hsla(220, 15%, 20%, 0.08),
+      0 12px 32px hsla(220, 15%, 20%, 0.06);
+  }
+
+  /* Breathing animations for loading states */
+  @keyframes breathe {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.02); }
+  }
+
+  .animate-breathe {
+    animation: breathe 3s ease-in-out infinite;
+  }
+
+  /* Gentle fade-in for page transitions */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Stagger delays for list items */
+  .delay-50 { animation-delay: 50ms; }
+  .delay-100 { animation-delay: 100ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
 }
