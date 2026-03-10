@@ -93,6 +93,8 @@
     "title": "Timeline",
     "noRecords": "No records yet",
     "today": "Today",
+    "selectDate": "Select a Date",
+    "backToCalendar": "Back to Calendar",
     "recordCount": "({count} {count, plural, one {record} other {records}})",
     "recordTypeQuick": "Quick Log",
     "recordTypeVideo": "Video",
