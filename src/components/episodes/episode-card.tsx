@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Clock, Trash2, Video } from "lucide-react";
+import { Clock, Video } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { formatTime } from "@/lib/date-utils";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useEpisodes } from "@/hooks/use-episodes";
+import { TimelineCard } from "@/components/timeline/timeline-card";
 import type { Episode, TicCard, AILabel } from "@/lib/types";
 import { AILabelSection } from "./ai-label-section";
 import { getSymptomName } from "@/lib/tic-symptoms";
@@ -28,8 +27,6 @@ export function EpisodeCard({ episode, ticCard, aiLabel, onDelete, onUpdate }: E
   const tCommon = useTranslations("common");
   const { toast } = useToast();
   const { getVideoUrl } = useEpisodes(episode.childId);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loadingVideo, setLoadingVideo] = useState(false);
 
@@ -60,117 +57,91 @@ export function EpisodeCard({ episode, ticCard, aiLabel, onDelete, onUpdate }: E
   }, [episode.episodeId, episode.videoS3Key, episode.uploadStatus, getVideoUrl, t, tCommon, toast]);
 
   const handleDelete = async () => {
-    if (!confirmDelete) {
-      setConfirmDelete(true);
-      setTimeout(() => setConfirmDelete(false), 3000);
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      await apiClient(`/children/${episode.childId}/episodes/${episode.episodeId}`, {
-        method: "DELETE",
-      });
-      toast({
-        title: t("deleteSuccess"),
-        description: t("deleteSuccessDescription"),
-      });
-      onDelete?.();
-    } catch (error) {
-      console.error("Delete error:", error);
-      toast({
-        variant: "destructive",
-        title: t("deleteError"),
-        description: error instanceof Error ? error.message : t("deleteErrorDescription"),
-      });
-    } finally {
-      setIsDeleting(false);
-      setConfirmDelete(false);
-    }
+    await apiClient(`/children/${episode.childId}/episodes/${episode.episodeId}`, {
+      method: "DELETE",
+    });
+    toast({
+      title: t("deleteSuccess"),
+      description: t("deleteSuccessDescription"),
+    });
+    onDelete?.();
   };
 
+  // Title content
+  const titleContent = ticCard ? (
+    <span className="font-semibold">
+      {ticCard.symptomId
+        ? getSymptomName(ticCard.symptomId, locale as "ja" | "en")
+        : ticCard.customSymptom || ticCard.label}
+    </span>
+  ) : (
+    <span className="text-muted-foreground">
+      {episode.ticCardId ? t("deletedCard") : t("unclassified")}
+    </span>
+  );
+
+  // Badge content
+  const badgeContent = (
+    <>
+      <Badge variant="outline" className="text-xs">
+        {recordTypeLabel}
+      </Badge>
+      {episode.videoS3Key && <Video className="h-4 w-4 text-muted-foreground" />}
+    </>
+  );
+
   return (
-    <Card>
-      <CardContent className="pt-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">{timeString}</span>
-              <Badge variant="outline" className="text-xs">
-                {recordTypeLabel}
-              </Badge>
-              {episode.videoS3Key && (
-                <Video className="h-4 w-4 text-muted-foreground" />
-              )}
+    <TimelineCard
+      icon={<Clock className="h-4 w-4 text-muted-foreground" />}
+      title={titleContent}
+      time={timeString}
+      badge={badgeContent}
+      onDelete={handleDelete}
+    >
+      {/* Context and Notes */}
+      {ticCard && episode.context && episode.context !== "unknown" && (
+        <p className="text-sm text-muted-foreground">
+          {contextLabel}
+        </p>
+      )}
+      {episode.notes && (
+        <p className="text-sm text-muted-foreground mt-1">
+          {episode.notes}
+        </p>
+      )}
+
+      {/* Video Player */}
+      {episode.videoS3Key && (
+        <div className="mt-3">
+          {loadingVideo ? (
+            <div className="flex items-center justify-center h-48 bg-muted rounded-md">
+              <p className="text-sm text-muted-foreground">{tCommon("loading")}</p>
             </div>
-            {ticCard ? (
-              <p className="text-sm">
-                <span className="font-semibold">
-                  {ticCard.symptomId
-                    ? getSymptomName(ticCard.symptomId, locale as "ja" | "en")
-                    : ticCard.customSymptom || ticCard.label}
-                </span>
-                {episode.context && episode.context !== "unknown" && (
-                  <span className="text-muted-foreground ml-2">
-                    - {contextLabel}
-                  </span>
-                )}
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {episode.ticCardId ? t("deletedCard") : t("unclassified")}
-              </p>
-            )}
-            {episode.notes && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {episode.notes}
-              </p>
-            )}
-          </div>
-          <Button
-            variant={confirmDelete ? "destructive" : "ghost"}
-            size="icon"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          ) : videoUrl ? (
+            <video
+              key={videoUrl}
+              controls
+              className="w-full rounded-md"
+              style={{ maxHeight: "400px" }}
+            >
+              <source src={videoUrl} type={episode.videoMimeType || "video/mp4"} />
+              {t("videoNotSupported")}
+            </video>
+          ) : (
+            <div className="flex items-center justify-center h-48 bg-muted rounded-md">
+              <p className="text-sm text-muted-foreground">{t("videoLoadError")}</p>
+            </div>
+          )}
         </div>
+      )}
 
-        {/* Video Player */}
-        {episode.videoS3Key && (
-          <div className="mt-3">
-            {loadingVideo ? (
-              <div className="flex items-center justify-center h-48 bg-muted rounded-md">
-                <p className="text-sm text-muted-foreground">{tCommon("loading")}</p>
-              </div>
-            ) : videoUrl ? (
-              <video
-                key={videoUrl}
-                controls
-                className="w-full rounded-md"
-                style={{ maxHeight: "400px" }}
-              >
-                <source src={videoUrl} type={episode.videoMimeType || "video/mp4"} />
-                {t("videoNotSupported")}
-              </video>
-            ) : (
-              <div className="flex items-center justify-center h-48 bg-muted rounded-md">
-                <p className="text-sm text-muted-foreground">{t("videoLoadError")}</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* AI Label Section */}
-        <AILabelSection
-          episode={episode}
-          aiLabel={aiLabel}
-          onAnalysisComplete={onUpdate}
-          onFeedbackSubmit={onUpdate}
-        />
-      </CardContent>
-    </Card>
+      {/* AI Label Section */}
+      <AILabelSection
+        episode={episode}
+        aiLabel={aiLabel}
+        onAnalysisComplete={onUpdate}
+        onFeedbackSubmit={onUpdate}
+      />
+    </TimelineCard>
   );
 }

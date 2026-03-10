@@ -58,6 +58,29 @@ export interface TicCard {
   updatedAt: string;
 }
 
+export interface MedicationCard {
+  medicationId: string;
+  childId: string;
+  medicationName: string;
+  medicationType: "antipsychotic" | "alpha2_agonist" | "other";
+  dosageMg: number;
+  frequency?: string;
+  notes?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MedicationLog {
+  logId: string;
+  childId: string;
+  medicationId: string;
+  takenAt: string;
+  dosageMg?: number;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface Episode {
   episodeId: string;
   childId: string;

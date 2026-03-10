@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -19,6 +19,8 @@ import { TimelineDayGroup } from "./timeline-day-group";
 import { useChildren } from "@/hooks/use-children";
 import { useEpisodes } from "@/hooks/use-episodes";
 import { useTicCards } from "@/hooks/use-tic-cards";
+import { useMedications } from "@/hooks/use-medications";
+import { listMedicationLogs, type MedicationLogResponse } from "@/lib/api";
 import type { Episode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -37,10 +39,27 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
   const { episodes, isLoading: episodesLoading, error: episodesError, createEpisode, refresh } =
     useEpisodes(selectedChildId);
   const { ticCards } = useTicCards(selectedChildId);
+  const { medications } = useMedications(selectedChildId);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [showCalendar, setShowCalendar] = useState(true);
   const [month, setMonth] = useState<Date>(new Date());
+  const [medicationLogs, setMedicationLogs] = useState<MedicationLogResponse[]>([]);
+
+  // Fetch medication logs
+  useEffect(() => {
+    if (!selectedChildId) {
+      setMedicationLogs([]);
+      return;
+    }
+
+    listMedicationLogs(selectedChildId)
+      .then(setMedicationLogs)
+      .catch((err) => {
+        console.error("Failed to fetch medication logs:", err);
+        setMedicationLogs([]);
+      });
+  }, [selectedChildId]);
 
   const handleRecordVideo = async () => {
     if (!selectedChildId) return;
@@ -59,9 +78,11 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
     }
   };
 
-  // Group episodes by date (YYYY-MM-DD)
-  const groupedEpisodes = useMemo(() => {
-    const groups: Record<string, Episode[]> = {};
+  // Group episodes and medication logs by date (YYYY-MM-DD)
+  const groupedRecords = useMemo(() => {
+    const groups: Record<string, Array<Episode | MedicationLogResponse>> = {};
+
+    // Add episodes
     episodes.forEach((episode) => {
       const date = episode.occurredAt.split("T")[0]; // YYYY-MM-DD
       if (!groups[date]) {
@@ -69,27 +90,46 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
       }
       groups[date].push(episode);
     });
+
+    // Add medication logs
+    medicationLogs.forEach((log) => {
+      const date = log.takenAt.split("T")[0]; // YYYY-MM-DD
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(log);
+    });
+
+    // Sort each day's records by time (descending)
+    Object.keys(groups).forEach((date) => {
+      groups[date].sort((a, b) => {
+        const timeA = "occurredAt" in a ? a.occurredAt : a.takenAt;
+        const timeB = "occurredAt" in b ? b.occurredAt : b.takenAt;
+        return timeB.localeCompare(timeA);
+      });
+    });
+
     return groups;
-  }, [episodes]);
+  }, [episodes, medicationLogs]);
 
-  // Get dates with episodes for modifiers
-  const datesWithEpisodes = useMemo(() => {
-    return Object.keys(groupedEpisodes).map((dateStr) => new Date(dateStr));
-  }, [groupedEpisodes]);
+  // Get dates with records for modifiers
+  const datesWithRecords = useMemo(() => {
+    return Object.keys(groupedRecords).map((dateStr) => new Date(dateStr));
+  }, [groupedRecords]);
 
-  // Get episode count for each date
-  const episodeCounts = useMemo(() => {
+  // Get record count for each date
+  const recordCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    Object.keys(groupedEpisodes).forEach((date) => {
-      counts[date] = groupedEpisodes[date].length;
+    Object.keys(groupedRecords).forEach((date) => {
+      counts[date] = groupedRecords[date].length;
     });
     return counts;
-  }, [groupedEpisodes]);
+  }, [groupedRecords]);
 
-  // Custom day formatter with episode count
+  // Custom day formatter with record count
   const formatDay = (date: Date) => {
     const dateStr = date.toISOString().split("T")[0];
-    const count = episodeCounts[dateStr];
+    const count = recordCounts[dateStr];
     return (
       <div className="relative flex items-center justify-center">
         {date.getDate()}
@@ -110,7 +150,7 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
   };
 
   const selectedDateStr = selectedDate?.toISOString().split("T")[0];
-  const selectedDayEpisodes = selectedDateStr ? groupedEpisodes[selectedDateStr] : undefined;
+  const selectedDayRecords = selectedDateStr ? groupedRecords[selectedDateStr] : undefined;
 
   if (childrenLoading) {
     return <p className="text-muted-foreground">{tCommon("loading")}</p>;
@@ -199,20 +239,20 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
                 onMonthChange={setMonth}
                 className="mx-auto"
                 modifiers={{
-                  hasEpisodes: datesWithEpisodes,
+                  hasRecords: datesWithRecords,
                 }}
                 modifiersClassNames={{
-                  hasEpisodes: "font-semibold",
+                  hasRecords: "font-semibold",
                 }}
                 disabled={(date) => {
                   const dateStr = date.toISOString().split("T")[0];
-                  return !groupedEpisodes[dateStr];
+                  return !groupedRecords[dateStr];
                 }}
                 formatters={{
                   formatDay: formatDay as any,
                 }}
               />
-              {episodes.length === 0 && (
+              {episodes.length === 0 && medicationLogs.length === 0 && (
                 <p className="text-muted-foreground text-center mt-4">
                   {t("noRecords")}
                 </p>
@@ -221,7 +261,7 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
           )}
 
           {/* Selected Date Timeline */}
-          {!showCalendar && selectedDate && selectedDayEpisodes && (
+          {!showCalendar && selectedDate && selectedDayRecords && (
             <div className="animate-fade-in-up space-y-4">
               <Button
                 variant="ghost"
@@ -233,8 +273,9 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
               </Button>
               <TimelineDayGroup
                 date={selectedDateStr!}
-                episodes={selectedDayEpisodes}
+                records={selectedDayRecords}
                 ticCards={ticCards}
+                medicationCards={medications}
                 onRefresh={refresh}
               />
             </div>

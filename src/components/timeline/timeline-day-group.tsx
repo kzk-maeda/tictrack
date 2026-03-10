@@ -1,22 +1,29 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { Pill } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { EpisodeCard } from "@/components/episodes/episode-card";
+import { TimelineCard } from "./timeline-card";
+import { formatTime } from "@/lib/date-utils";
 import { formatDate } from "@/lib/date-utils";
-import type { Episode, TicCard, AILabel } from "@/lib/types";
+import { deleteMedicationLog } from "@/lib/api";
+import type { Episode, TicCard, AILabel, MedicationCard } from "@/lib/types";
+import type { MedicationLogResponse } from "@/lib/api";
 
 interface TimelineDayGroupProps {
   date: string;
-  episodes: Episode[];
+  records: Array<Episode | MedicationLogResponse>;
   ticCards: TicCard[];
+  medicationCards: MedicationCard[];
   onRefresh?: () => void;
 }
 
 export function TimelineDayGroup({
   date,
-  episodes,
+  records,
   ticCards,
+  medicationCards,
   onRefresh,
 }: TimelineDayGroupProps) {
   const locale = useLocale();
@@ -28,6 +35,10 @@ export function TimelineDayGroup({
   const isToday =
     dateObj.toDateString() === new Date().toDateString();
 
+  const isMedicationLog = (record: Episode | MedicationLogResponse): record is MedicationLogResponse => {
+    return "logId" in record && "medicationId" in record;
+  };
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-3">
@@ -35,11 +46,40 @@ export function TimelineDayGroup({
           {isToday ? t("today") : dateString}
         </h3>
         <span className="text-sm text-muted-foreground">
-          {t("recordCount", { count: episodes.length })}
+          {t("recordCount", { count: records.length })}
         </span>
       </div>
       <div className="space-y-2 mb-6">
-        {episodes.map((episode) => {
+        {records.map((record) => {
+          if (isMedicationLog(record)) {
+            // Medication log
+            const medication = medicationCards.find((m) => m.medicationId === record.medicationId);
+            const time = formatTime(new Date(record.takenAt), locale);
+
+            return (
+              <TimelineCard
+                key={record.logId}
+                icon={<Pill className="h-5 w-5 text-blue-500" />}
+                title={medication?.medicationName || "(Unknown medication)"}
+                time={time}
+                onDelete={async () => {
+                  await deleteMedicationLog(record.childId, record.logId);
+                  onRefresh?.();
+                }}
+              >
+                <div className="text-sm text-muted-foreground">
+                  {record.dosageMg ? `${record.dosageMg} mg` : "—"}
+                </div>
+                {record.notes && (
+                  <div className="text-sm text-muted-foreground mt-1">
+                    {record.notes}
+                  </div>
+                )}
+              </TimelineCard>
+            );
+          } else {
+            // Episode
+            const episode = record;
           const ticCard = episode.ticCardId
             ? ticCards.find((c) => c.cardId === episode.ticCardId)
             : undefined;
@@ -91,6 +131,7 @@ export function TimelineDayGroup({
               onUpdate={onRefresh}
             />
           );
+          }
         })}
       </div>
       <Separator className="mb-6" />

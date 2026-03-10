@@ -21,6 +21,7 @@
   "nav": {
     "timeline": "タイムライン",
     "ticCards": "チックカード",
+    "medications": "投薬管理",
     "settings": "設定",
     "logout": "ログアウト"
   },
@@ -164,6 +165,50 @@
       "not_useful": "役に立たなかった",
       "incorrect": "間違っている",
       "needs_edit": "修正が必要"
+    }
+  },
+  "medications": {
+    "title": "投薬管理",
+    "add": "薬を追加",
+    "quickLog": "服薬記録",
+    "logging": "記録中...",
+    "inactive": "使用停止",
+    "noMedications": "登録されている薬がありません",
+    "inactiveMedications": "使用停止中の薬",
+    "dosage": "用量",
+    "frequency": "服用頻度",
+    "form": {
+      "titleAdd": "薬を追加",
+      "titleEdit": "薬情報を編集",
+      "medication": "薬の種類",
+      "medicationPlaceholder": "薬を選択してください",
+      "medicationCustom": "その他（カスタム入力）",
+      "medicationName": "薬の名前",
+      "medicationNamePlaceholder": "例: リスペリドン (リスパダール)",
+      "dosage": "用量",
+      "commonDosages": "一般的な用量",
+      "frequency": "服用頻度",
+      "frequencyPlaceholder": "例: 1日2回、朝・夕",
+      "notes": "備考",
+      "notesPlaceholder": "例: 食後に服用、副作用の記録など",
+      "active": "使用中",
+      "errorNameRequired": "薬の名前を入力してください",
+      "errorDosageRequired": "用量を入力してください",
+      "errorGeneral": "エラーが発生しました"
+    },
+    "toast": {
+      "created": "追加しました",
+      "createdDescription": "\"{name}\"を追加しました",
+      "updated": "更新しました",
+      "updatedDescription": "\"{name}\"を更新しました",
+      "deleted": "削除しました",
+      "deletedDescription": "\"{name}\"を削除しました",
+      "logged": "記録しました",
+      "loggedDescription": "\"{name}\"の服薬を記録しました",
+      "errorLog": "エラー",
+      "errorLogDescription": "服薬記録に失敗しました",
+      "errorDelete": "削除エラー",
+      "errorDeleteDescription": "薬の削除に失敗しました"
     }
   },
   "settings": {

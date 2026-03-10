@@ -145,3 +145,32 @@ export interface AILabel {
 
   createdAt: string;
 }
+
+// Medication types
+export type MedicationType =
+  | "antipsychotic"           // 抗精神病薬
+  | "alpha2_agonist"          // α2アドレナリン受容体作動薬
+  | "other";                  // その他
+
+export interface MedicationCard {
+  medicationId: string;
+  childId: string;
+  medicationName: string;     // e.g., "アリピプラゾール (エビリファイ)"
+  medicationType: MedicationType;
+  dosageMg: number;           // Dosage in mg
+  frequency?: string;         // e.g., "1日2回", "朝・夕"
+  notes?: string;             // Additional notes
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MedicationLog {
+  logId: string;
+  childId: string;
+  medicationId: string;
+  takenAt: string;            // ISO timestamp
+  dosageMg?: number;          // Optional override of card dosage
+  notes?: string;
+  createdAt: string;
+}
