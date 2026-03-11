@@ -211,6 +211,28 @@ export async function deleteMedicationCard(
   await verifyChildOwnership(childId, userId);
   await getMedicationCard(medicationId, childId);
 
+  // Delete associated medication logs first
+  const logsResult = await docClient.send(
+    new QueryCommand({
+      TableName: TableNames.MEDICATION_LOGS,
+      IndexName: "medicationId-takenAt-index",
+      KeyConditionExpression: "medicationId = :medicationId",
+      ExpressionAttributeValues: { ":medicationId": medicationId },
+    }),
+  );
+
+  if (logsResult.Items && logsResult.Items.length > 0) {
+    for (const log of logsResult.Items) {
+      await docClient.send(
+        new DeleteCommand({
+          TableName: TableNames.MEDICATION_LOGS,
+          Key: { logId: log.logId },
+        }),
+      );
+    }
+  }
+
+  // Delete the medication card
   await docClient.send(
     new DeleteCommand({
       TableName: TableNames.MEDICATION_CARDS,

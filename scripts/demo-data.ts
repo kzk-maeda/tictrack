@@ -6,7 +6,7 @@
 
 // Child information
 export const CHILD_DATA = {
-  displayName: "太郎",
+  displayName: "Adam",
   birthYearMonth: "2018-04",
   isDefault: true,
 };

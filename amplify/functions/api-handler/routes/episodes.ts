@@ -169,6 +169,26 @@ export async function deleteEpisode(
     throw new ForbiddenError("Episode does not belong to this child");
   }
 
+  // Delete associated AI labels first
+  const aiLabelsResult = await docClient.send(
+    new QueryCommand({
+      TableName: TableNames.AI_LABELS,
+      KeyConditionExpression: "episodeId = :episodeId",
+      ExpressionAttributeValues: { ":episodeId": episodeId },
+    }),
+  );
+
+  if (aiLabelsResult.Items && aiLabelsResult.Items.length > 0) {
+    for (const label of aiLabelsResult.Items) {
+      await docClient.send(
+        new DeleteCommand({
+          TableName: TableNames.AI_LABELS,
+          Key: { episodeId: label.episodeId, version: label.version },
+        }),
+      );
+    }
+  }
+
   // Delete the episode
   await docClient.send(
     new DeleteCommand({
