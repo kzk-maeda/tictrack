@@ -15,7 +15,8 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "seed:demo": "tsx scripts/seed-demo-data.ts"
   },
   "repository": {
     "type": "git",
@@ -31,6 +32,7 @@
   "devDependencies": {
     "@aws-amplify/backend": "^1.21.0",
     "@aws-amplify/backend-cli": "^1.8.2",
+    "@aws-sdk/client-cognito-identity-provider": "^3.1006.0",
     "@aws-sdk/client-dynamodb": "^3.1003.0",
     "@aws-sdk/client-s3": "^3.1003.0",
     "@aws-sdk/lib-dynamodb": "^3.1003.0",
