@@ -119,16 +119,27 @@ async function createChild(userId: string): Promise<string> {
   return childId;
 }
 
+// Store card metadata for episode creation
+interface CardMetadata {
+  cardId: string;
+  type: "motor" | "vocal";
+  severity: number;
+}
+
 // Create tic cards
-async function createTicCards(childId: string): Promise<string[]> {
+async function createTicCards(childId: string): Promise<CardMetadata[]> {
   console.log("Creating tic cards...");
 
-  const cardIds: string[] = [];
+  const cardMetadata: CardMetadata[] = [];
   const now = new Date().toISOString();
 
   for (const card of TIC_CARDS) {
     const cardId = randomUUID();
-    cardIds.push(cardId);
+    cardMetadata.push({
+      cardId,
+      type: card.type,
+      severity: card.severity,
+    });
 
     const item: any = {
       cardId: { S: cardId },
@@ -140,6 +151,11 @@ async function createTicCards(childId: string): Promise<string[]> {
       createdAt: { S: now },
       updatedAt: { S: now },
     };
+
+    // Add label field for dashboard display
+    if ("label" in card && card.label) {
+      item.label = { S: card.label };
+    }
 
     if ("symptomId" in card) {
       item.symptomId = { S: card.symptomId };
@@ -156,12 +172,12 @@ async function createTicCards(childId: string): Promise<string[]> {
     );
   }
 
-  console.log(`✓ Created ${cardIds.length} tic cards`);
-  return cardIds;
+  console.log(`✓ Created ${cardMetadata.length} tic cards`);
+  return cardMetadata;
 }
 
 // Create episodes
-async function createEpisodes(childId: string, cardIds: string[]): Promise<string[]> {
+async function createEpisodes(childId: string, cards: CardMetadata[]): Promise<string[]> {
   console.log("Creating episodes...");
 
   const episodes: string[] = [];
@@ -174,7 +190,7 @@ async function createEpisodes(childId: string, cardIds: string[]): Promise<strin
     const occurredAt = randomTimeWeighted(
       randomDate(EPISODE_SETTINGS.startDate, EPISODE_SETTINGS.endDate)
     );
-    const cardId = cardIds[Math.floor(Math.random() * cardIds.length)];
+    const card = cards[Math.floor(Math.random() * cards.length)];
     const context =
       EPISODE_SETTINGS.contexts[
         Math.floor(Math.random() * EPISODE_SETTINGS.contexts.length)
@@ -187,9 +203,13 @@ async function createEpisodes(childId: string, cardIds: string[]): Promise<strin
           episodeId: { S: episodeId },
           childId: { S: childId },
           recordType: { S: "quick_log" },
-          ticCardId: { S: cardId },
+          ticCardId: { S: card.cardId },
           occurredAt: { S: occurredAt },
           context: { S: context },
+          labelStatus: { S: "confirmed" },
+          // Denormalize type and severity for dashboard aggregation
+          type: { S: card.type },
+          severity: { N: card.severity.toString() },
           createdAt: { S: new Date().toISOString() },
           updatedAt: { S: new Date().toISOString() },
         },
@@ -380,12 +400,12 @@ async function main() {
 
     // Step 4: Create tic cards
     console.log("Step 4: Creating tic cards...");
-    const cardIds = await createTicCards(childId);
+    const cards = await createTicCards(childId);
     console.log();
 
     // Step 5: Create episodes
     console.log("Step 5: Creating episodes...");
-    await createEpisodes(childId, cardIds);
+    await createEpisodes(childId, cards);
     console.log();
 
     // Step 6: Create video episodes with AI labels
