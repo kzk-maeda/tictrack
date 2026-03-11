@@ -6,6 +6,7 @@ import { listTicCards, createTicCard, updateTicCard, deleteTicCard } from "./rou
 import { listMedicationCards, createMedicationCard, updateMedicationCard, deleteMedicationCard, listMedicationLogs, createMedicationLog, deleteMedicationLog } from "./routes/medications.js";
 import { listEpisodes, createEpisode, deleteEpisode, submitEpisodeFeedback, getEpisodeAILabel, getAnalysisStatus } from "./routes/episodes.js";
 import { handleVideoUploadUrl, handleVideoUploadComplete, handleVideoPlaybackUrl } from "./routes/videos.js";
+import { getDashboard } from "./routes/dashboard.js";
 import { NotFoundError } from "./lib/errors.js";
 
 const routes: RouteDefinition[] = [
@@ -108,13 +109,24 @@ const routes: RouteDefinition[] = [
     pattern: /^\/children\/([^/]+)\/episodes\/([^/]+)\/video-url$/,
     handler: (e) => handleVideoPlaybackUrl(e),
   },
+
+  // Dashboard
+  {
+    method: "GET",
+    pattern: /^\/children\/([^/]+)\/dashboard$/,
+    handler: (e, p) => getDashboard(e, p),
+  },
 ];
 
 export async function route(
   event: APIGatewayProxyEvent,
 ): Promise<RouteResult> {
   // Strip stage prefix if present (e.g., /dev/children -> /children)
-  const path = event.path.replace(/^\/dev/, "") || "/";
+  const rawPath = event.path || "/";
+  // Only remove known stage names, not all first segments
+  const path = rawPath.replace(/^\/(dev|prod|staging)(?=\/)/, "") || "/";
+
+  console.log(`[Router] Raw path: ${rawPath}, Normalized path: ${path}, Method: ${event.httpMethod}`);
 
   for (const def of routes) {
     if (event.httpMethod !== def.method) continue;
@@ -131,8 +143,10 @@ export async function route(
     // Set pathParameters on event so handlers can access them
     event.pathParameters = params;
 
+    console.log(`[Router] Matched route: ${def.method} ${def.pattern}, params:`, params);
     return def.handler(event, params);
   }
 
+  console.error(`[Router] No route found. Available routes:`, routes.map(r => `${r.method} ${r.pattern}`));
   throw new NotFoundError(`No route found for ${event.httpMethod} ${path}`);
 }

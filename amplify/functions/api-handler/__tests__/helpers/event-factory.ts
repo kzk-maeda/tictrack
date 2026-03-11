@@ -5,6 +5,7 @@ interface MockEventOptions {
   path?: string;
   body?: unknown;
   pathParameters?: Record<string, string> | null;
+  queryParams?: Record<string, string> | null;
   userId?: string;
   noAuth?: boolean;
 }
@@ -17,6 +18,7 @@ export function createMockEvent(
     path = "/",
     body = null,
     pathParameters = null,
+    queryParams = null,
     userId = "test-user-id-123",
     noAuth = false,
   } = options;
@@ -26,7 +28,7 @@ export function createMockEvent(
     path,
     body: body ? JSON.stringify(body) : null,
     pathParameters,
-    queryStringParameters: null,
+    queryStringParameters: queryParams,
     multiValueQueryStringParameters: null,
     headers: {
       "Content-Type": "application/json",

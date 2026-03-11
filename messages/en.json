@@ -23,7 +23,8 @@
     "ticCards": "Tic Cards",
     "medications": "Medications",
     "settings": "Settings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "dashboard": "Dashboard"
   },
   "children": {
     "title": "Children",
@@ -222,5 +223,37 @@
     "name": "TicTrack",
     "shortName": "TicTrack",
     "description": "Caregiver-first, non-diagnostic app for recording and analyzing children's tic symptoms"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Statistics and analysis of recorded data",
+    "periodLabel": "Period",
+    "period7days": "Last 7 Days",
+    "period30days": "Last 30 Days",
+    "totalEpisodes": "Total Episodes",
+    "totalEpisodesDesc": "Total records in selected period",
+    "recordedDays": "Recorded Days",
+    "dataCompleteness": "Data Completeness: {completeness}",
+    "avgPerDay": "Avg per Day",
+    "avgPerDayDesc": "Average of recorded days",
+    "mostFrequent": "Most Frequent Tic",
+    "timesRecorded": "{count} times",
+    "noData": "No data",
+    "typeDistribution": "Type Distribution",
+    "typeMotor": "Motor",
+    "typeVocal": "Vocal",
+    "typeBoth": "Both",
+    "severityDistribution": "Severity Distribution",
+    "severity1": "Level 1",
+    "severity2": "Level 2",
+    "severity3": "Level 3",
+    "timePattern": "Time Pattern",
+    "peakTime": "Peak Time",
+    "time0612": "06-12",
+    "time1218": "12-18",
+    "time1822": "18-22",
+    "time2206": "22-06",
+    "episodeCount": "Episode Count",
+    "mostFrequentTics": "Most Frequent Tics (Top 5)"
   }
 }

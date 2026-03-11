@@ -174,3 +174,36 @@ export interface MedicationLog {
   notes?: string;
   createdAt: string;
 }
+
+// Dashboard types
+export interface DashboardData {
+  basicStats: {
+    totalEpisodes: number;
+    recordedDays: number;
+    missingDays: number;
+    avgPerRecordedDay: number;
+    dataCompleteness: string;
+  };
+  typeDistribution: {
+    motor: number;
+    vocal: number;
+    both: number;
+  };
+  severityDistribution: {
+    "1": number;
+    "2": number;
+    "3": number;
+    average: number;
+  };
+  timePattern: {
+    "06-12": number;
+    "12-18": number;
+    "18-22": number;
+    "22-06": number;
+    peakTime?: string;
+  };
+  mostFrequentTics: Array<{
+    symptom: string;
+    count: number;
+  }>;
+}

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthenticator } from "@aws-amplify/ui-react";
-import { LogOut, Home, CreditCard, Settings, Menu, Pill } from "lucide-react";
+import { LogOut, Home, CreditCard, Settings, Menu, Pill, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -33,6 +33,7 @@ export function Nav() {
     { href: "/tic-cards", label: t("ticCards"), icon: CreditCard },
     { href: "/medications", label: t("medications"), icon: Pill },
     { href: "/timeline", label: t("timeline"), icon: Home },
+    { href: "/dashboard", label: t("dashboard"), icon: BarChart3 },
     { href: "/settings", label: t("settings"), icon: Settings },
   ];
 

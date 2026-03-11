@@ -23,7 +23,8 @@
     "ticCards": "チックカード",
     "medications": "投薬管理",
     "settings": "設定",
-    "logout": "ログアウト"
+    "logout": "ログアウト",
+    "dashboard": "ダッシュボード"
   },
   "children": {
     "title": "子ども",
@@ -222,5 +223,37 @@
     "name": "TicTrack",
     "shortName": "TicTrack",
     "description": "介護者ファーストの、子どものチック症状を記録・分析する非診断アプリ"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "subtitle": "記録データの統計と分析",
+    "periodLabel": "期間",
+    "period7days": "過去7日間",
+    "period30days": "過去30日間",
+    "totalEpisodes": "総エピソード数",
+    "totalEpisodesDesc": "選択期間内の記録数",
+    "recordedDays": "記録日数",
+    "dataCompleteness": "データ完全性: {completeness}",
+    "avgPerDay": "1日平均",
+    "avgPerDayDesc": "記録のあった日の平均",
+    "mostFrequent": "最も頻繁なチック",
+    "timesRecorded": "{count}回",
+    "noData": "データなし",
+    "typeDistribution": "タイプ分布",
+    "typeMotor": "運動性",
+    "typeVocal": "音声性",
+    "typeBoth": "両方",
+    "severityDistribution": "重症度分布",
+    "severity1": "レベル1",
+    "severity2": "レベル2",
+    "severity3": "レベル3",
+    "timePattern": "時間帯パターン",
+    "peakTime": "ピーク時間帯",
+    "time0612": "06-12時",
+    "time1218": "12-18時",
+    "time1822": "18-22時",
+    "time2206": "22-06時",
+    "episodeCount": "エピソード数",
+    "mostFrequentTics": "最も頻繁なチック（上位5個）"
   }
 }

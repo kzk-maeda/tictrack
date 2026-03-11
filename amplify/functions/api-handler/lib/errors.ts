@@ -14,6 +14,13 @@ export class ValidationError extends AppError {
   }
 }
 
+// Alias for ValidationError
+export class BadRequestError extends ValidationError {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 export class UnauthorizedError extends AppError {
   constructor(message = "Authentication required") {
     super(401, message);

@@ -230,6 +230,7 @@ backend.apiHandler.resources.lambda.addToRolePolicy(
       "dynamodb:DeleteItem",
       "dynamodb:Query",
       "dynamodb:Scan",
+      "dynamodb:BatchGetItem",
     ],
     resources: database.allTableAndIndexArns,
   })
