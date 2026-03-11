@@ -37,24 +37,16 @@ const USER_POOL_ID = "ap-northeast-1_k1nZn5TA4";
 const BUCKET_NAME = "amplify-awsaideascompetit-tictrackmediabucket710f7-vrusjcjf3sph";
 const TARGET_EMAIL = "kzk.maeda0711+test@gmail.com";
 
-// Table names (will be set dynamically)
-const TABLE_PREFIX = "amplify-awsaideascompetition-kazukimaeda-sandbox-79195a0cd8-databasestack";
-
-// Get table suffix from environment variable or use default
-// Find this by running: aws dynamodb list-tables | grep amplify-awsaideascompetition
-// Example: amplify-awsaideascompetition-...-databasestack-6d3e07bd-Children
-//          The suffix is: -6d3e07bd
-const TABLE_SUFFIX = process.env.TABLE_SUFFIX || "-6d3e07bd";
-
-let TABLES: {
-  USERS: string;
-  CHILDREN: string;
-  TIC_CARDS: string;
-  EPISODES: string;
-  AI_LABELS: string;
-  MEDICATIONS: string;
-  MEDICATION_LOGS: string;
-  LIFE_EVENTS: string;
+// Table names (simple names as defined in CDK)
+const TABLES = {
+  USERS: "Users",
+  CHILDREN: "Children",
+  TIC_CARDS: "TicCards",
+  EPISODES: "Episodes",
+  AI_LABELS: "AILabels",
+  MEDICATIONS: "Medications",
+  MEDICATION_LOGS: "MedicationLogs",
+  LIFE_EVENTS: "LifeEvents",
 };
 
 // Initialize AWS clients
@@ -103,20 +95,9 @@ async function getUserId(): Promise<string> {
   return userId;
 }
 
-// Set table names
-function setTableNames() {
-  TABLES = {
-    USERS: `${TABLE_PREFIX}${TABLE_SUFFIX}-Users`,
-    CHILDREN: `${TABLE_PREFIX}${TABLE_SUFFIX}-Children`,
-    TIC_CARDS: `${TABLE_PREFIX}${TABLE_SUFFIX}-TicCards`,
-    EPISODES: `${TABLE_PREFIX}${TABLE_SUFFIX}-Episodes`,
-    AI_LABELS: `${TABLE_PREFIX}${TABLE_SUFFIX}-AILabels`,
-    MEDICATIONS: `${TABLE_PREFIX}${TABLE_SUFFIX}-Medications`,
-    MEDICATION_LOGS: `${TABLE_PREFIX}${TABLE_SUFFIX}-MedicationLogs`,
-    LIFE_EVENTS: `${TABLE_PREFIX}${TABLE_SUFFIX}-LifeEvents`,
-  };
-
-  console.log(`Using table suffix: ${TABLE_SUFFIX}`);
+// Verify table configuration
+function verifyTableNames() {
+  console.log(`Using DynamoDB tables in region: ${REGION}`);
   console.log(`Example table: ${TABLES.CHILDREN}`);
 }
 
@@ -492,10 +473,10 @@ async function main() {
   console.log("=== TicTrack Demo Data Seed Script ===\n");
 
   try {
-    // Step 1: Set table names
-    console.log("Step 1: Setting table names...");
-    setTableNames();
-    console.log("Table names configured\n");
+    // Step 1: Verify table names
+    console.log("Step 1: Verifying table configuration...");
+    verifyTableNames();
+    console.log();
 
     // Step 2: Get userId
     console.log("Step 2: Getting userId from Cognito...");

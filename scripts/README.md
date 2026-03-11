@@ -31,41 +31,7 @@
 
 ## 事前準備
 
-### 1. テーブル名のサフィックスを確認
-
-スクリプト内の `TABLE_PREFIX` と `stackSuffix` を実際のデプロイ環境に合わせて更新する必要があります。
-
-以下のコマンドでDynamoDBのテーブル一覧を確認:
-
-```bash
-aws dynamodb list-tables --region ap-northeast-1 --profile tictrack-dev \
-  | jq -r '.TableNames[] | select(contains("amplify-awsaideascompetition"))'
-```
-
-出力例:
-```
-amplify-awsaideascompetition-kazukimaeda-sandbox-79195a0cd8-databasestack-6d3e07bd-Children
-amplify-awsaideascompetition-kazukimaeda-sandbox-79195a0cd8-databasestack-6d3e07bd-TicCards
-amplify-awsaideascompetition-kazukimaeda-sandbox-79195a0cd8-databasestack-6d3e07bd-Episodes
-...
-```
-
-この場合、サフィックスは `-6d3e07bd` です。
-
-### 2. 環境変数を設定
-
-```bash
-# テーブルサフィックスを環境変数として設定
-export TABLE_SUFFIX="-6d3e07bd"  # ← あなたの環境のサフィックスに変更
-```
-
-または、スクリプト実行時に指定:
-
-```bash
-TABLE_SUFFIX="-6d3e07bd" npm run seed:demo
-```
-
-### 3. AWS認証情報を設定
+### 1. AWS認証情報を設定
 
 ```bash
 # AWS SSOログイン（書き込み権限のあるプロファイルを使用）
@@ -84,7 +50,7 @@ npm run seed:demo
 または直接実行:
 
 ```bash
-tsx scripts/seed-demo-data.ts
+npx tsx scripts/seed-demo-data.ts
 ```
 
 ## 実行結果
@@ -94,8 +60,9 @@ tsx scripts/seed-demo-data.ts
 ```
 === TicTrack Demo Data Seed Script ===
 
-Step 1: Setting table names...
-Table names configured
+Step 1: Verifying table configuration...
+Using DynamoDB tables in region: ap-northeast-1
+Example table: Children
 
 Step 2: Getting userId from Cognito...
 Fetching userId for kzk.maeda0711+test@gmail.com...
@@ -155,7 +122,11 @@ aws sts get-caller-identity --profile tictrack-dev
 
 ### エラー: "ResourceNotFoundException"
 
-テーブル名のサフィックスが正しいか確認してください。
+指定したリージョンにテーブルが存在するか確認してください:
+
+```bash
+aws dynamodb list-tables --region ap-northeast-1 --profile tictrack-dev
+```
 
 ## データの確認
 
