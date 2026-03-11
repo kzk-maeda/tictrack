@@ -36,6 +36,12 @@
     "noChildren": "子どもを追加してください",
     "birthYearMonth": "生年月",
     "deleteConfirm": "もう一度タップで「{name}」を削除",
+    "deleteConfirmTitle": "子どもを削除",
+    "deleteConfirmDescription": "本当に「{name}」を削除しますか？",
+    "deleteRelatedTicCards": "すべてのチックカード",
+    "deleteRelatedEpisodes": "すべての症状記録とAI分析結果",
+    "deleteRelatedMedications": "すべての服薬カードと服薬記録",
+    "deleteRelatedLifeEvents": "すべての出来事",
     "form": {
       "titleAdd": "子どもを追加",
       "titleEdit": "子ども情報を編集",
@@ -109,6 +115,9 @@
     "deleteSuccessDescription": "記録を削除しました",
     "deleteError": "削除に失敗しました",
     "deleteErrorDescription": "記録の削除に失敗しました",
+    "deleteConfirmTitle": "記録を削除",
+    "deleteConfirmDescription": "本当にこの記録を削除しますか？",
+    "deleteRelatedAILabel": "AI分析結果",
     "videoLoadError": "動画の読み込みに失敗しました",
     "videoNotSupported": "お使いのブラウザは動画の再生に対応していません"
   },

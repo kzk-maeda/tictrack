@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Clock, Video } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
 import { formatTime } from "@/lib/date-utils";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +30,7 @@ export function EpisodeCard({ episode, ticCard, aiLabel, onDelete, onUpdate }: E
   const { getVideoUrl } = useEpisodes(episode.childId);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loadingVideo, setLoadingVideo] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const occurredDate = new Date(episode.occurredAt);
   const timeString = formatTime(occurredDate, locale);
@@ -56,7 +58,11 @@ export function EpisodeCard({ episode, ticCard, aiLabel, onDelete, onUpdate }: E
     }
   }, [episode.episodeId, episode.videoS3Key, episode.uploadStatus, getVideoUrl, t, tCommon, toast]);
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
     await apiClient(`/children/${episode.childId}/episodes/${episode.episodeId}`, {
       method: "DELETE",
     });
@@ -91,13 +97,22 @@ export function EpisodeCard({ episode, ticCard, aiLabel, onDelete, onUpdate }: E
   );
 
   return (
-    <TimelineCard
-      icon={<Clock className="h-4 w-4 text-muted-foreground" />}
-      title={titleContent}
-      time={timeString}
-      badge={badgeContent}
-      onDelete={handleDelete}
-    >
+    <>
+      <DeleteConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleConfirmDelete}
+        title={t("deleteConfirmTitle")}
+        description={t("deleteConfirmDescription")}
+        relatedData={aiLabel ? [t("deleteRelatedAILabel")] : undefined}
+      />
+      <TimelineCard
+        icon={<Clock className="h-4 w-4 text-muted-foreground" />}
+        title={titleContent}
+        time={timeString}
+        badge={badgeContent}
+        onDelete={handleDeleteClick}
+      >
       {/* Context and Notes */}
       {ticCard && episode.context && episode.context !== "unknown" && (
         <p className="text-sm text-muted-foreground">
@@ -135,13 +150,14 @@ export function EpisodeCard({ episode, ticCard, aiLabel, onDelete, onUpdate }: E
         </div>
       )}
 
-      {/* AI Label Section */}
-      <AILabelSection
-        episode={episode}
-        aiLabel={aiLabel}
-        onAnalysisComplete={onUpdate}
-        onFeedbackSubmit={onUpdate}
-      />
-    </TimelineCard>
+        {/* AI Label Section */}
+        <AILabelSection
+          episode={episode}
+          aiLabel={aiLabel}
+          onAnalysisComplete={onUpdate}
+          onFeedbackSubmit={onUpdate}
+        />
+      </TimelineCard>
+    </>
   );
 }

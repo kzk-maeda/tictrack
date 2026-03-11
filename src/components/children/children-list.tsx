@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
 import { ChildCard } from "./child-card";
 import { ChildForm } from "./child-form";
 import { useChildren } from "@/hooks/use-children";
@@ -16,20 +17,21 @@ export function ChildrenList() {
     useChildren();
   const [formOpen, setFormOpen] = useState(false);
   const [editingChild, setEditingChild] = useState<Child | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<Child | null>(null);
+  const [deletingChild, setDeletingChild] = useState<Child | null>(null);
 
   const handleEdit = (child: Child) => {
     setEditingChild(child);
     setFormOpen(true);
   };
 
-  const handleDelete = async (child: Child) => {
-    if (deleteConfirm?.childId === child.childId) {
-      await deleteChild(child.childId);
-      setDeleteConfirm(null);
-    } else {
-      setDeleteConfirm(child);
-      setTimeout(() => setDeleteConfirm(null), 3000);
+  const handleDelete = (child: Child) => {
+    setDeletingChild(child);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deletingChild) {
+      await deleteChild(deletingChild.childId);
+      setDeletingChild(null);
     }
   };
 
@@ -95,11 +97,21 @@ export function ChildrenList() {
         </div>
       )}
 
-      {deleteConfirm && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-destructive text-destructive-foreground px-4 py-2 rounded-md text-sm">
-          {t("deleteConfirm", { name: deleteConfirm.displayName })}
-        </div>
-      )}
+      <DeleteConfirmationDialog
+        open={!!deletingChild}
+        onOpenChange={(open) => !open && setDeletingChild(null)}
+        onConfirm={handleConfirmDelete}
+        title={t("deleteConfirmTitle")}
+        description={t("deleteConfirmDescription", {
+          name: deletingChild?.displayName || "",
+        })}
+        relatedData={[
+          t("deleteRelatedTicCards"),
+          t("deleteRelatedEpisodes"),
+          t("deleteRelatedMedications"),
+          t("deleteRelatedLifeEvents"),
+        ]}
+      />
 
       <ChildForm
         open={formOpen}

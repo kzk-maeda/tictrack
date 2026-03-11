@@ -36,6 +36,12 @@
     "noChildren": "Please add a child",
     "birthYearMonth": "Birth Year/Month",
     "deleteConfirm": "Tap again to delete \"{name}\"",
+    "deleteConfirmTitle": "Delete Child",
+    "deleteConfirmDescription": "Are you sure you want to delete \"{name}\"?",
+    "deleteRelatedTicCards": "All tic cards",
+    "deleteRelatedEpisodes": "All episodes and AI analysis results",
+    "deleteRelatedMedications": "All medication cards and logs",
+    "deleteRelatedLifeEvents": "All life events",
     "form": {
       "titleAdd": "Add Child",
       "titleEdit": "Edit Child Information",
@@ -109,6 +115,9 @@
     "deleteSuccessDescription": "Record deleted successfully",
     "deleteError": "Delete failed",
     "deleteErrorDescription": "Failed to delete record",
+    "deleteConfirmTitle": "Delete Record",
+    "deleteConfirmDescription": "Are you sure you want to delete this record?",
+    "deleteRelatedAILabel": "AI analysis result",
     "videoLoadError": "Failed to load video",
     "videoNotSupported": "Your browser does not support video playback"
   },
