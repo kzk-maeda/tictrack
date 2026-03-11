@@ -31,6 +31,15 @@ import { randomUUID } from "crypto";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { REGION, USER_POOL_ID, BUCKET_NAME, TARGET_EMAIL, TABLES } from "./config";
+import {
+  CHILD_DATA,
+  TIC_CARDS,
+  VIDEO_EPISODES,
+  MEDICATIONS,
+  LIFE_EVENTS,
+  EPISODE_SETTINGS,
+  MEDICATION_LOG_SETTINGS,
+} from "./demo-data";
 
 // Initialize AWS clients
 const dynamodb = new DynamoDBClient({ region: REGION });
@@ -97,9 +106,9 @@ async function createChild(userId: string): Promise<string> {
       Item: {
         childId: { S: childId },
         userId: { S: userId },
-        displayName: { S: "太郎" },
-        birthYearMonth: { S: "2018-04" },
-        isDefault: { BOOL: true },
+        displayName: { S: CHILD_DATA.displayName },
+        birthYearMonth: { S: CHILD_DATA.birthYearMonth },
+        isDefault: { BOOL: CHILD_DATA.isDefault },
         createdAt: { S: now },
         updatedAt: { S: now },
       },
@@ -114,23 +123,10 @@ async function createChild(userId: string): Promise<string> {
 async function createTicCards(childId: string): Promise<string[]> {
   console.log("Creating tic cards...");
 
-  const cards = [
-    { type: "motor", complexity: "simple", symptomId: "eye_blink", severity: 2 },
-    { type: "motor", complexity: "simple", symptomId: "head_jerk", severity: 3 },
-    { type: "motor", complexity: "simple", symptomId: "shoulder_shrug", severity: 2 },
-    { type: "motor", complexity: "simple", symptomId: "facial_grimace", severity: 3 },
-    { type: "motor", complexity: "complex", symptomId: "touching_objects", severity: 2 },
-    { type: "vocal", complexity: "simple", symptomId: "throat_clear", severity: 3 },
-    { type: "vocal", complexity: "simple", symptomId: "sniff", severity: 2 },
-    { type: "vocal", complexity: "simple", symptomId: "cough", severity: 2 },
-    { type: "vocal", complexity: "complex", symptomId: "repeating_words", severity: 1 },
-    { type: "motor", complexity: "complex", customSymptom: "首を何度も回す", severity: 3 },
-  ];
-
   const cardIds: string[] = [];
   const now = new Date().toISOString();
 
-  for (const card of cards) {
+  for (const card of TIC_CARDS) {
     const cardId = randomUUID();
     cardIds.push(cardId);
 
@@ -169,18 +165,20 @@ async function createEpisodes(childId: string, cardIds: string[]): Promise<strin
   console.log("Creating episodes...");
 
   const episodes: string[] = [];
-  const startDate = new Date("2026-01-01");
-  const endDate = new Date("2026-03-10");
 
-  // Create ~80 quick_log episodes
-  for (let i = 0; i < 80; i++) {
+  // Create quick_log episodes
+  for (let i = 0; i < EPISODE_SETTINGS.totalQuickLogs; i++) {
     const episodeId = randomUUID();
     episodes.push(episodeId);
 
-    const occurredAt = randomTimeWeighted(randomDate(startDate, endDate));
+    const occurredAt = randomTimeWeighted(
+      randomDate(EPISODE_SETTINGS.startDate, EPISODE_SETTINGS.endDate)
+    );
     const cardId = cardIds[Math.floor(Math.random() * cardIds.length)];
-    const contexts = ["home", "school", "play", "sleep", "meal", "stress"];
-    const context = contexts[Math.floor(Math.random() * contexts.length)];
+    const context =
+      EPISODE_SETTINGS.contexts[
+        Math.floor(Math.random() * EPISODE_SETTINGS.contexts.length)
+      ];
 
     await dynamodb.send(
       new PutItemCommand({
@@ -207,53 +205,7 @@ async function createEpisodes(childId: string, cardIds: string[]): Promise<strin
 async function createVideoEpisodes(childId: string): Promise<void> {
   console.log("Creating video episodes with AI labels...");
 
-  // We'll create 3 video episodes
-  const videos = [
-    {
-      date: "2026-02-15T19:30:00Z",
-      s3Key: "videos/demo/eye-blink-demo.mp4",
-      aiLabel: {
-        suggestedType: "motor",
-        suggestedSeverity: 2,
-        suggestedContext: "home",
-        confidence: 0.85,
-        observations: [
-          { timestamp: 2.5, description: "Rapid eye blinking observed", intensity: "medium" },
-          { timestamp: 5.1, description: "Frequency increased", intensity: "medium" },
-        ],
-      },
-    },
-    {
-      date: "2026-02-20T20:15:00Z",
-      s3Key: "videos/demo/throat-clear-demo.mp4",
-      aiLabel: {
-        suggestedType: "vocal",
-        suggestedSeverity: 3,
-        suggestedContext: "stress",
-        confidence: 0.92,
-        observations: [
-          { timestamp: 1.2, description: "Throat clearing sound detected", intensity: "high" },
-          { timestamp: 3.8, description: "Repeated throat clearing", intensity: "high" },
-        ],
-      },
-    },
-    {
-      date: "2026-03-05T18:45:00Z",
-      s3Key: "videos/demo/shoulder-shrug-demo.mp4",
-      aiLabel: {
-        suggestedType: "motor",
-        suggestedSeverity: 2,
-        suggestedContext: "play",
-        confidence: 0.78,
-        observations: [
-          { timestamp: 0.8, description: "Shoulder shrugging movement", intensity: "low" },
-          { timestamp: 4.5, description: "Repeated shoulder movement", intensity: "medium" },
-        ],
-      },
-    },
-  ];
-
-  for (const video of videos) {
+  for (const video of VIDEO_EPISODES) {
     const episodeId = randomUUID();
 
     // Create episode
@@ -295,33 +247,16 @@ async function createVideoEpisodes(childId: string): Promise<void> {
     );
   }
 
-  console.log(`✓ Created 3 video episodes with AI labels`);
+  console.log(`✓ Created ${VIDEO_EPISODES.length} video episodes with AI labels`);
 }
 
 // Create medication cards
 async function createMedications(childId: string): Promise<string[]> {
   console.log("Creating medication cards...");
 
-  const medications = [
-    {
-      name: "リスペリドン (Risperdal)",
-      type: "antipsychotic",
-      dosageMg: 0.5,
-      frequency: "1日2回（朝・夕食後）",
-      startDate: "2026-01-20",
-    },
-    {
-      name: "グアンファシン (Intuniv)",
-      type: "alpha2_agonist",
-      dosageMg: 1.0,
-      frequency: "1日1回（就寝前）",
-      startDate: "2026-01-25",
-    },
-  ];
-
   const medicationIds: string[] = [];
 
-  for (const med of medications) {
+  for (const med of MEDICATIONS) {
     const medicationId = randomUUID();
     medicationIds.push(medicationId);
 
@@ -354,20 +289,22 @@ async function createMedicationLogs(
 ): Promise<void> {
   console.log("Creating medication logs...");
 
-  const startDate = new Date("2026-01-20");
-  const endDate = new Date("2026-03-10");
-  const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const days = Math.ceil(
+    (MEDICATION_LOG_SETTINGS.endDate.getTime() -
+      MEDICATION_LOG_SETTINGS.startDate.getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
 
   let logCount = 0;
 
   // Create daily logs for each medication
   for (let day = 0; day < days; day++) {
-    const date = new Date(startDate);
+    const date = new Date(MEDICATION_LOG_SETTINGS.startDate);
     date.setDate(date.getDate() + day);
 
     for (const medicationId of medicationIds) {
-      // Skip some days randomly (90% adherence)
-      if (Math.random() > 0.9) continue;
+      // Skip some days randomly based on adherence rate
+      if (Math.random() > MEDICATION_LOG_SETTINGS.adherenceRate) continue;
 
       const logId = randomUUID();
       const takenAt = new Date(date);
@@ -397,38 +334,7 @@ async function createMedicationLogs(
 async function createLifeEvents(childId: string): Promise<void> {
   console.log("Creating life events...");
 
-  const events = [
-    {
-      type: "graduation",
-      title: "保育園卒園",
-      occurredAt: "2026-03-15",
-      stressLevel: 4,
-      notes: "小学校入学を控えて緊張している様子",
-    },
-    {
-      type: "medical",
-      title: "小児神経科の初診",
-      occurredAt: "2026-01-15",
-      stressLevel: 3,
-      notes: "チック症状について専門医に相談",
-    },
-    {
-      type: "social",
-      title: "発表会",
-      occurredAt: "2026-02-10",
-      stressLevel: 4,
-      notes: "大勢の前での発表で緊張",
-    },
-    {
-      type: "family_change",
-      title: "妹が生まれる",
-      occurredAt: "2026-01-30",
-      stressLevel: 2,
-      notes: "家族構成の変化",
-    },
-  ];
-
-  for (const event of events) {
+  for (const event of LIFE_EVENTS) {
     const eventId = randomUUID();
 
     await dynamodb.send(
@@ -449,7 +355,7 @@ async function createLifeEvents(childId: string): Promise<void> {
     );
   }
 
-  console.log(`✓ Created ${events.length} life events`);
+  console.log(`✓ Created ${LIFE_EVENTS.length} life events`);
 }
 
 // Main execution

@@ -4,9 +4,10 @@
 
 ## スクリプト一覧
 
-- **`seed-demo-data.ts`**: デモデータを作成
-- **`cleanup-demo-data.ts`**: デモデータを削除
-- **`config.ts`**: 共通設定（対象ユーザー、テーブル名など）
+- **`demo-data.ts`**: 📋 **データ定義**（チックカード、服薬、出来事など）
+- **`config.ts`**: ⚙️ **共通設定**（対象ユーザー、テーブル名など）
+- **`seed-demo-data.ts`**: ➕ デモデータを作成
+- **`cleanup-demo-data.ts`**: 🗑️ デモデータを削除
 
 ## 使い方の流れ
 
@@ -49,6 +50,54 @@ npm run seed:demo
    - 小児神経科の初診（2026/01/15）
    - 発表会（2026/02/10）
    - 妹が生まれる（2026/01/30）
+
+## データのカスタマイズ
+
+すべてのデモデータ定義は **`scripts/demo-data.ts`** に集約されています。
+
+### 例: チックカードを追加
+
+```typescript
+// scripts/demo-data.ts
+export const TIC_CARDS = [
+  // 既存のカード...
+  {
+    type: "motor" as const,
+    complexity: "simple" as const,
+    symptomId: "arm_flapping",  // 新しい症状
+    severity: 2,
+  },
+];
+```
+
+### 例: 服薬を変更
+
+```typescript
+// scripts/demo-data.ts
+export const MEDICATIONS = [
+  {
+    name: "新しい薬",
+    type: "antipsychotic" as const,
+    dosageMg: 1.0,
+    frequency: "1日3回",
+    startDate: "2026-02-01",
+  },
+];
+```
+
+### 例: エピソード数を変更
+
+```typescript
+// scripts/demo-data.ts
+export const EPISODE_SETTINGS = {
+  totalQuickLogs: 150,  // 80 → 150 に増やす
+  startDate: new Date("2025-12-01"),  // 期間を延ばす
+  endDate: new Date("2026-03-10"),
+  contexts: ["home", "school", "play", "sleep", "meal", "stress"] as const,
+};
+```
+
+データ定義を変更したら、再度 `npm run seed:demo` を実行するだけでOKです。
 
 ## 事前準備
 
