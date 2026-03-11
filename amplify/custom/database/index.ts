@@ -3,7 +3,7 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import { RemovalPolicy } from "aws-cdk-lib";
 
 /**
- * DatabaseConstruct — 10 DynamoDB tables for TicTrack
+ * DatabaseConstruct — 11 DynamoDB tables for TicTrack
  *
  * All tables use PAY_PER_REQUEST billing and AWS-managed encryption.
  * PITR disabled (prototype). RemovalPolicy.DESTROY for sandbox cleanup.
@@ -19,8 +19,9 @@ export class DatabaseConstruct extends Construct {
   public readonly checkInsTable: dynamodb.Table;
   public readonly weeklyReportsTable: dynamodb.Table;
   public readonly shareTokensTable: dynamodb.Table;
+  public readonly lifeEventsTable: dynamodb.Table;
 
-  /** ARNs of all 10 tables */
+  /** ARNs of all 11 tables */
   public readonly allTableArns: string[];
   /** ARNs of all tables + their GSI indexes */
   public readonly allTableAndIndexArns: string[];
@@ -158,6 +159,20 @@ export class DatabaseConstruct extends Construct {
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
+    // --- LifeEvents ---
+    this.lifeEventsTable = new dynamodb.Table(this, "LifeEvents", {
+      tableName: "LifeEvents",
+      partitionKey: { name: "eventId", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+    this.lifeEventsTable.addGlobalSecondaryIndex({
+      indexName: "childId-occurredAt-index",
+      partitionKey: { name: "childId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "occurredAt", type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
     // Convenience properties for IAM grants
     this.allTableArns = [
       this.usersTable,
@@ -170,6 +185,7 @@ export class DatabaseConstruct extends Construct {
       this.checkInsTable,
       this.weeklyReportsTable,
       this.shareTokensTable,
+      this.lifeEventsTable,
     ].map((t) => t.tableArn);
 
     this.allTableAndIndexArns = this.allTableArns.flatMap((arn) => [

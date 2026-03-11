@@ -30,8 +30,7 @@ export function Nav() {
   };
 
   const navItems = [
-    { href: "/tic-cards", label: t("ticCards"), icon: CreditCard },
-    { href: "/medications", label: t("medications"), icon: Pill },
+    { href: "/events", label: t("events"), icon: CreditCard },
     { href: "/timeline", label: t("timeline"), icon: Home },
     { href: "/dashboard", label: t("dashboard"), icon: BarChart3 },
     { href: "/settings", label: t("settings"), icon: Settings },

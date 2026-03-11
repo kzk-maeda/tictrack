@@ -20,6 +20,7 @@
   },
   "nav": {
     "timeline": "Timeline",
+    "events": "Events",
     "ticCards": "Tic Cards",
     "medications": "Medications",
     "settings": "Settings",
@@ -210,6 +211,60 @@
       "errorLogDescription": "Failed to log medication",
       "errorDelete": "Delete Error",
       "errorDeleteDescription": "Failed to delete medication"
+    }
+  },
+  "lifeEvents": {
+    "title": "Life Events",
+    "add": "Add Event",
+    "noEvents": "No events recorded",
+    "stressLevel": "Stress Level",
+    "endDate": "End Date",
+    "form": {
+      "titleAdd": "Add Life Event",
+      "titleEdit": "Edit Life Event",
+      "eventType": "Event Type",
+      "eventTypePlaceholder": "Select event type",
+      "title": "Title",
+      "titlePlaceholder": "e.g., Preschool graduation, Moving",
+      "occurredAt": "Date",
+      "endDate": "End Date (Optional)",
+      "notes": "Details",
+      "notesPlaceholder": "Provide additional details about the event",
+      "stressLevel": "Stress Level (Optional)",
+      "stressLevelPlaceholder": "Select 1-5",
+      "errorTitleRequired": "Title is required",
+      "errorTypeRequired": "Event type is required",
+      "errorDateRequired": "Date is required",
+      "errorGeneral": "An error occurred"
+    },
+    "types": {
+      "graduation": "Graduation",
+      "school_transfer": "School Transfer",
+      "relocation": "Relocation",
+      "family_change": "Family Change",
+      "medical": "Medical Event",
+      "social": "Social Event",
+      "other": "Other"
+    },
+    "toast": {
+      "created": "Event Added",
+      "createdDescription": "\"{title}\" has been recorded",
+      "updated": "Event Updated",
+      "updatedDescription": "\"{title}\" has been updated",
+      "deleted": "Event Deleted",
+      "deletedDescription": "\"{title}\" has been deleted",
+      "error": "Error",
+      "errorDescription": "Operation failed"
+    }
+  },
+  "events": {
+    "title": "Events",
+    "subtitle": "Record tic symptoms and related information",
+    "tabs": {
+      "ticCards": "Tic Cards",
+      "videoInput": "Video Input",
+      "medications": "Medications",
+      "lifeEvents": "Life Events"
     }
   },
   "settings": {

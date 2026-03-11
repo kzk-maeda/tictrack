@@ -73,6 +73,7 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-switch": "^1.2.6",
+    "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toast": "^1.2.15",
     "@serwist/next": "^9.5.6",
     "aws-amplify": "^6.16.2",
@@ -83,6 +84,7 @@
     "react-day-picker": "^9.14.0",
     "react-dom": "^18.3.1",
     "recharts": "^3.8.0",
-    "swr": "^2.4.1"
+    "swr": "^2.4.1",
+    "ulidx": "^2.4.1"
   }
 }

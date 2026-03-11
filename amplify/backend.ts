@@ -204,6 +204,10 @@ backend.apiHandler.addEnvironment(
   database.shareTokensTable.tableName
 );
 backend.apiHandler.addEnvironment(
+  "LIFE_EVENTS_TABLE",
+  database.lifeEventsTable.tableName
+);
+backend.apiHandler.addEnvironment(
   "S3_MEDIA_BUCKET",
   backend.storage.resources.bucket.bucketName
 );

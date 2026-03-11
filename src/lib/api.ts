@@ -2,7 +2,7 @@
 
 import { fetchAuthSession } from "aws-amplify/auth";
 import outputs from "../../amplify_outputs.json";
-import type { ProblemDetails } from "./types";
+import type { ProblemDetails, LifeEvent } from "./types";
 
 const API_ENDPOINT = outputs.custom.API.endpoint.replace(/\/$/, "");
 
@@ -271,6 +271,40 @@ export async function deleteMedicationLog(
   logId: string
 ): Promise<void> {
   return apiClient<void>(`/children/${childId}/medication-logs/${logId}`, {
+    method: "DELETE",
+  });
+}
+
+// ============================================================================
+// Life Events API
+// ============================================================================
+
+export async function listLifeEvents(childId: string): Promise<LifeEvent[]> {
+  return apiClient<LifeEvent[]>(`/children/${childId}/life-events`);
+}
+
+export async function createLifeEvent(
+  childId: string,
+  request: Omit<LifeEvent, "eventId" | "childId" | "createdAt" | "updatedAt">
+): Promise<LifeEvent> {
+  return apiClient<LifeEvent>(`/children/${childId}/life-events`, {
+    method: "POST",
+    body: request,
+  });
+}
+
+export async function updateLifeEvent(
+  eventId: string,
+  request: Partial<Omit<LifeEvent, "eventId" | "childId" | "createdAt" | "updatedAt">>
+): Promise<LifeEvent> {
+  return apiClient<LifeEvent>(`/life-events/${eventId}`, {
+    method: "PUT",
+    body: request,
+  });
+}
+
+export async function deleteLifeEvent(eventId: string): Promise<void> {
+  return apiClient<void>(`/life-events/${eventId}`, {
     method: "DELETE",
   });
 }

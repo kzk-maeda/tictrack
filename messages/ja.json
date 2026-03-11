@@ -20,6 +20,7 @@
   },
   "nav": {
     "timeline": "タイムライン",
+    "events": "記録",
     "ticCards": "チックカード",
     "medications": "投薬管理",
     "settings": "設定",
@@ -210,6 +211,60 @@
       "errorLogDescription": "服薬記録に失敗しました",
       "errorDelete": "削除エラー",
       "errorDeleteDescription": "薬の削除に失敗しました"
+    }
+  },
+  "lifeEvents": {
+    "title": "出来事",
+    "add": "出来事を追加",
+    "noEvents": "記録された出来事がありません",
+    "stressLevel": "ストレスレベル",
+    "endDate": "終了日",
+    "form": {
+      "titleAdd": "出来事を追加",
+      "titleEdit": "出来事を編集",
+      "eventType": "イベントの種類",
+      "eventTypePlaceholder": "種類を選択してください",
+      "title": "タイトル",
+      "titlePlaceholder": "例: 保育園卒園、引っ越し",
+      "occurredAt": "発生日",
+      "endDate": "終了日 (任意)",
+      "notes": "詳細",
+      "notesPlaceholder": "イベントの詳細を記入してください",
+      "stressLevel": "ストレスレベル (任意)",
+      "stressLevelPlaceholder": "1-5で選択",
+      "errorTitleRequired": "タイトルを入力してください",
+      "errorTypeRequired": "イベントの種類を選択してください",
+      "errorDateRequired": "発生日を選択してください",
+      "errorGeneral": "エラーが発生しました"
+    },
+    "types": {
+      "graduation": "卒園・卒業",
+      "school_transfer": "転校",
+      "relocation": "転居",
+      "family_change": "家族の変化",
+      "medical": "医療イベント",
+      "social": "社会的イベント",
+      "other": "その他"
+    },
+    "toast": {
+      "created": "追加しました",
+      "createdDescription": "\"{title}\"を記録しました",
+      "updated": "更新しました",
+      "updatedDescription": "\"{title}\"を更新しました",
+      "deleted": "削除しました",
+      "deletedDescription": "\"{title}\"を削除しました",
+      "error": "エラー",
+      "errorDescription": "操作に失敗しました"
+    }
+  },
+  "events": {
+    "title": "記録",
+    "subtitle": "チック症状や関連情報を記録",
+    "tabs": {
+      "ticCards": "チックカード",
+      "videoInput": "動画入力",
+      "medications": "服薬",
+      "lifeEvents": "出来事"
     }
   },
   "settings": {

@@ -18,4 +18,5 @@ export const TableNames = {
   CHECK_INS: process.env.CHECK_INS_TABLE!,
   WEEKLY_REPORTS: process.env.WEEKLY_REPORTS_TABLE!,
   SHARE_TOKENS: process.env.SHARE_TOKENS_TABLE!,
+  LIFE_EVENTS: process.env.LIFE_EVENTS_TABLE!,
 } as const;

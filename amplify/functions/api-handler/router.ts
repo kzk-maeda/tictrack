@@ -4,6 +4,7 @@ import { listChildren, createChild, updateChild, deleteChild, setDefaultChild } 
 import { getMe, updateMe } from "./routes/users.js";
 import { listTicCards, createTicCard, updateTicCard, deleteTicCard } from "./routes/tic-cards.js";
 import { listMedicationCards, createMedicationCard, updateMedicationCard, deleteMedicationCard, listMedicationLogs, createMedicationLog, deleteMedicationLog } from "./routes/medications.js";
+import { listLifeEvents, createLifeEvent, updateLifeEvent, deleteLifeEvent } from "./routes/life-events.js";
 import { listEpisodes, createEpisode, deleteEpisode, submitEpisodeFeedback, getEpisodeAILabel, getAnalysisStatus } from "./routes/episodes.js";
 import { handleVideoUploadUrl, handleVideoUploadComplete, handleVideoPlaybackUrl } from "./routes/videos.js";
 import { getDashboard } from "./routes/dashboard.js";
@@ -67,6 +68,20 @@ const routes: RouteDefinition[] = [
     method: "DELETE",
     pattern: /^\/children\/([^/]+)\/medication-logs\/([^/]+)$/,
     handler: (e, p) => deleteMedicationLog(e, p),
+  },
+
+  // Life Events
+  { method: "GET", pattern: /^\/children\/([^/]+)\/life-events$/, handler: (e, p) => listLifeEvents(e, p) },
+  { method: "POST", pattern: /^\/children\/([^/]+)\/life-events$/, handler: (e, p) => createLifeEvent(e, p) },
+  {
+    method: "PUT",
+    pattern: /^\/life-events\/([^/]+)$/,
+    handler: (e, p) => updateLifeEvent(e, p),
+  },
+  {
+    method: "DELETE",
+    pattern: /^\/life-events\/([^/]+)$/,
+    handler: (e, p) => deleteLifeEvent(e, p),
   },
 
   // Episodes

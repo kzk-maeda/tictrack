@@ -175,6 +175,29 @@ export interface MedicationLog {
   createdAt: string;
 }
 
+// Life Event types
+export type LifeEventType =
+  | "graduation"        // 卒園
+  | "school_transfer"   // 転校
+  | "relocation"        // 転居
+  | "family_change"     // 家族の変化（出生、離婚など）
+  | "medical"           // 医療イベント（手術、入院など）
+  | "social"            // 社会的イベント（発表会、イベントなど）
+  | "other";            // その他
+
+export interface LifeEvent {
+  eventId: string;
+  childId: string;
+  eventType: LifeEventType;
+  title: string;           // e.g., "保育園卒園", "引っ越し"
+  occurredAt: string;      // ISO timestamp (date of event)
+  endDate?: string;        // Optional end date for ongoing events
+  notes?: string;          // Additional details about the event
+  stressLevel?: number;    // 1-5 scale (optional stress assessment)
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Dashboard types
 export interface DashboardData {
   basicStats: {
