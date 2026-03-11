@@ -1,6 +1,27 @@
-# Demo Data Seed Script
+# Demo Data Scripts
 
-デモ用のダミーデータをDynamoDBに登録するスクリプトです。
+デモ用のダミーデータを作成・削除するスクリプト群です。
+
+## スクリプト一覧
+
+- **`seed-demo-data.ts`**: デモデータを作成
+- **`cleanup-demo-data.ts`**: デモデータを削除
+- **`config.ts`**: 共通設定（対象ユーザー、テーブル名など）
+
+## 使い方の流れ
+
+```bash
+# 1. デモデータを作成
+npm run seed:demo
+
+# 2. アプリでテスト・デモ
+
+# 3. データをクリーンアップ
+npm run seed:clean
+
+# 4. 必要に応じて再度作成
+npm run seed:demo
+```
 
 ## 作成されるデータ
 
@@ -154,9 +175,64 @@ aws dynamodb query --table-name "amplify-awsaideascompetition-...-Episodes" \
 
 ## データのクリーンアップ
 
-現在、データ削除スクリプトは用意されていません。必要に応じてDynamoDBコンソールまたはAWS CLIで手動削除してください。
+対象ユーザーのすべてのデータを削除するスクリプトを用意しています。
 
-将来的には以下のようなスクリプトを追加予定:
+### クリーンアップの実行
+
 ```bash
-npm run seed:clean  # 対象ユーザーのデータを削除
+npm run seed:clean
 ```
+
+または直接実行:
+
+```bash
+npx tsx scripts/cleanup-demo-data.ts
+```
+
+### クリーンアップされるデータ
+
+対象ユーザー (`kzk.maeda0711+test@gmail.com`) のすべてのデータ:
+1. すべての子供レコード
+2. 各子供に紐づく以下のデータ:
+   - チックカード
+   - 症状記録（Episodes）
+   - AI分析結果（AILabels）
+   - 服薬カード
+   - 服薬記録
+   - 出来事（LifeEvents）
+
+### 実行結果例
+
+```
+=== TicTrack Demo Data Cleanup Script ===
+
+Step 1: Getting userId from Cognito...
+✓ Found userId: abc123...
+
+Step 2: Getting children...
+✓ Found 1 children
+
+Step 3: Deleting child data...
+
+Deleting data for child: def456...
+  ✓ Deleted 10 tic cards
+  Found 83 episodes
+  ✓ Deleted 3 AI labels
+  ✓ Deleted 83 episodes
+  ✓ Deleted 90 medication logs
+  ✓ Deleted 2 medication cards
+  ✓ Deleted 4 life events
+  ✓ Deleted child record
+
+=== ✓ Demo data cleanup completed successfully! ===
+
+Deleted data for 1 child(ren)
+User ID: abc123...
+Target Email: kzk.maeda0711+test@gmail.com
+```
+
+### 注意事項
+
+- **完全削除**: このスクリプトは対象ユーザーのすべてのデータを完全に削除します。元に戻すことはできません。
+- **冪等性**: 複数回実行しても安全です。データが存在しない場合は何も削除されません。
+- **対象ユーザー**: `scripts/config.ts` の `TARGET_EMAIL` で指定されたユーザーのみが対象です。

@@ -30,24 +30,7 @@ import { S3Client, PutObjectCommand, CopyObjectCommand } from "@aws-sdk/client-s
 import { randomUUID } from "crypto";
 import { readFileSync } from "fs";
 import { join } from "path";
-
-// Configuration from amplify_outputs.json
-const REGION = "ap-northeast-1";
-const USER_POOL_ID = "ap-northeast-1_k1nZn5TA4";
-const BUCKET_NAME = "amplify-awsaideascompetit-tictrackmediabucket710f7-vrusjcjf3sph";
-const TARGET_EMAIL = "kzk.maeda0711+test@gmail.com";
-
-// Table names (simple names as defined in CDK)
-const TABLES = {
-  USERS: "Users",
-  CHILDREN: "Children",
-  TIC_CARDS: "TicCards",
-  EPISODES: "Episodes",
-  AI_LABELS: "AILabels",
-  MEDICATION_CARDS: "MedicationCards",
-  MEDICATION_LOGS: "MedicationLogs",
-  LIFE_EVENTS: "LifeEvents",
-};
+import { REGION, USER_POOL_ID, BUCKET_NAME, TARGET_EMAIL, TABLES } from "./config";
 
 // Initialize AWS clients
 const dynamodb = new DynamoDBClient({ region: REGION });
@@ -95,9 +78,10 @@ async function getUserId(): Promise<string> {
   return userId;
 }
 
-// Verify table configuration
-function verifyTableNames() {
-  console.log(`Using DynamoDB tables in region: ${REGION}`);
+// Verify configuration
+function verifyConfig() {
+  console.log(`Region: ${REGION}`);
+  console.log(`Target user: ${TARGET_EMAIL}`);
   console.log(`Example table: ${TABLES.CHILDREN}`);
 }
 
@@ -473,9 +457,9 @@ async function main() {
   console.log("=== TicTrack Demo Data Seed Script ===\n");
 
   try {
-    // Step 1: Verify table names
-    console.log("Step 1: Verifying table configuration...");
-    verifyTableNames();
+    // Step 1: Verify configuration
+    console.log("Step 1: Verifying configuration...");
+    verifyConfig();
     console.log();
 
     // Step 2: Get userId
