@@ -266,6 +266,10 @@
       "videoInput": "動画入力",
       "medications": "服薬",
       "lifeEvents": "出来事"
+    },
+    "videoInput": {
+      "description": "動画でチック症状を記録すると、AIが自動的に分析してラベル付けします",
+      "noChildrenMessage": "動画を撮影するには、まず子どもを追加してください"
     }
   },
   "settings": {

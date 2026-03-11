@@ -266,6 +266,10 @@
       "videoInput": "Video Input",
       "medications": "Medications",
       "lifeEvents": "Life Events"
+    },
+    "videoInput": {
+      "description": "Record tic symptoms with video and AI will automatically analyze and label them",
+      "noChildrenMessage": "Please add a child first to record video"
     }
   },
   "settings": {

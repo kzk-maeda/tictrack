@@ -60,8 +60,8 @@ export function Nav() {
   };
 
   const navItems = [
-    { href: "/events", label: t("events"), icon: CreditCard },
     { href: "/timeline", label: t("timeline"), icon: Home },
+    { href: "/events", label: t("events"), icon: CreditCard },
     { href: "/dashboard", label: t("dashboard"), icon: BarChart3 },
     { href: "/settings", label: t("settings"), icon: Settings },
   ];

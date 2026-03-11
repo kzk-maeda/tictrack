@@ -12,10 +12,10 @@ export default function Home() {
 
   useEffect(() => {
     if (authStatus === "unauthenticated") {
-      router.replace("/auth");
+      router.push("/auth");
     } else if (authStatus === "authenticated") {
       // Redirect to timeline as default page
-      router.replace("/timeline");
+      router.push("/timeline");
     }
   }, [authStatus, router]);
 

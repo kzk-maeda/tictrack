@@ -44,9 +44,9 @@
 - [ ] 動画の分析結果からカードを作成する機能の実装
 
 ## Step 6: 週次レポート
-- [ ] Step Functions ワークフロー実装
-- [ ] レポート生成 Lambda 実装
-- [ ] レポート UI 実装
+- [x] Step Functions ワークフロー実装
+- [x] レポート生成 Lambda 実装
+- [x] レポート UI 実装
 
 ## Step 7: マイクログガイド
 - [ ] Micro-Guide Agent 実装

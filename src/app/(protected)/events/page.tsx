@@ -15,6 +15,7 @@ import type { Episode } from "@/lib/types";
 export default function EventsPage() {
   const t = useTranslations("events");
   const tTabs = useTranslations("events.tabs");
+  const tVideo = useTranslations("events.videoInput");
   const tNav = useTranslations("nav");
   const router = useRouter();
   const { children } = useChildren();
@@ -79,7 +80,7 @@ export default function EventsPage() {
             <Video className="h-16 w-16 mx-auto mb-6 text-primary" />
             <h3 className="text-xl font-semibold mb-3">{tTabs("videoInput")}</h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              動画でチック症状を記録すると、AIが自動的に分析してラベル付けします
+              {tVideo("description")}
             </p>
             <Button
               size="lg"
@@ -92,7 +93,7 @@ export default function EventsPage() {
             </Button>
             {children.length === 0 && (
               <p className="text-sm text-muted-foreground mt-4">
-                動画を撮影するには、まず子どもを追加してください
+                {tVideo("noChildrenMessage")}
               </p>
             )}
           </div>
