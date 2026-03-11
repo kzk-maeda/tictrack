@@ -20,9 +20,10 @@ interface EpisodeCardProps {
   aiLabel?: AILabel;
   onDelete?: () => void;
   onUpdate?: () => void;
+  isDemoMode?: boolean;
 }
 
-export function EpisodeCard({ episode, ticCard, aiLabel, onDelete, onUpdate }: EpisodeCardProps) {
+export function EpisodeCard({ episode, ticCard, aiLabel, onDelete, onUpdate, isDemoMode = false }: EpisodeCardProps) {
   const locale = useLocale();
   const t = useTranslations("timeline");
   const tCommon = useTranslations("common");
@@ -111,7 +112,7 @@ export function EpisodeCard({ episode, ticCard, aiLabel, onDelete, onUpdate }: E
         title={titleContent}
         time={timeString}
         badge={badgeContent}
-        onDelete={handleDeleteClick}
+        onDelete={onDelete ? async () => handleDeleteClick() : undefined}
       >
       {/* Context and Notes */}
       {ticCard && episode.context && episode.context !== "unknown" && (
@@ -156,6 +157,7 @@ export function EpisodeCard({ episode, ticCard, aiLabel, onDelete, onUpdate }: E
           aiLabel={aiLabel}
           onAnalysisComplete={onUpdate}
           onFeedbackSubmit={onUpdate}
+          isDemoMode={isDemoMode}
         />
       </TimelineCard>
     </>

@@ -432,6 +432,13 @@ async function main() {
     console.log(`\nChild ID: ${childId}`);
     console.log(`User ID: ${userId}`);
     console.log(`Target Email: ${TARGET_EMAIL}`);
+
+    console.log("\n=== Demo User ID Configuration ===");
+    console.log(`\nCopy this to amplify/backend.ts:`);
+    console.log(`DEMO_USER_ID="${userId}"`);
+    console.log(`\nOr set as environment variable before deploying:`);
+    console.log(`export DEMO_USER_ID="${userId}"`);
+    console.log(`npx ampx sandbox`);
   } catch (error) {
     console.error("\n❌ Error during seeding:", error);
     process.exit(1);

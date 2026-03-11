@@ -27,9 +27,10 @@ import { cn } from "@/lib/utils";
 interface TimelineProps {
   selectedChildId: string | null;
   onSelectChild: (childId: string | null) => void;
+  isDemoMode?: boolean;
 }
 
-export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
+export function Timeline({ selectedChildId, onSelectChild, isDemoMode = false }: TimelineProps) {
   const router = useRouter();
   const t = useTranslations("timeline");
   const tChildren = useTranslations("children");
@@ -178,7 +179,7 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
       </div>
 
       {/* Record Video Button */}
-      {selectedChildId && (
+      {selectedChildId && !isDemoMode && (
         <Button
           onClick={handleRecordVideo}
           className="w-full"
@@ -277,6 +278,7 @@ export function Timeline({ selectedChildId, onSelectChild }: TimelineProps) {
                 ticCards={ticCards}
                 medicationCards={medications}
                 onRefresh={refresh}
+                isDemoMode={isDemoMode}
               />
             </div>
           )}

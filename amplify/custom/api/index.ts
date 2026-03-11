@@ -89,6 +89,13 @@ export class ApiConstruct extends Construct {
       authorizationType: apigateway.AuthorizationType.NONE,
     });
 
+    // --- Demo mode routes: /demo/{proxy+} (no authentication) ---
+    const demoResource = this.restApi.root.addResource("demo");
+    const demoProxy = demoResource.addResource("{proxy+}");
+    demoProxy.addMethod("ANY", lambdaIntegration, {
+      authorizationType: apigateway.AuthorizationType.NONE,
+    });
+
     // --- Start Analysis Integration: /analyze/{episodeId} (Step Functions) ---
     if (stateMachineArn && episodesTable) {
       // Get current file's directory path (ES module compatible)

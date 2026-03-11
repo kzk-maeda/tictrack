@@ -14,9 +14,17 @@
   },
   "auth": {
     "title": "TicTrack",
-    "description": "Sign In",
+    "description": "Track and analyze tic symptoms",
     "coppaGuardian": "I am a parent/guardian",
-    "coppaConsent": "I consent to collect my child's data"
+    "coppaConsent": "I consent to collect my child's data",
+    "demoMode": "Try Demo Mode",
+    "demoModeDescription": "Experience the app without signing up",
+    "or": "or"
+  },
+  "demo": {
+    "title": "Demo Mode",
+    "description": "Data is read-only",
+    "exit": "Exit Demo Mode"
   },
   "nav": {
     "timeline": "Timeline",

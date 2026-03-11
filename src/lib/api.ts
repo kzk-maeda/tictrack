@@ -23,17 +23,49 @@ async function getAuthToken(): Promise<string> {
   return token;
 }
 
+/**
+ * Check if demo mode is active
+ */
+function isDemoMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("isDemoMode") === "true";
+}
+
 export async function apiClient<T>(
   path: string,
   options: { method?: string; body?: unknown } = {},
 ): Promise<T> {
-  const token = await getAuthToken();
-  const response = await fetch(`${API_ENDPOINT}${path}`, {
-    method: options.method || "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token,
-    },
+  const method = options.method || "GET";
+  const isDemo = isDemoMode();
+
+  // Block mutations in demo mode
+  if (isDemo && method !== "GET") {
+    throw new ApiError(403, {
+      type: "demo-mode-mutation",
+      title: "Demo Mode",
+      status: 403,
+      detail: "Mutations are not allowed in demo mode",
+    });
+  }
+
+  // Construct URL: add /demo prefix if in demo mode
+  const basePath = isDemo ? "/demo" : "";
+  const url = `${API_ENDPOINT}${basePath}${path}`;
+
+  // Prepare headers
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  // Add auth token only if NOT in demo mode
+  if (!isDemo) {
+    const token = await getAuthToken();
+    headers.Authorization = token;
+  }
+
+  const response = await fetch(url, {
+    method,
+    headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
 

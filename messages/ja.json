@@ -14,9 +14,17 @@
   },
   "auth": {
     "title": "TicTrack",
-    "description": "ログイン",
+    "description": "子どものチック症状を記録・分析",
     "coppaGuardian": "私は保護者です",
-    "coppaConsent": "子どものデータ収集に同意します"
+    "coppaConsent": "子どものデータ収集に同意します",
+    "demoMode": "デモモードを試す",
+    "demoModeDescription": "サインアップ不要でアプリを体験できます",
+    "or": "または"
+  },
+  "demo": {
+    "title": "デモモード",
+    "description": "データは読み取り専用です",
+    "exit": "デモモードを終了"
   },
   "nav": {
     "timeline": "タイムライン",

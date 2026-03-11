@@ -18,6 +18,7 @@ interface AILabelSectionProps {
   aiLabel?: AILabel;
   onAnalysisComplete?: () => void;
   onFeedbackSubmit?: () => void;
+  isDemoMode?: boolean;
 }
 
 export function AILabelSection({
@@ -25,6 +26,7 @@ export function AILabelSection({
   aiLabel: initialAILabel,
   onAnalysisComplete,
   onFeedbackSubmit,
+  isDemoMode = false,
 }: AILabelSectionProps) {
   const t = useTranslations("aiLabel");
   const tCommon = useTranslations("common");
@@ -231,9 +233,14 @@ export function AILabelSection({
     return null;
   }
 
-  // No AI label but video exists - show trigger button
+  // No AI label but video exists - show trigger button (not in demo mode)
   // Show for pending, undefined (old episodes), or any non-completed status
   if (!aiLabel && episode.labelStatus !== "ai_suggested" && episode.labelStatus !== "analyzing") {
+    // In demo mode, don't show the analyze button
+    if (isDemoMode) {
+      return null;
+    }
+
     return (
       <Card className="mt-3">
         <CardContent className="pt-4">
@@ -343,7 +350,7 @@ export function AILabelSection({
             <Brain className="h-4 w-4" />
             {t("title")}
           </CardTitle>
-          {aiLabel && episode.videoS3Key && (
+          {aiLabel && episode.videoS3Key && !isDemoMode && (
             <Button
               size="sm"
               variant="outline"
@@ -437,8 +444,8 @@ export function AILabelSection({
           </p>
         )}
 
-        {/* Feedback Section */}
-        {episode.feedbackType ? (
+        {/* Feedback Section (not in demo mode) */}
+        {!isDemoMode && (episode.feedbackType ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             {episode.feedbackType === "useful" && <ThumbsUp className="h-4 w-4" />}
             {episode.feedbackType === "not_useful" && <ThumbsDown className="h-4 w-4" />}
@@ -522,7 +529,7 @@ export function AILabelSection({
               </div>
             )}
           </div>
-        )}
+        ))}
       </CardContent>
     </Card>
   );

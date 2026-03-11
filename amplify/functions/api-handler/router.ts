@@ -8,9 +8,39 @@ import { listLifeEvents, createLifeEvent, updateLifeEvent, deleteLifeEvent } fro
 import { listEpisodes, createEpisode, deleteEpisode, submitEpisodeFeedback, getEpisodeAILabel, getAnalysisStatus } from "./routes/episodes.js";
 import { handleVideoUploadUrl, handleVideoUploadComplete, handleVideoPlaybackUrl } from "./routes/videos.js";
 import { getDashboard } from "./routes/dashboard.js";
+import {
+  demoListChildren,
+  demoListEpisodes,
+  demoGetDashboard,
+  demoListTicCards,
+  demoListMedicationCards,
+  demoListMedicationLogs,
+  demoListLifeEvents,
+  demoGetEpisodeAILabel,
+  demoGetAnalysisStatus,
+  demoHandleVideoPlaybackUrl,
+  rejectMutation,
+} from "./routes/demo.js";
 import { NotFoundError } from "./lib/errors.js";
 
 const routes: RouteDefinition[] = [
+  // Demo Mode Routes (no authentication required)
+  { method: "GET", pattern: /^\/demo\/children$/, handler: (e) => demoListChildren(e) },
+  { method: "GET", pattern: /^\/demo\/children\/([^/]+)\/episodes$/, handler: (e, p) => demoListEpisodes(e, p) },
+  { method: "GET", pattern: /^\/demo\/children\/([^/]+)\/dashboard$/, handler: (e, p) => demoGetDashboard(e, p) },
+  { method: "GET", pattern: /^\/demo\/children\/([^/]+)\/tic-cards$/, handler: (e, p) => demoListTicCards(e, p) },
+  { method: "GET", pattern: /^\/demo\/children\/([^/]+)\/medications$/, handler: (e, p) => demoListMedicationCards(e, p) },
+  { method: "GET", pattern: /^\/demo\/children\/([^/]+)\/medication-logs$/, handler: (e, p) => demoListMedicationLogs(e, p) },
+  { method: "GET", pattern: /^\/demo\/children\/([^/]+)\/life-events$/, handler: (e, p) => demoListLifeEvents(e, p) },
+  { method: "GET", pattern: /^\/demo\/children\/([^/]+)\/episodes\/([^/]+)\/ai-label$/, handler: (e, p) => demoGetEpisodeAILabel(e, p) },
+  { method: "GET", pattern: /^\/demo\/children\/([^/]+)\/episodes\/([^/]+)\/analysis-status$/, handler: (e, p) => demoGetAnalysisStatus(e, p) },
+  { method: "GET", pattern: /^\/demo\/children\/([^/]+)\/episodes\/([^/]+)\/video-url$/, handler: (e) => demoHandleVideoPlaybackUrl(e) },
+  // Reject all mutations in demo mode
+  { method: "POST", pattern: /^\/demo\//, handler: () => rejectMutation() },
+  { method: "PUT", pattern: /^\/demo\//, handler: () => rejectMutation() },
+  { method: "DELETE", pattern: /^\/demo\//, handler: () => rejectMutation() },
+
+  // Authenticated Routes (existing routes)
   { method: "GET", pattern: /^\/children$/, handler: (e) => listChildren(e) },
   { method: "POST", pattern: /^\/children$/, handler: (e) => createChild(e) },
   {

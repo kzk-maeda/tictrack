@@ -219,6 +219,11 @@ backend.apiHandler.addEnvironment(
   "REGION",
   Stack.of(backend.apiHandler.resources.lambda).region
 );
+// Demo mode user ID (populated from seed script)
+backend.apiHandler.addEnvironment(
+  "DEMO_USER_ID",
+  process.env.DEMO_USER_ID || "47644a48-a081-70d1-6e8b-272c764c6078"
+);
 
 // =====================================================================
 // IAM grants — api-handler

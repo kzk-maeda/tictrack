@@ -17,6 +17,7 @@ interface TimelineDayGroupProps {
   ticCards: TicCard[];
   medicationCards: MedicationCard[];
   onRefresh?: () => void;
+  isDemoMode?: boolean;
 }
 
 export function TimelineDayGroup({
@@ -25,6 +26,7 @@ export function TimelineDayGroup({
   ticCards,
   medicationCards,
   onRefresh,
+  isDemoMode = false,
 }: TimelineDayGroupProps) {
   const locale = useLocale();
   const t = useTranslations("timeline");
@@ -62,10 +64,10 @@ export function TimelineDayGroup({
                 icon={<Pill className="h-5 w-5 text-blue-500" />}
                 title={medication?.medicationName || "(Unknown medication)"}
                 time={time}
-                onDelete={async () => {
+                onDelete={!isDemoMode ? async () => {
                   await deleteMedicationLog(record.childId, record.logId);
                   onRefresh?.();
-                }}
+                } : undefined}
               >
                 <div className="text-sm text-muted-foreground">
                   {record.dosageMg ? `${record.dosageMg} mg` : "—"}
@@ -127,8 +129,9 @@ export function TimelineDayGroup({
               episode={episode}
               ticCard={ticCard}
               aiLabel={aiLabel}
-              onDelete={onRefresh}
-              onUpdate={onRefresh}
+              onDelete={!isDemoMode ? onRefresh : undefined}
+              onUpdate={!isDemoMode ? onRefresh : undefined}
+              isDemoMode={isDemoMode}
             />
           );
           }

@@ -23,9 +23,12 @@ import {
 export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, signOut } = useAuthenticator((context) => [context.user]);
   const t = useTranslations("nav");
   const [isOpen, setIsOpen] = useState(false);
+
+  // useAuthenticator is available in all contexts (wrapped by AmplifyProvider)
+  // In demo mode, user will be null/undefined
+  const { user, signOut } = useAuthenticator((context) => [context.user]);
   const { children } = useChildren();
 
   const handleSignOut = async () => {
@@ -59,12 +62,20 @@ export function Nav() {
     }
   };
 
-  const navItems = [
+  // Navigation items with demo mode support
+  const baseNavItems = [
     { href: "/timeline", label: t("timeline"), icon: Home },
     { href: "/events", label: t("events"), icon: CreditCard },
     { href: "/dashboard", label: t("dashboard"), icon: BarChart3 },
     { href: "/settings", label: t("settings"), icon: Settings },
   ];
+
+  // Detect demo mode from URL path (more reliable than localStorage for SSR)
+  const isInDemoMode = pathname?.startsWith("/demo");
+
+  const navItems = isInDemoMode
+    ? baseNavItems.map((item) => ({ ...item, href: `/demo${item.href}` }))
+    : baseNavItems;
 
   const handleNavClick = () => {
     setIsOpen(false);
@@ -119,66 +130,76 @@ export function Nav() {
                   })}
                 </nav>
 
-                {/* Mobile Video Recording Button */}
-                <div className="px-6 mt-4">
-                  <Button
-                    variant="default"
-                    className="w-full justify-start gap-2"
-                    onClick={() => {
-                      handleNavClick();
-                      handleRecordVideo();
-                    }}
-                  >
-                    <Video className="h-4 w-4" />
-                    {t("recordVideo")}
-                  </Button>
-                </div>
-
-                {/* Mobile User Info & Logout */}
-                <div className="absolute bottom-8 left-6 right-6 space-y-3">
-                  <div className="text-sm text-muted-foreground px-2">
-                    {user?.signInDetails?.loginId}
+                {/* Mobile Video Recording Button (not in demo mode) */}
+                {!isInDemoMode && (
+                  <div className="px-6 mt-4">
+                    <Button
+                      variant="default"
+                      className="w-full justify-start gap-2"
+                      onClick={() => {
+                        handleNavClick();
+                        handleRecordVideo();
+                      }}
+                    >
+                      <Video className="h-4 w-4" />
+                      {t("recordVideo")}
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => {
-                      handleNavClick();
-                      handleSignOut();
-                    }}
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    {t("logout")}
-                  </Button>
-                </div>
+                )}
+
+                {/* Mobile User Info & Logout (not in demo mode) */}
+                {!isInDemoMode && (
+                  <div className="absolute bottom-8 left-6 right-6 space-y-3">
+                    <div className="text-sm text-muted-foreground px-2">
+                      {user?.signInDetails?.loginId}
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        handleNavClick();
+                        handleSignOut();
+                      }}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      {t("logout")}
+                    </Button>
+                  </div>
+                )}
               </SheetContent>
             </Sheet>
           </div>
 
           {/* Desktop Actions */}
           <div className="flex items-center gap-4">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleRecordVideo}
-              className="gap-2"
-            >
-              <Video className="h-4 w-4" />
-              <span className="hidden sm:inline">{t("recordVideo")}</span>
-            </Button>
+            {!isInDemoMode && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleRecordVideo}
+                className="gap-2"
+              >
+                <Video className="h-4 w-4" />
+                <span className="hidden sm:inline">{t("recordVideo")}</span>
+              </Button>
+            )}
             <LanguageSwitcher />
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              {user?.signInDetails?.loginId}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="hidden md:flex hover:bg-muted/60 transition-all"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              {t("logout")}
-            </Button>
+            {!isInDemoMode && (
+              <>
+                <span className="text-sm text-muted-foreground hidden sm:inline">
+                  {user?.signInDetails?.loginId}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="hidden md:flex hover:bg-muted/60 transition-all"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  {t("logout")}
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
