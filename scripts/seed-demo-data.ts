@@ -44,7 +44,7 @@ const TABLES = {
   TIC_CARDS: "TicCards",
   EPISODES: "Episodes",
   AI_LABELS: "AILabels",
-  MEDICATIONS: "Medications",
+  MEDICATION_CARDS: "MedicationCards",
   MEDICATION_LOGS: "MedicationLogs",
   LIFE_EVENTS: "LifeEvents",
 };
@@ -343,7 +343,7 @@ async function createMedications(childId: string): Promise<string[]> {
 
     await dynamodb.send(
       new PutItemCommand({
-        TableName: TABLES.MEDICATIONS,
+        TableName: TABLES.MEDICATION_CARDS,
         Item: {
           medicationId: { S: medicationId },
           childId: { S: childId },
