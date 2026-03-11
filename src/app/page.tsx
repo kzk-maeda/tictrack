@@ -14,8 +14,8 @@ export default function Home() {
     if (authStatus === "unauthenticated") {
       router.replace("/auth");
     } else if (authStatus === "authenticated") {
-      // Redirect to tic-cards as default page
-      router.replace("/tic-cards");
+      // Redirect to timeline as default page
+      router.replace("/timeline");
     }
   }, [authStatus, router]);
 

@@ -25,7 +25,8 @@
     "medications": "投薬管理",
     "settings": "設定",
     "logout": "ログアウト",
-    "dashboard": "ダッシュボード"
+    "dashboard": "ダッシュボード",
+    "recordVideo": "動画を撮影"
   },
   "children": {
     "title": "子ども",

@@ -25,7 +25,8 @@
     "medications": "Medications",
     "settings": "Settings",
     "logout": "Logout",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "recordVideo": "Record Video"
   },
   "children": {
     "title": "Children",

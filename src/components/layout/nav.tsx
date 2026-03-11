@@ -4,11 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthenticator } from "@aws-amplify/ui-react";
-import { LogOut, Home, CreditCard, Settings, Menu, Pill, BarChart3 } from "lucide-react";
+import { LogOut, Home, CreditCard, Settings, Menu, Pill, BarChart3, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "./language-switcher";
+import { useChildren } from "@/hooks/use-children";
+import { apiClient } from "@/lib/api";
+import type { Episode } from "@/lib/types";
 import {
   Sheet,
   SheetContent,
@@ -23,10 +26,37 @@ export function Nav() {
   const { user, signOut } = useAuthenticator((context) => [context.user]);
   const t = useTranslations("nav");
   const [isOpen, setIsOpen] = useState(false);
+  const { children } = useChildren();
 
   const handleSignOut = async () => {
     await signOut();
     router.push("/auth");
+  };
+
+  const handleRecordVideo = async () => {
+    // Get default child or first child
+    const defaultChild = children.find((c) => c.isDefault) || children[0];
+    if (!defaultChild) {
+      // No children available, redirect to timeline where they can add a child
+      router.push("/timeline");
+      return;
+    }
+
+    try {
+      // Create a new episode first
+      const episode = await apiClient<Episode>(`/children/${defaultChild.childId}/episodes`, {
+        method: "POST",
+        body: {
+          recordType: "video",
+          occurredAt: new Date().toISOString(),
+        },
+      });
+
+      // Navigate to capture page with childId and episodeId
+      router.push(`/capture?childId=${defaultChild.childId}&episodeId=${episode.episodeId}`);
+    } catch (error) {
+      console.error("Failed to create episode:", error);
+    }
   };
 
   const navItems = [
@@ -89,6 +119,21 @@ export function Nav() {
                   })}
                 </nav>
 
+                {/* Mobile Video Recording Button */}
+                <div className="px-6 mt-4">
+                  <Button
+                    variant="default"
+                    className="w-full justify-start gap-2"
+                    onClick={() => {
+                      handleNavClick();
+                      handleRecordVideo();
+                    }}
+                  >
+                    <Video className="h-4 w-4" />
+                    {t("recordVideo")}
+                  </Button>
+                </div>
+
                 {/* Mobile User Info & Logout */}
                 <div className="absolute bottom-8 left-6 right-6 space-y-3">
                   <div className="text-sm text-muted-foreground px-2">
@@ -112,6 +157,15 @@ export function Nav() {
 
           {/* Desktop Actions */}
           <div className="flex items-center gap-4">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleRecordVideo}
+              className="gap-2"
+            >
+              <Video className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("recordVideo")}</span>
+            </Button>
             <LanguageSwitcher />
             <span className="text-sm text-muted-foreground hidden sm:inline">
               {user?.signInDetails?.loginId}
