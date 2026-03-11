@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Video } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +28,6 @@ export function TicCardsList() {
   const t = useTranslations("ticCards");
   const tChildren = useTranslations("children");
   const tCommon = useTranslations("common");
-  const tCapture = useTranslations("capture");
   const { children, isLoading: childrenLoading } = useChildren();
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
 
@@ -52,23 +51,6 @@ export function TicCardsList() {
   } = useTicCards(selectedChildId);
 
   const { createEpisode } = useEpisodes(selectedChildId);
-
-  const handleRecordVideo = async () => {
-    if (!selectedChildId) return;
-
-    try {
-      // Create a new episode first
-      const episode = await createEpisode({
-        recordType: "video",
-        occurredAt: new Date().toISOString(),
-      });
-
-      // Navigate to capture page with childId and episodeId
-      router.push(`/capture?childId=${selectedChildId}&episodeId=${episode.episodeId}`);
-    } catch (error) {
-      console.error("Failed to create episode:", error);
-    }
-  };
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<TicCard | null>(null);
@@ -180,20 +162,6 @@ export function TicCardsList() {
           </SelectContent>
         </Select>
       </div>
-
-      {/* Record Video Button */}
-      {selectedChildId && (
-        <div className="mb-6">
-          <Button
-            onClick={handleRecordVideo}
-            className="w-full"
-            size="lg"
-          >
-            <Video className="mr-2 h-5 w-5" />
-            {tCapture("title")}
-          </Button>
-        </div>
-      )}
 
       {!selectedChildId ? (
         <p className="text-muted-foreground text-center py-8">
