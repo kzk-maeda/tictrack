@@ -3,6 +3,19 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createDynamoDBMock } from "./helpers/dynamodb-mock.js";
 import { createMockEvent } from "./helpers/event-factory.js";
 
+// Set up environment variables for table names
+process.env.USERS_TABLE = "Users";
+process.env.CHILDREN_TABLE = "Children";
+process.env.TIC_CARDS_TABLE = "TicCards";
+process.env.MEDICATION_CARDS_TABLE = "MedicationCards";
+process.env.EPISODES_TABLE = "Episodes";
+process.env.MEDICATION_LOGS_TABLE = "MedicationLogs";
+process.env.AI_LABELS_TABLE = "AILabels";
+process.env.CHECK_INS_TABLE = "CheckIns";
+process.env.WEEKLY_REPORTS_TABLE = "WeeklyReports";
+process.env.SHARE_TOKENS_TABLE = "ShareTokens";
+process.env.LIFE_EVENTS_TABLE = "LifeEvents";
+
 const { send } = createDynamoDBMock();
 
 const { handler } = await import("../handler.js");
@@ -228,7 +241,15 @@ describe("Children CRUD", () => {
           updatedAt: "2026-03-01T10:00:00Z",
         },
       });
-      // DeleteItem success
+      // Query TicCards (empty)
+      send.mockResolvedValueOnce({ Items: [] });
+      // Query Episodes (empty)
+      send.mockResolvedValueOnce({ Items: [] });
+      // Query MedicationCards (empty)
+      send.mockResolvedValueOnce({ Items: [] });
+      // Query LifeEvents (empty)
+      send.mockResolvedValueOnce({ Items: [] });
+      // DeleteItem for child
       send.mockResolvedValueOnce({});
 
       const event = createMockEvent({
