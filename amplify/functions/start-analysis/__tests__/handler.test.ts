@@ -50,6 +50,7 @@ function createMockEvent(
 ): APIGatewayProxyEvent {
   return {
     httpMethod: "POST",
+    path: `/episodes/${episodeId}/analyze`,
     pathParameters: { episodeId },
     body: body ? JSON.stringify(body) : null,
     headers: {},
@@ -193,6 +194,7 @@ describe("start-analysis Lambda - IDOR Fix", () => {
         (call) => call[0].input?.stateMachineArn
       );
       expect(sfnCall).toBeDefined();
+      if (!sfnCall) throw new Error("Step Functions call not found");
 
       const sfnInput = JSON.parse(sfnCall[0].input.input);
       expect(sfnInput.s3Key).toBe(realS3Key); // From DB
