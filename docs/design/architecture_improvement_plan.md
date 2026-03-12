@@ -640,8 +640,8 @@ IaC 変更の安全性を担保するため、CDK アサーションテストを
 凡例: 🔴 TDD | 🔄 リファクタリング（テスト保護下） | ⚙️ 設定変更（手動検証/CDKテスト）
 
 ### Phase 1 (P0 - 即時)
-- [ ] 🔴 1.1 start-analysis IDOR 修正
-- [ ] 🔴 1.2 Video playback 所有権チェック追加
+- [x] 🔴 1.1 start-analysis IDOR 修正
+- [x] 🔴 1.2 Video playback 所有権チェック追加
 - [ ] ⚙️ 1.3 CORS 制限（Lambda ヘッダー部分は部分的 TDD）
 
 ### Phase 2 (P1 - デモ後)
