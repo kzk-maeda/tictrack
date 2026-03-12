@@ -16,7 +16,7 @@ import {
   validateBirthYearMonth,
   parseJsonBody,
 } from "../lib/validation.js";
-import { ForbiddenError, NotFoundError } from "../lib/errors.js";
+import { getOwnedChild } from "../lib/authorization.js";
 
 export async function listChildren(
   event: APIGatewayProxyEvent,
@@ -62,28 +62,6 @@ export async function createChild(
   );
 
   return created(child);
-}
-
-async function getOwnedChild(
-  childId: string,
-  userId: string,
-): Promise<Child> {
-  const result = await docClient.send(
-    new GetCommand({
-      TableName: TableNames.CHILDREN,
-      Key: { childId },
-    }),
-  );
-
-  if (!result.Item) {
-    throw new NotFoundError("Child not found");
-  }
-
-  if (result.Item.userId !== userId) {
-    throw new ForbiddenError("Access denied");
-  }
-
-  return result.Item as Child;
 }
 
 export async function updateChild(

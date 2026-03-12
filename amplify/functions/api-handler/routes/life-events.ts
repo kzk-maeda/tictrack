@@ -16,8 +16,9 @@ import type { RouteResult } from "../types.js";
 import { getUserId } from "../lib/auth.js";
 import { docClient, TableNames } from "../lib/dynamodb.js";
 import { ok, created } from "../lib/response.js";
-import { ValidationError, ForbiddenError, NotFoundError } from "../lib/errors.js";
+import { ValidationError, NotFoundError } from "../lib/errors.js";
 import { ulid } from "ulidx";
+import { verifyChildOwnership } from "../lib/authorization.js";
 
 /**
  * GET /children/{childId}/life-events
@@ -265,23 +266,4 @@ export async function deleteLifeEvent(
   );
 
   return ok({ message: "Life event deleted successfully" });
-}
-
-/**
- * Verify that the child belongs to the authenticated user
- */
-async function verifyChildOwnership(
-  childId: string,
-  userId: string
-): Promise<void> {
-  const result = await docClient.send(
-    new GetCommand({
-      TableName: TableNames.CHILDREN,
-      Key: { childId },
-    })
-  );
-
-  if (!result.Item || result.Item.userId !== userId) {
-    throw new ForbiddenError("Access denied to this child's data");
-  }
 }
