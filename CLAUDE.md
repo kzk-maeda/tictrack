@@ -253,6 +253,34 @@ def test_generate_report(mock_bedrock, mock_ddb):
 
 ## Development Workflow
 
+### Git Branch Strategy
+
+**IMPORTANT: Always use feature branches. Never commit directly to main.**
+
+#### Branch Protection
+- This repository does NOT have GitHub branch protection enabled (requires GitHub Pro for private repos)
+- Developers must follow branch workflow discipline manually
+- Use the provided Claude Code skills to ensure proper workflow
+
+#### Required Workflow
+1. **Always start with a feature branch**: Use `/start-feature <name>` or `git checkout -b feature/<name>`
+2. **Never push directly to main**: All changes must go through Pull Requests
+3. **Create PRs for review**: Use `/create-pr` to create formatted pull requests
+4. **Clean up after merge**: Use `/cleanup-branch` to delete merged branches
+
+#### Why This Matters
+- ✅ Code review opportunity before merging
+- ✅ CI runs on feature branches before main
+- ✅ Easy to revert if needed
+- ✅ Clear history of what changed and why
+- ❌ Direct main commits bypass review and CI validation
+
+#### Emergency Exception
+If you accidentally push to main:
+1. Create a retroactive PR for documentation
+2. Or revert and re-apply via feature branch
+3. Update this document if the workflow needs adjustment
+
 ### Starting New Feature
 1. `/start-feature step{N}-{description}` (or `git checkout -b feature/...`)
 2. Write tests first (TDD Red phase)
