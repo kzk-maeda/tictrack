@@ -133,6 +133,101 @@ Next.js 14 App Router with i18n (next-intl):
 - `src/lib/` - Utilities (API client, types, date utils)
 - `messages/ja.json`, `messages/en.json` - i18n translations
 
+## Frontend Development Patterns
+
+### State Management: SWR (ADR 011)
+All data fetching MUST use SWR for cache sharing, optimistic updates, and automatic revalidation. See `docs/adr/011-adopt-swr-for-state-management.md` for full rationale.
+
+**Basic Pattern:**
+```typescript
+import useSWR from "swr";
+import { useCallback } from "react";
+import { apiClient } from "@/lib/api";
+
+export function useChildren() {
+  const { data, error, isLoading, mutate } = useSWR<Child[]>(
+    "/children",
+    async (url) => apiClient<Child[]>(url),
+    {
+      revalidateOnFocus: true,
+      dedupingInterval: 5000,
+    }
+  );
+
+  const children = data || [];
+
+  const createChild = useCallback(
+    async (data: CreateChildRequest) => {
+      const child = await apiClient<Child>("/children", {
+        method: "POST",
+        body: data,
+      });
+
+      // Optimistic update
+      await mutate([...children, child], false);
+      return child;
+    },
+    [children, mutate],
+  );
+
+  return { children, isLoading, error, createChild };
+}
+```
+
+**Conditional Fetching (parameter-dependent):**
+```typescript
+export function useTicCards(childId: string | null) {
+  const url = childId ? `/children/${childId}/tic-cards` : null;
+
+  const { data, error, isLoading, mutate } = useSWR<TicCard[]>(
+    url, // null prevents fetching
+    async (url) => apiClient<TicCard[]>(url),
+    { revalidateOnFocus: true, dedupingInterval: 5000 }
+  );
+
+  const ticCards = data || [];
+  // ...
+}
+```
+
+**Optimistic Update Pattern:**
+```typescript
+const updateChild = useCallback(
+  async (childId: string, data: UpdateChildRequest) => {
+    const updated = await apiClient<Child>(`/children/${childId}`, {
+      method: "PUT",
+      body: data,
+    });
+
+    // Immediately reflect in UI
+    await mutate(
+      children.map((c) => (c.childId === childId ? updated : c)),
+      false // skip revalidation (trust server response)
+    );
+
+    return updated;
+  },
+  [children, mutate],
+);
+```
+
+### Design Rules for Data Fetching
+
+**✅ DO:**
+- Use SWR for all data fetching (no useState + useEffect)
+- Implement optimistic updates with `mutate()` after mutations
+- Use conditional fetching (pass `null` as key) when parameters are undefined
+- Maintain consistent hook interface: `{ data, isLoading, error, mutations... }`
+- Configure appropriate cache settings:
+  - `revalidateOnFocus: true` (default, recommended)
+  - `dedupingInterval: 5000` (5 seconds deduplication)
+
+**❌ DON'T:**
+- Use useState + useEffect for manual data fetching
+- Forget to call `mutate()` after mutations (causes stale UI)
+- Over-revalidate (use `revalidateOnMount: false` cautiously)
+- Skip optimistic updates (degrades UX)
+
 ## Testing Strategy
 
 ### TDD Workflow (Strictly Enforced)
