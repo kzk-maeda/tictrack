@@ -1,18 +1,7 @@
-import { docClient } from "./dynamodb.js";
+import { docClient, TableNames } from "./dynamodb.js";
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
 import { NotFoundError, ForbiddenError } from "./errors.js";
-
-const CHILDREN_TABLE = process.env.CHILDREN_TABLE!;
-
-export interface Child {
-  childId: string;
-  userId: string;
-  displayName: string;
-  birthYear?: number;
-  createdAt: string;
-  updatedAt: string;
-  [key: string]: any;
-}
+import type { Child } from "../types.js";
 
 /**
  * Verify that a child belongs to the specified user
@@ -62,7 +51,7 @@ export async function getOwnedChild(
 async function fetchChild(childId: string): Promise<Child> {
   const result = await docClient.send(
     new GetCommand({
-      TableName: CHILDREN_TABLE,
+      TableName: TableNames.CHILDREN,
       Key: { childId },
     })
   );

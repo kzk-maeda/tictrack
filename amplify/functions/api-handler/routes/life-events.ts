@@ -16,7 +16,7 @@ import type { RouteResult } from "../types.js";
 import { getUserId } from "../lib/auth.js";
 import { docClient, TableNames } from "../lib/dynamodb.js";
 import { ok, created } from "../lib/response.js";
-import { ValidationError, ForbiddenError, NotFoundError } from "../lib/errors.js";
+import { ValidationError, NotFoundError } from "../lib/errors.js";
 import { ulid } from "ulidx";
 import { verifyChildOwnership } from "../lib/authorization.js";
 

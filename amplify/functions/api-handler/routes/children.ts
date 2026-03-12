@@ -16,7 +16,6 @@ import {
   validateBirthYearMonth,
   parseJsonBody,
 } from "../lib/validation.js";
-import { ForbiddenError, NotFoundError } from "../lib/errors.js";
 import { getOwnedChild } from "../lib/authorization.js";
 
 export async function listChildren(

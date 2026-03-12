@@ -10,7 +10,7 @@ import type { RouteResult } from "../types.js";
 import { getUserId } from "../lib/auth.js";
 import { docClient, TableNames } from "../lib/dynamodb.js";
 import { ok } from "../lib/response.js";
-import { BadRequestError, ForbiddenError } from "../lib/errors.js";
+import { BadRequestError } from "../lib/errors.js";
 import { aggregateData } from "../lib/aggregation.js";
 import { verifyChildOwnership } from "../lib/authorization.js";
 
