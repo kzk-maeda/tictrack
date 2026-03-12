@@ -29,6 +29,10 @@ Architecture Decision Record (ADR) は、アーキテクチャ上の重要な判
 | 007 | [next-intl を i18n に採用](./007-adopt-next-intl-for-i18n.md) | 承認済み | 2026-03-08 |
 | 008 | [Step Functions による AI 分析の非同期化](./008-async-ai-analysis-with-step-functions.md) | 承認済み | 2026-03-09 |
 | 009 | [AI ラベルデータ構造の修正と後方互換性](./009-ai-label-backward-compatibility.md) | 承認済み | 2026-03-10 |
+| 010 | [デモモードの実装（認証不要の体験機能）](./010-demo-mode-implementation.md) | 承認済み | 2026-03-12 |
+| 011 | [SWR をフロントエンド状態管理に採用](./011-adopt-swr-for-state-management.md) | 承認済み | 2026-03-12 |
+| 012 | [ドメインサービス層の導入](./012-introduce-domain-service-layer.md) | 承認済み | 2026-03-12 |
+| 013 | [API Client のモジュール分割とデモモード分離](./013-split-api-client-with-demo-mode.md) | 承認済み | 2026-03-12 |
 
 ## ADR の作成ルール
 
