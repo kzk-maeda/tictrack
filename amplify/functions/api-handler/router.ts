@@ -179,11 +179,27 @@ export async function route(
     if (!match) continue;
 
     const params: Record<string, string> = {};
-    if (match[1]) params.childId = match[1];
-    if (match[2]) params.cardId = match[2];
-    if (match[2]) params.episodeId = match[2];
-    if (match[2]) params.medicationId = match[2];
-    if (match[2]) params.logId = match[2];
+
+    // Special case: /life-events/{eventId} routes have eventId as first parameter, not childId
+    if (path.startsWith("/life-events/") && match[1]) {
+      params.eventId = match[1];
+    } else {
+      // Default: first capture group is childId
+      if (match[1]) params.childId = match[1];
+
+      // Second capture group depends on path context
+      if (match[2]) {
+        if (path.includes("/tic-cards/")) {
+          params.cardId = match[2];
+        } else if (path.includes("/episodes/")) {
+          params.episodeId = match[2];
+        } else if (path.includes("/medications/") && !path.includes("/medication-logs/")) {
+          params.medicationId = match[2];
+        } else if (path.includes("/medication-logs/")) {
+          params.logId = match[2];
+        }
+      }
+    }
 
     // Set pathParameters on event so handlers can access them
     event.pathParameters = params;
