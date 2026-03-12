@@ -1,56 +1,68 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import useSWR from "swr";
+import { useCallback } from "react";
 import * as api from "@/lib/api";
 import type { LifeEvent } from "@/lib/types";
 
 export function useLifeEvents(childId: string | null) {
-  const [lifeEvents, setLifeEvents] = useState<LifeEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const url = childId ? `/children/${childId}/life-events` : null;
 
-  // Fetch life events when childId changes
-  useEffect(() => {
-    if (!childId) {
-      setLifeEvents([]);
-      return;
+  const { data, error, isLoading, mutate } = useSWR<LifeEvent[]>(
+    url,
+    async () => (childId ? api.listLifeEvents(childId) : []),
+    {
+      revalidateOnFocus: true,
+      dedupingInterval: 5000,
     }
+  );
 
-    const fetchLifeEvents = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const events = await api.listLifeEvents(childId);
-        setLifeEvents(events);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to fetch life events"));
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const lifeEvents = data || [];
 
-    fetchLifeEvents();
-  }, [childId]);
+  const addLifeEvent = useCallback(
+    async (request: Omit<LifeEvent, "eventId" | "createdAt" | "updatedAt">) => {
+      if (!childId) throw new Error("No child selected");
 
-  const addLifeEvent = async (request: Omit<LifeEvent, "eventId" | "createdAt" | "updatedAt">) => {
-    if (!childId) throw new Error("No child selected");
+      const newEvent = await api.createLifeEvent(childId, request);
 
-    const newEvent = await api.createLifeEvent(childId, request);
-    setLifeEvents((prev) => [newEvent, ...prev]);
-    return newEvent;
-  };
+      // Optimistic update (prepend new event)
+      await mutate([newEvent, ...lifeEvents], false);
 
-  const updateLifeEvent = async (
-    eventId: string,
-    request: Partial<Omit<LifeEvent, "eventId" | "childId" | "createdAt" | "updatedAt">>
-  ) => {
-    const updated = await api.updateLifeEvent(eventId, request);
-    setLifeEvents((prev) => prev.map((e) => (e.eventId === eventId ? updated : e)));
-    return updated;
-  };
+      return newEvent;
+    },
+    [childId, lifeEvents, mutate]
+  );
 
-  const removeLifeEvent = async (eventId: string) => {
-    await api.deleteLifeEvent(eventId);
-    setLifeEvents((prev) => prev.filter((e) => e.eventId !== eventId));
-  };
+  const updateLifeEvent = useCallback(
+    async (
+      eventId: string,
+      request: Partial<Omit<LifeEvent, "eventId" | "childId" | "createdAt" | "updatedAt">>
+    ) => {
+      const updated = await api.updateLifeEvent(eventId, request);
+
+      // Optimistic update
+      await mutate(
+        lifeEvents.map((e) => (e.eventId === eventId ? updated : e)),
+        false
+      );
+
+      return updated;
+    },
+    [lifeEvents, mutate]
+  );
+
+  const removeLifeEvent = useCallback(
+    async (eventId: string) => {
+      await api.deleteLifeEvent(eventId);
+
+      // Optimistic update
+      await mutate(
+        lifeEvents.filter((e) => e.eventId !== eventId),
+        false
+      );
+    },
+    [lifeEvents, mutate]
+  );
 
   return {
     lifeEvents,

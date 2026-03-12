@@ -1,36 +1,23 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import useSWR from "swr";
+import { useCallback } from "react";
 import { apiClient } from "@/lib/api";
 import type { TicCard } from "@/lib/types";
 
 export function useTicCards(childId: string | null) {
-  const [ticCards, setTicCards] = useState<TicCard[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const url = childId ? `/children/${childId}/tic-cards` : null;
 
-  const refresh = useCallback(async () => {
-    if (!childId) {
-      setTicCards([]);
-      setIsLoading(false);
-      return;
+  const { data, error, isLoading, mutate } = useSWR<TicCard[]>(
+    url,
+    async (url) => apiClient<TicCard[]>(url),
+    {
+      revalidateOnFocus: true,
+      dedupingInterval: 5000,
     }
+  );
 
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await apiClient<TicCard[]>(`/children/${childId}/tic-cards`);
-      setTicCards(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load tic cards");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [childId]);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  const ticCards = data || [];
 
   const createTicCard = useCallback(
     async (data: {
@@ -48,10 +35,13 @@ export function useTicCards(childId: string | null) {
         method: "POST",
         body: data,
       });
-      setTicCards((prev) => [...prev, card]);
+
+      // Optimistic update
+      await mutate([...ticCards, card], false);
+
       return card;
     },
-    [childId],
+    [childId, ticCards, mutate],
   );
 
   const updateTicCard = useCallback(
@@ -77,12 +67,16 @@ export function useTicCards(childId: string | null) {
           body: data,
         },
       );
-      setTicCards((prev) =>
-        prev.map((c) => (c.cardId === cardId ? updated : c)),
+
+      // Optimistic update
+      await mutate(
+        ticCards.map((c) => (c.cardId === cardId ? updated : c)),
+        false
       );
+
       return updated;
     },
-    [childId],
+    [childId, ticCards, mutate],
   );
 
   const deleteTicCard = useCallback(
@@ -91,15 +85,22 @@ export function useTicCards(childId: string | null) {
       await apiClient(`/children/${childId}/tic-cards/${cardId}`, {
         method: "DELETE",
       });
-      setTicCards((prev) => prev.filter((c) => c.cardId !== cardId));
+
+      // Optimistic update
+      await mutate(
+        ticCards.filter((c) => c.cardId !== cardId),
+        false
+      );
     },
-    [childId],
+    [childId, ticCards, mutate],
   );
+
+  const refresh = useCallback(() => mutate(), [mutate]);
 
   return {
     ticCards,
     isLoading,
-    error,
+    error: error ? error.message : null,
     createTicCard,
     updateTicCard,
     deleteTicCard,
