@@ -23,7 +23,7 @@ import {
 import type {
   MedicationCardResponse,
   CreateMedicationCardRequest,
-} from "@/lib/api";
+} from "@/lib/api/medications";
 
 interface MedicationFormProps {
   medication?: MedicationCardResponse;

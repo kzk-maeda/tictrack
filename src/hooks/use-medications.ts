@@ -12,7 +12,7 @@ import {
   type CreateMedicationCardRequest,
   type UpdateMedicationCardRequest,
   type CreateMedicationLogRequest,
-} from "@/lib/api";
+} from "@/lib/api/medications";
 
 export function useMedications(childId: string | null) {
   const url = childId ? `/children/${childId}/medications` : null;

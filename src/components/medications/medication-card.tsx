@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Pill, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "next-intl";
-import type { MedicationCardResponse } from "@/lib/api";
+import type { MedicationCardResponse } from "@/lib/api/medications";
 
 interface MedicationCardProps {
   medication: MedicationCardResponse;

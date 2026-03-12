@@ -2,7 +2,7 @@
 
 import useSWR from "swr";
 import { useCallback } from "react";
-import * as api from "@/lib/api";
+import * as api from "@/lib/api/life-events";
 import type { LifeEvent } from "@/lib/types";
 
 export function useLifeEvents(childId: string | null) {
