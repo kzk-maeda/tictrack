@@ -1,30 +1,21 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import useSWR from "swr";
+import { useCallback } from "react";
 import { apiClient } from "@/lib/api";
 import type { Child } from "@/lib/types";
 
 export function useChildren() {
-  const [children, setChildren] = useState<Child[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const refresh = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await apiClient<Child[]>("/children");
-      setChildren(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load children");
-    } finally {
-      setIsLoading(false);
+  const { data, error, isLoading, mutate } = useSWR<Child[]>(
+    "/children",
+    async (url) => apiClient<Child[]>(url),
+    {
+      revalidateOnFocus: true,
+      dedupingInterval: 5000, // Cache for 5 seconds
     }
-  }, []);
+  );
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  const children = data || [];
 
   const createChild = useCallback(
     async (data: { displayName: string; birthYearMonth: string }) => {
@@ -32,10 +23,13 @@ export function useChildren() {
         method: "POST",
         body: data,
       });
-      setChildren((prev) => [...prev, child]);
+
+      // Optimistic update
+      await mutate([...children, child], false);
+
       return child;
     },
-    [],
+    [children, mutate],
   );
 
   const updateChild = useCallback(
@@ -47,27 +41,55 @@ export function useChildren() {
         method: "PUT",
         body: data,
       });
-      setChildren((prev) =>
-        prev.map((c) => (c.childId === childId ? updated : c)),
+
+      // Optimistic update
+      await mutate(
+        children.map((c) => (c.childId === childId ? updated : c)),
+        false
       );
+
       return updated;
     },
-    [],
+    [children, mutate],
   );
 
-  const deleteChild = useCallback(async (childId: string) => {
-    await apiClient(`/children/${childId}`, { method: "DELETE" });
-    setChildren((prev) => prev.filter((c) => c.childId !== childId));
-  }, []);
+  const deleteChild = useCallback(
+    async (childId: string) => {
+      await apiClient(`/children/${childId}`, { method: "DELETE" });
 
-  const setDefaultChild = useCallback(async (childId: string) => {
-    const updated = await apiClient<Child>(`/children/${childId}/set-default`, {
-      method: "POST",
-    });
-    // Refresh all children to update isDefault flags
-    await refresh();
-    return updated;
-  }, [refresh]);
+      // Optimistic update
+      await mutate(
+        children.filter((c) => c.childId !== childId),
+        false
+      );
+    },
+    [children, mutate],
+  );
 
-  return { children, isLoading, error, createChild, updateChild, deleteChild, setDefaultChild, refresh };
+  const setDefaultChild = useCallback(
+    async (childId: string) => {
+      const updated = await apiClient<Child>(`/children/${childId}/set-default`, {
+        method: "POST",
+      });
+
+      // Refresh all children to update isDefault flags
+      await mutate();
+
+      return updated;
+    },
+    [mutate],
+  );
+
+  const refresh = useCallback(() => mutate(), [mutate]);
+
+  return {
+    children,
+    isLoading,
+    error: error ? error.message : null,
+    createChild,
+    updateChild,
+    deleteChild,
+    setDefaultChild,
+    refresh
+  };
 }

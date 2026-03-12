@@ -1,43 +1,32 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import useSWR from "swr";
+import { useCallback, useMemo } from "react";
 import { apiClient } from "@/lib/api";
 import type { Episode } from "@/lib/types";
 
 export function useEpisodes(childId: string | null) {
-  const [episodes, setEpisodes] = useState<Episode[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Get last 30 days of episodes
+  const { from, to } = useMemo(() => {
+    const to = new Date().toISOString();
+    const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    return { from, to };
+  }, []);
 
-  const refresh = useCallback(async () => {
-    if (!childId) {
-      setEpisodes([]);
-      setIsLoading(false);
-      return;
+  const url = childId
+    ? `/children/${childId}/episodes?from=${from}&to=${to}`
+    : null;
+
+  const { data, error, isLoading, mutate } = useSWR<Episode[]>(
+    url,
+    async (url) => apiClient<Episode[]>(url),
+    {
+      revalidateOnFocus: true,
+      dedupingInterval: 5000,
     }
+  );
 
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // Get last 30 days of episodes
-      const to = new Date().toISOString();
-      const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-
-      const data = await apiClient<Episode[]>(
-        `/children/${childId}/episodes?from=${from}&to=${to}`,
-      );
-      setEpisodes(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load episodes");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [childId]);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  const episodes = data || [];
 
   const createEpisode = useCallback(
     async (data: {
@@ -52,10 +41,13 @@ export function useEpisodes(childId: string | null) {
         method: "POST",
         body: data,
       });
-      setEpisodes((prev) => [episode, ...prev]);
+
+      // Optimistic update (prepend new episode)
+      await mutate([episode, ...episodes], false);
+
       return episode;
     },
-    [childId],
+    [childId, episodes, mutate],
   );
 
   const getVideoUrl = useCallback(
@@ -69,5 +61,7 @@ export function useEpisodes(childId: string | null) {
     [childId],
   );
 
-  return { episodes, isLoading, error, createEpisode, getVideoUrl, refresh };
+  const refresh = useCallback(() => mutate(), [mutate]);
+
+  return { episodes, isLoading, error: error ? error.message : null, createEpisode, getVideoUrl, refresh };
 }

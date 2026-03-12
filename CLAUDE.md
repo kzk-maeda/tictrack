@@ -133,6 +133,22 @@ Next.js 14 App Router with i18n (next-intl):
 - `src/lib/` - Utilities (API client, types, date utils)
 - `messages/ja.json`, `messages/en.json` - i18n translations
 
+## Frontend Development Patterns
+
+### State Management: SWR (ADR 011)
+All data fetching MUST use SWR for cache sharing, optimistic updates, and automatic revalidation. See `docs/adr/011-adopt-swr-for-state-management.md` for implementation patterns.
+
+**✅ DO:**
+- Use SWR for all data fetching (no useState + useEffect)
+- Implement optimistic updates with `mutate()` after mutations
+- Use conditional fetching (pass `null` as key) when parameters are undefined
+- Configure: `revalidateOnFocus: true`, `dedupingInterval: 5000`
+
+**❌ DON'T:**
+- Use useState + useEffect for manual data fetching
+- Forget to call `mutate()` after mutations
+- Skip optimistic updates
+
 ## Testing Strategy
 
 ### TDD Workflow (Strictly Enforced)
