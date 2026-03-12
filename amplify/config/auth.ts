@@ -1,3 +1,4 @@
+import { PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import type { DatabaseConstruct } from "../custom/database/index";
 
 export interface AuthConfig {
@@ -79,11 +80,15 @@ export function configureAuth(config: AuthConfig): void {
     config.validateInvitation.resources.lambda
   );
 
-  // Grant User Pool permission to invoke Lambda
-  config.validateInvitation.resources.lambda.grantInvoke(config.auth.userPool);
+  // Get the Lambda function from validateInvitation
+  const validateInvitationLambda = config.validateInvitation.resources.lambda;
+
+  // Grant Cognito service permission to invoke the Lambda
+  validateInvitationLambda.addPermission("CognitoInvokePermission", {
+    principal: new ServicePrincipal("cognito-idp.amazonaws.com"),
+    sourceArn: config.auth.userPool.userPoolArn,
+  });
 
   // Add Pre-signup trigger to User Pool via LambdaConfig
-  userPoolCfn.addPropertyOverride("LambdaConfig", {
-    PreSignUp: config.validateInvitation.resources.lambda.functionArn,
-  });
+  userPoolCfn.addPropertyOverride("LambdaConfig.PreSignUp", validateInvitationLambda.functionArn);
 }
