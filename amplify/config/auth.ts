@@ -1,3 +1,14 @@
+import { PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import type { DatabaseConstruct } from "../custom/database/index";
+
+export interface AuthConfig {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  auth: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  validateInvitation: any;
+  database: DatabaseConstruct;
+}
+
 /**
  * Helper: get L1 CfnResource from L2 construct
  */
@@ -7,15 +18,14 @@ function cfn(construct: any): { addPropertyOverride(path: string, value: unknown
 }
 
 /**
- * Configure Cognito User Pool and User Pool Client overrides
+ * Configure Cognito User Pool and User Pool Client overrides + Pre-signup trigger
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function configureAuth(auth: any): void {
+export function configureAuth(config: AuthConfig): void {
   // =====================================================================
   // Cognito User Pool overrides
   // =====================================================================
 
-  const userPoolCfn = cfn(auth.userPool);
+  const userPoolCfn = cfn(config.auth.userPool);
 
   // Password policy: min 8, uppercase, lowercase, numbers, symbols
   userPoolCfn.addPropertyOverride("Policies", {
@@ -43,7 +53,7 @@ export function configureAuth(auth: any): void {
   // User Pool Client overrides
   // =====================================================================
 
-  const userPoolClientCfn = cfn(auth.userPoolClient);
+  const userPoolClientCfn = cfn(config.auth.userPoolClient);
 
   // Token validity (1h/1h/30d)
   userPoolClientCfn.addPropertyOverride("AccessTokenValidity", 1);
@@ -54,4 +64,31 @@ export function configureAuth(auth: any): void {
     IdToken: "hours",
     RefreshToken: "days",
   });
+
+  // =====================================================================
+  // Pre-signup Trigger: Validate invitation code
+  // =====================================================================
+
+  // Add environment variable for invitations table
+  config.validateInvitation.addEnvironment(
+    "INVITATIONS_TABLE",
+    config.database.invitationsTable.tableName
+  );
+
+  // Grant Lambda permission to read/write invitations table
+  config.database.invitationsTable.grantReadWriteData(
+    config.validateInvitation.resources.lambda
+  );
+
+  // Get the Lambda function from validateInvitation
+  const validateInvitationLambda = config.validateInvitation.resources.lambda;
+
+  // Grant Cognito service permission to invoke the Lambda
+  validateInvitationLambda.addPermission("CognitoInvokePermission", {
+    principal: new ServicePrincipal("cognito-idp.amazonaws.com"),
+    sourceArn: config.auth.userPool.userPoolArn,
+  });
+
+  // Add Pre-signup trigger to User Pool via LambdaConfig
+  userPoolCfn.addPropertyOverride("LambdaConfig.PreSignUp", validateInvitationLambda.functionArn);
 }

@@ -4,6 +4,7 @@ import { auth } from "./auth/resource";
 import { storage } from "./storage/resource";
 import { apiHandler } from "./functions/api-handler/resource";
 import { agentcoreProxy } from "./functions/agentcore-proxy/resource";
+import { validateInvitation } from "./functions/validate-invitation/resource";
 import { configureAuth } from "./config/auth";
 import { configureStorage } from "./config/storage";
 import { configureDatabase } from "./config/database";
@@ -19,14 +20,12 @@ const backend = defineBackend({
   storage,
   apiHandler,
   agentcoreProxy,
+  validateInvitation,
 });
 
 // =====================================================================
 // Configuration: Apply overrides and create custom stacks
 // =====================================================================
-
-// Auth: Cognito User Pool and User Pool Client overrides
-configureAuth(backend.auth.resources);
 
 // Storage: S3 media bucket lifecycle rules
 configureStorage(backend.storage.resources);
@@ -36,6 +35,13 @@ const { database, foundation } = configureDatabase({
   createStack: backend.createStack.bind(backend),
   apiHandler: backend.apiHandler,
   storage: backend.storage.resources,
+});
+
+// Auth: Cognito User Pool and User Pool Client overrides + Pre-signup trigger
+configureAuth({
+  auth: backend.auth.resources,
+  validateInvitation: backend.validateInvitation,
+  database,
 });
 
 // AgentCore: AgentCore Runtime + agentcore-proxy env vars + IAM

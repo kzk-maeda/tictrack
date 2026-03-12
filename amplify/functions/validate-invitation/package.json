@@ -1,0 +1,14 @@
+{
+  "name": "validate-invitation",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.698.0",
+    "@aws-sdk/lib-dynamodb": "^3.698.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^22.10.2"
+  }
+}

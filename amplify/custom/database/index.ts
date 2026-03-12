@@ -3,7 +3,7 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import { RemovalPolicy } from "aws-cdk-lib";
 
 /**
- * DatabaseConstruct — 11 DynamoDB tables for TicTrack
+ * DatabaseConstruct — 12 DynamoDB tables for TicTrack
  *
  * All tables use PAY_PER_REQUEST billing and AWS-managed encryption.
  * PITR disabled (prototype). RemovalPolicy.DESTROY for sandbox cleanup.
@@ -20,8 +20,9 @@ export class DatabaseConstruct extends Construct {
   public readonly weeklyReportsTable: dynamodb.Table;
   public readonly shareTokensTable: dynamodb.Table;
   public readonly lifeEventsTable: dynamodb.Table;
+  public readonly invitationsTable: dynamodb.Table;
 
-  /** ARNs of all 11 tables */
+  /** ARNs of all 12 tables */
   public readonly allTableArns: string[];
   /** ARNs of all tables + their GSI indexes */
   public readonly allTableAndIndexArns: string[];
@@ -173,6 +174,19 @@ export class DatabaseConstruct extends Construct {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    // --- Invitations (for invite-only signup) ---
+    this.invitationsTable = new dynamodb.Table(this, "Invitations", {
+      tableName: "Invitations",
+      partitionKey: { name: "invitationCode", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+    this.invitationsTable.addGlobalSecondaryIndex({
+      indexName: "email-index",
+      partitionKey: { name: "email", type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
     // Convenience properties for IAM grants
     this.allTableArns = [
       this.usersTable,
@@ -186,6 +200,7 @@ export class DatabaseConstruct extends Construct {
       this.weeklyReportsTable,
       this.shareTokensTable,
       this.lifeEventsTable,
+      this.invitationsTable,
     ].map((t) => t.tableArn);
 
     this.allTableAndIndexArns = this.allTableArns.flatMap((arn) => [
