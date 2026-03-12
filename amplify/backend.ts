@@ -156,6 +156,8 @@ const api = new ApiConstruct(backendIntegrationStack, "Api", {
   corsOrigin: "*",
   stateMachineArn: orchestration.stateMachine.stateMachineArn,
   episodesTable: database.episodesTable,
+  childrenTable: database.childrenTable,
+  mediaBucket: backend.storage.resources.bucket,
   region: Stack.of(backendIntegrationStack).region,
 });
 

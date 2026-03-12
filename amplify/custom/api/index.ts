@@ -22,6 +22,10 @@ export interface ApiConstructProps {
   stateMachineArn?: string;
   /** Episodes DynamoDB table (optional, for async AI analysis) */
   episodesTable?: dynamodb.ITable;
+  /** Children DynamoDB table (optional, for ownership verification) */
+  childrenTable?: dynamodb.ITable;
+  /** S3 media bucket (optional, for video storage) */
+  mediaBucket?: any; // Using any to avoid importing s3.IBucket
   /** AWS Region */
   region?: string;
 }
@@ -46,7 +50,7 @@ export class ApiConstruct extends Construct {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
 
-    const { userPool, apiHandlerFn, corsOrigin, agentCoreProxyFn, stateMachineArn, episodesTable, region } = props;
+    const { userPool, apiHandlerFn, corsOrigin, agentCoreProxyFn, stateMachineArn, episodesTable, childrenTable, mediaBucket, region } = props;
 
     // --- REST API ---
     this.restApi = new apigateway.RestApi(this, "RestApi", {
@@ -97,7 +101,7 @@ export class ApiConstruct extends Construct {
     });
 
     // --- Start Analysis Integration: /analyze/{episodeId} (Step Functions) ---
-    if (stateMachineArn && episodesTable) {
+    if (stateMachineArn && episodesTable && childrenTable && mediaBucket) {
       // Get current file's directory path (ES module compatible)
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = dirname(__filename);
@@ -116,6 +120,8 @@ export class ApiConstruct extends Construct {
           environment: {
             STATE_MACHINE_ARN: stateMachineArn,
             EPISODES_TABLE: episodesTable.tableName,
+            CHILDREN_TABLE: childrenTable.tableName,
+            MEDIA_BUCKET: mediaBucket.bucketName,
             // AWS_REGION is automatically provided by Lambda runtime
           },
         }
@@ -129,8 +135,11 @@ export class ApiConstruct extends Construct {
         })
       );
 
-      // Grant permissions to update Episodes table
-      episodesTable.grantWriteData(startAnalysisLambda);
+      // Grant permissions to read Episodes table and update with analysis status
+      episodesTable.grantReadWriteData(startAnalysisLambda);
+
+      // Grant permissions to read Children table for ownership verification
+      childrenTable.grantReadData(startAnalysisLambda);
 
       const startAnalysisIntegration = new apigateway.LambdaIntegration(
         startAnalysisLambda,
