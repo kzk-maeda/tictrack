@@ -180,10 +180,20 @@ export async function route(
 
     const params: Record<string, string> = {};
     if (match[1]) params.childId = match[1];
-    if (match[2]) params.cardId = match[2];
-    if (match[2]) params.episodeId = match[2];
-    if (match[2]) params.medicationId = match[2];
-    if (match[2]) params.logId = match[2];
+    if (match[2]) {
+      // Map second parameter based on URL path context
+      if (path.includes('/tic-cards/')) {
+        params.cardId = match[2];
+      } else if (path.includes('/episodes/')) {
+        params.episodeId = match[2];
+      } else if (path.includes('/medications/') && !path.includes('/medication-logs/')) {
+        params.medicationId = match[2];
+      } else if (path.includes('/medication-logs/')) {
+        params.logId = match[2];
+      } else if (path.includes('/life-events/')) {
+        params.eventId = match[2];
+      }
+    }
 
     // Set pathParameters on event so handlers can access them
     event.pathParameters = params;
