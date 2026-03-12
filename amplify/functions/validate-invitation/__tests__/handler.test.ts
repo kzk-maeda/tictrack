@@ -1,8 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { PreSignUpTriggerEvent } from "aws-lambda";
+import type { PreSignUpTriggerEvent, Context } from "aws-lambda";
 
 // Create mock functions
 const mockSend = vi.fn();
+
+// Mock Context
+const mockContext: Context = {
+  callbackWaitsForEmptyEventLoop: false,
+  functionName: "validate-invitation",
+  functionVersion: "1",
+  invokedFunctionArn: "arn:aws:lambda:us-east-1:123456789012:function:validate-invitation",
+  memoryLimitInMB: "128",
+  awsRequestId: "test-request-id",
+  logGroupName: "/aws/lambda/validate-invitation",
+  logStreamName: "test-stream",
+  getRemainingTimeInMillis: () => 30000,
+  done: () => {},
+  fail: () => {},
+  succeed: () => {},
+};
 
 // Mock AWS SDK
 vi.mock("@aws-sdk/client-dynamodb", () => {
@@ -84,7 +100,7 @@ describe("validate-invitation Lambda", () => {
       // Mock DynamoDB UpdateCommand response
       mockSend.mockResolvedValueOnce({});
 
-      const result = await handler(event);
+      const result = await handler(event, mockContext, () => {});
 
       expect(result).toEqual(event);
       expect(mockSend).toHaveBeenCalledTimes(2);
@@ -105,7 +121,7 @@ describe("validate-invitation Lambda", () => {
 
       mockSend.mockResolvedValueOnce({});
 
-      const result = await handler(event);
+      const result = await handler(event, mockContext, () => {});
 
       expect(result).toEqual(event);
     });
@@ -125,7 +141,7 @@ describe("validate-invitation Lambda", () => {
 
       mockSend.mockResolvedValueOnce({});
 
-      const result = await handler(event);
+      const result = await handler(event, mockContext, () => {});
 
       expect(result).toEqual(event);
     });
@@ -135,7 +151,7 @@ describe("validate-invitation Lambda", () => {
     it("should reject signup when invitation code is missing", async () => {
       const event = createEvent("test@example.com");
 
-      await expect(handler(event)).rejects.toThrow(
+      await expect(handler(event, mockContext, () => {})).rejects.toThrow(
         "Invitation code is required"
       );
 
@@ -149,7 +165,7 @@ describe("validate-invitation Lambda", () => {
         // No Item returned
       });
 
-      await expect(handler(event)).rejects.toThrow(
+      await expect(handler(event, mockContext, () => {})).rejects.toThrow(
         "Invalid invitation code"
       );
     });
@@ -169,7 +185,7 @@ describe("validate-invitation Lambda", () => {
         },
       });
 
-      await expect(handler(event)).rejects.toThrow(
+      await expect(handler(event, mockContext, () => {})).rejects.toThrow(
         "Invitation code has already been used"
       );
     });
@@ -187,7 +203,7 @@ describe("validate-invitation Lambda", () => {
         },
       });
 
-      await expect(handler(event)).rejects.toThrow(
+      await expect(handler(event, mockContext, () => {})).rejects.toThrow(
         "Invitation code has expired"
       );
     });
@@ -205,7 +221,7 @@ describe("validate-invitation Lambda", () => {
         },
       });
 
-      await expect(handler(event)).rejects.toThrow(
+      await expect(handler(event, mockContext, () => {})).rejects.toThrow(
         "This invitation is for a different email address"
       );
     });
@@ -220,7 +236,7 @@ describe("validate-invitation Lambda", () => {
       );
 
       // Handler re-throws original error for better debugging
-      await expect(handler(event)).rejects.toThrow(
+      await expect(handler(event, mockContext, () => {})).rejects.toThrow(
         "DynamoDB connection error"
       );
     });
