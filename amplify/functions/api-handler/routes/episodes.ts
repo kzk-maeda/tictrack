@@ -7,26 +7,7 @@ import { docClient, TableNames } from "../lib/dynamodb.js";
 import { ok, created, noContent } from "../lib/response.js";
 import { parseJsonBody, validateISODateTime } from "../lib/validation.js";
 import { ForbiddenError, NotFoundError } from "../lib/errors.js";
-
-async function verifyChildOwnership(
-  childId: string,
-  userId: string,
-): Promise<void> {
-  const result = await docClient.send(
-    new GetCommand({
-      TableName: TableNames.CHILDREN,
-      Key: { childId },
-    }),
-  );
-
-  if (!result.Item) {
-    throw new NotFoundError("Child not found");
-  }
-
-  if (result.Item.userId !== userId) {
-    throw new ForbiddenError("Access denied");
-  }
-}
+import { verifyChildOwnership } from "../lib/authorization.js";
 
 async function verifyTicCardOwnership(
   ticCardId: string,

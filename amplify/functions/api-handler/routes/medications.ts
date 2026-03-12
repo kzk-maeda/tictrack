@@ -19,26 +19,7 @@ import {
   validateFrequency,
 } from "../lib/validation.js";
 import { ForbiddenError, NotFoundError, ValidationError } from "../lib/errors.js";
-
-async function verifyChildOwnership(
-  childId: string,
-  userId: string,
-): Promise<void> {
-  const result = await docClient.send(
-    new GetCommand({
-      TableName: TableNames.CHILDREN,
-      Key: { childId },
-    }),
-  );
-
-  if (!result.Item) {
-    throw new NotFoundError("Child not found");
-  }
-
-  if (result.Item.userId !== userId) {
-    throw new ForbiddenError("Access denied");
-  }
-}
+import { verifyChildOwnership } from "../lib/authorization.js";
 
 export async function listMedicationCards(
   event: APIGatewayProxyEvent,

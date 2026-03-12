@@ -12,6 +12,7 @@ import { docClient, TableNames } from "../lib/dynamodb.js";
 import { ok } from "../lib/response.js";
 import { BadRequestError, ForbiddenError } from "../lib/errors.js";
 import { aggregateData } from "../lib/aggregation.js";
+import { verifyChildOwnership } from "../lib/authorization.js";
 
 /**
  * GET /children/{childId}/dashboard
@@ -95,25 +96,6 @@ function parseDate(dateStr: string): Date {
     return new Date(dateStr + "T00:00:00Z");
   }
   return new Date(dateStr);
-}
-
-/**
- * Verify that the child belongs to the authenticated user
- */
-async function verifyChildOwnership(
-  childId: string,
-  userId: string
-): Promise<void> {
-  const result = await docClient.send(
-    new GetCommand({
-      TableName: TableNames.CHILDREN,
-      Key: { childId },
-    })
-  );
-
-  if (!result.Item || result.Item.userId !== userId) {
-    throw new ForbiddenError("Access denied to this child's data");
-  }
 }
 
 /**
