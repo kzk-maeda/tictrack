@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import type { MedicationCardResponse } from "@/lib/api";
+import type { MedicationCardResponse } from "@/lib/api/medications";
 
 export function MedicationsList() {
   const t = useTranslations("medications");

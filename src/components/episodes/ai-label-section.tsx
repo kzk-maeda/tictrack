@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { triggerAIAnalysis, submitAILabelFeedback, getAILabel, getAnalysisStatus } from "@/lib/api";
+import { triggerAIAnalysis, submitAILabelFeedback, getAILabel, getAnalysisStatus } from "@/lib/api/ai-labels";
 import type { Episode, AILabel } from "@/lib/types";
 import { getSymptomName } from "@/lib/tic-symptoms";
 import outputs from "../../../amplify_outputs.json";

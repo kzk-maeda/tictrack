@@ -7,9 +7,8 @@ import { EpisodeCard } from "@/components/episodes/episode-card";
 import { TimelineCard } from "./timeline-card";
 import { formatTime } from "@/lib/date-utils";
 import { formatDate } from "@/lib/date-utils";
-import { deleteMedicationLog } from "@/lib/api";
+import { deleteMedicationLog, type MedicationLogResponse } from "@/lib/api/medications";
 import type { Episode, TicCard, AILabel, MedicationCard } from "@/lib/types";
-import type { MedicationLogResponse } from "@/lib/api";
 
 interface TimelineDayGroupProps {
   date: string;

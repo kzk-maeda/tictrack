@@ -20,7 +20,7 @@ import { useChildren } from "@/hooks/use-children";
 import { useEpisodes } from "@/hooks/use-episodes";
 import { useTicCards } from "@/hooks/use-tic-cards";
 import { useMedications } from "@/hooks/use-medications";
-import { listMedicationLogs, type MedicationLogResponse } from "@/lib/api";
+import { listMedicationLogs, type MedicationLogResponse } from "@/lib/api/medications";
 import type { Episode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
