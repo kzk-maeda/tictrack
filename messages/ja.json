@@ -21,7 +21,10 @@
     "coppaConsentFull": "子どものデータ収集・処理に同意します。データはチック症状の記録・分析のみに使用されます。",
     "demoMode": "デモモードを試す",
     "demoModeDescription": "サインアップ不要でアプリを体験できます",
-    "or": "または"
+    "or": "または",
+    "invitationCode": "招待コード",
+    "invitationCodePlaceholder": "招待コードを入力してください",
+    "invitationCodeDescription": "サインアップには招待コードが必要です"
   },
   "demo": {
     "title": "デモモード",

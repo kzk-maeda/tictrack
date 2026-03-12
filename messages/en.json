@@ -21,7 +21,10 @@
     "coppaConsentFull": "I consent to the collection and processing of my child's data. Data will only be used for recording and analyzing tic symptoms.",
     "demoMode": "Try Demo Mode",
     "demoModeDescription": "Experience the app without signing up",
-    "or": "or"
+    "or": "or",
+    "invitationCode": "Invitation Code",
+    "invitationCodePlaceholder": "Enter your invitation code",
+    "invitationCodeDescription": "An invitation code is required to sign up"
   },
   "demo": {
     "title": "Demo Mode",

@@ -3,10 +3,11 @@
 import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { signUp } from "aws-amplify/auth";
 
 function AuthRedirect() {
   const { authStatus } = useAuthenticator((context) => [context.authStatus]);
@@ -51,6 +52,7 @@ function CoppaConsent() {
 export default function AuthPage() {
   const router = useRouter();
   const t = useTranslations("auth");
+  const [invitationCode, setInvitationCode] = useState("");
 
   const handleDemoMode = () => {
     // Set demo mode flag in localStorage
@@ -103,12 +105,50 @@ export default function AuthPage() {
 
         <Authenticator
           signUpAttributes={["email"]}
+          services={{
+            async handleSignUp(input) {
+              const { username, password } = input;
+
+              return await signUp({
+                username,
+                password,
+                options: {
+                  userAttributes: {
+                    email: username, // username is the email in Cognito
+                  },
+                  validationData: {
+                    invitationCode,
+                  },
+                },
+              });
+            },
+          }}
           components={{
             SignUp: {
               FormFields() {
                 return (
                   <>
                     <Authenticator.SignUp.FormFields />
+
+                    {/* Invitation Code Field */}
+                    <div className="amplify-field">
+                      <label className="amplify-label" htmlFor="invitationCode">
+                        {t("invitationCode")} <span className="amplify-field__required">*</span>
+                      </label>
+                      <input
+                        id="invitationCode"
+                        type="text"
+                        className="amplify-input"
+                        placeholder={t("invitationCodePlaceholder")}
+                        value={invitationCode}
+                        onChange={(e) => setInvitationCode(e.target.value)}
+                        required
+                      />
+                      <small className="amplify-field__description">
+                        {t("invitationCodeDescription")}
+                      </small>
+                    </div>
+
                     <CoppaConsent />
                   </>
                 );
