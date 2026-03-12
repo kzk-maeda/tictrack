@@ -5,12 +5,13 @@ import { docClient } from "../lib/dynamodb.js";
 import { GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { ok } from "../lib/response.js";
 import { getUserId } from "../lib/auth.js";
-import { ValidationError, NotFoundError } from "../lib/errors.js";
+import { ValidationError, NotFoundError, ForbiddenError } from "../lib/errors.js";
 import type { RouteResult } from "../types.js";
 
 const s3Client = new S3Client({});
 const MEDIA_BUCKET = process.env.S3_MEDIA_BUCKET!;
 const EPISODES_TABLE = process.env.EPISODES_TABLE!;
+const CHILDREN_TABLE = process.env.CHILDREN_TABLE!;
 
 const ALLOWED_CONTENT_TYPES = [
   "video/mp4",
@@ -19,6 +20,54 @@ const ALLOWED_CONTENT_TYPES = [
   "video/webm;codecs=vp9",
 ];
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
+/**
+ * Verify that episode belongs to child and child belongs to user
+ * @throws {ForbiddenError} if ownership verification fails
+ */
+async function verifyOwnership(
+  episodeId: string,
+  childIdFromPath: string,
+  authenticatedUserId: string
+): Promise<void> {
+  // Fetch episode from database
+  const episodeResult = await docClient.send(
+    new GetCommand({
+      TableName: EPISODES_TABLE,
+      Key: { episodeId },
+    })
+  );
+
+  if (!episodeResult.Item) {
+    throw new NotFoundError("Episode not found");
+  }
+
+  const episode = episodeResult.Item;
+
+  // Verify episode belongs to the specified child
+  if (episode.childId !== childIdFromPath) {
+    throw new ForbiddenError("This episode does not belong to this child");
+  }
+
+  // Fetch child to verify ownership
+  const childResult = await docClient.send(
+    new GetCommand({
+      TableName: CHILDREN_TABLE,
+      Key: { childId: episode.childId },
+    })
+  );
+
+  if (!childResult.Item) {
+    throw new NotFoundError("Child not found");
+  }
+
+  const child = childResult.Item;
+
+  // Verify child belongs to authenticated user
+  if (child.userId !== authenticatedUserId) {
+    throw new ForbiddenError("This child does not belong to you");
+  }
+}
 
 export async function handleVideoUploadUrl(
   event: APIGatewayProxyEvent,
@@ -40,6 +89,11 @@ export async function handleVideoUploadUrl(
 
     console.log("Parsed request", { userId, childId, episodeId, contentType, fileSize });
 
+    // Validate path parameters
+    if (!childId || !episodeId) {
+      throw new ValidationError("childId and episodeId are required");
+    }
+
     // Validation
     if (!ALLOWED_CONTENT_TYPES.includes(contentType)) {
       throw new ValidationError(
@@ -53,21 +107,10 @@ export async function handleVideoUploadUrl(
       );
     }
 
-    // Verify episode exists and belongs to user
-    console.log("Checking episode exists", { episodeId, childId });
-    const getResult = await docClient.send(
-      new GetCommand({
-        TableName: EPISODES_TABLE,
-        Key: { episodeId },
-      }),
-    );
-
-    if (!getResult.Item) {
-      console.log("Episode not found");
-      throw new NotFoundError("Episode not found");
-    }
-
-    console.log("Episode found", getResult.Item);
+    // Verify ownership: episode belongs to child, child belongs to user
+    console.log("Verifying ownership", { episodeId, childId, userId });
+    await verifyOwnership(episodeId, childId, userId);
+    console.log("Ownership verified");
 
     // Generate S3 key
     const timestamp = Date.now();
@@ -97,21 +140,18 @@ export async function handleVideoUploadUrl(
 export async function handleVideoUploadComplete(
   event: APIGatewayProxyEvent,
 ): Promise<RouteResult> {
+  const userId = getUserId(event);
   const { childId, episodeId } = event.pathParameters || {};
   const body = JSON.parse(event.body || "{}");
   const { s3Key, mimeType, fileSize, duration } = body;
 
-  // Verify episode exists
-  const getResult = await docClient.send(
-    new GetCommand({
-      TableName: EPISODES_TABLE,
-      Key: { episodeId },
-    }),
-  );
-
-  if (!getResult.Item) {
-    throw new NotFoundError("Episode not found");
+  // Validate path parameters
+  if (!childId || !episodeId) {
+    throw new ValidationError("childId and episodeId are required");
   }
+
+  // Verify ownership: episode belongs to child, child belongs to user
+  await verifyOwnership(episodeId, childId, userId);
 
   // Update episode with video metadata
   const updateResult = await docClient.send(
@@ -138,7 +178,16 @@ export async function handleVideoUploadComplete(
 export async function handleVideoPlaybackUrl(
   event: APIGatewayProxyEvent,
 ): Promise<RouteResult> {
+  const userId = getUserId(event);
   const { childId, episodeId } = event.pathParameters || {};
+
+  // Validate path parameters
+  if (!childId || !episodeId) {
+    throw new ValidationError("childId and episodeId are required");
+  }
+
+  // Verify ownership: episode belongs to child, child belongs to user
+  await verifyOwnership(episodeId, childId, userId);
 
   // Get episode with video metadata
   const getResult = await docClient.send(
