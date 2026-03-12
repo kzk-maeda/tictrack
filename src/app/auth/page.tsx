@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 
 function AuthRedirect() {
   const { authStatus } = useAuthenticator((context) => [context.authStatus]);
@@ -18,6 +19,33 @@ function AuthRedirect() {
   }, [authStatus, router]);
 
   return null;
+}
+
+function CoppaConsent() {
+  const t = useTranslations("auth");
+
+  return (
+    <div className="mt-4 space-y-3 text-sm">
+      <label className="flex items-start gap-2">
+        <input
+          type="checkbox"
+          name="coppa_guardian"
+          required
+          className="mt-1 h-4 w-4"
+        />
+        <span>{t("coppaGuardianFull")}</span>
+      </label>
+      <label className="flex items-start gap-2">
+        <input
+          type="checkbox"
+          name="coppa_consent"
+          required
+          className="mt-1 h-4 w-4"
+        />
+        <span>{t("coppaConsentFull")}</span>
+      </label>
+    </div>
+  );
 }
 
 export default function AuthPage() {
@@ -35,6 +63,11 @@ export default function AuthPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
+        {/* Language Switcher */}
+        <div className="flex justify-end mb-4">
+          <LanguageSwitcher />
+        </div>
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-primary">{t("title")}</h1>
           <p className="text-muted-foreground mt-2">
@@ -76,30 +109,7 @@ export default function AuthPage() {
                 return (
                   <>
                     <Authenticator.SignUp.FormFields />
-                    <div className="mt-4 space-y-3 text-sm">
-                      <label className="flex items-start gap-2">
-                        <input
-                          type="checkbox"
-                          name="coppa_guardian"
-                          required
-                          className="mt-1 h-4 w-4"
-                        />
-                        <span>
-                          私は18歳以上の保護者/養育者であることを確認します
-                        </span>
-                      </label>
-                      <label className="flex items-start gap-2">
-                        <input
-                          type="checkbox"
-                          name="coppa_consent"
-                          required
-                          className="mt-1 h-4 w-4"
-                        />
-                        <span>
-                          子どものデータ収集・処理に同意します。データはチック症状の記録・分析のみに使用されます。
-                        </span>
-                      </label>
-                    </div>
+                    <CoppaConsent />
                   </>
                 );
               },

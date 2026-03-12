@@ -16,7 +16,9 @@
     "title": "TicTrack",
     "description": "Track and analyze tic symptoms",
     "coppaGuardian": "I am a parent/guardian",
+    "coppaGuardianFull": "I confirm that I am a parent/guardian aged 18 or older",
     "coppaConsent": "I consent to collect my child's data",
+    "coppaConsentFull": "I consent to the collection and processing of my child's data. Data will only be used for recording and analyzing tic symptoms.",
     "demoMode": "Try Demo Mode",
     "demoModeDescription": "Experience the app without signing up",
     "or": "or"
