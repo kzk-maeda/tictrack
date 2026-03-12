@@ -1,3 +1,13 @@
+import type { DatabaseConstruct } from "../custom/database/index";
+
+export interface AuthConfig {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  auth: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  validateInvitation: any;
+  database: DatabaseConstruct;
+}
+
 /**
  * Helper: get L1 CfnResource from L2 construct
  */
@@ -7,15 +17,14 @@ function cfn(construct: any): { addPropertyOverride(path: string, value: unknown
 }
 
 /**
- * Configure Cognito User Pool and User Pool Client overrides
+ * Configure Cognito User Pool and User Pool Client overrides + Pre-signup trigger
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function configureAuth(auth: any): void {
+export function configureAuth(config: AuthConfig): void {
   // =====================================================================
   // Cognito User Pool overrides
   // =====================================================================
 
-  const userPoolCfn = cfn(auth.userPool);
+  const userPoolCfn = cfn(config.auth.userPool);
 
   // Password policy: min 8, uppercase, lowercase, numbers, symbols
   userPoolCfn.addPropertyOverride("Policies", {
@@ -43,7 +52,7 @@ export function configureAuth(auth: any): void {
   // User Pool Client overrides
   // =====================================================================
 
-  const userPoolClientCfn = cfn(auth.userPoolClient);
+  const userPoolClientCfn = cfn(config.auth.userPoolClient);
 
   // Token validity (1h/1h/30d)
   userPoolClientCfn.addPropertyOverride("AccessTokenValidity", 1);
@@ -54,4 +63,22 @@ export function configureAuth(auth: any): void {
     IdToken: "hours",
     RefreshToken: "days",
   });
+
+  // =====================================================================
+  // Pre-signup Trigger: Validate invitation code
+  // =====================================================================
+
+  // Add environment variable for invitations table
+  config.validateInvitation.addEnvironment(
+    "INVITATIONS_TABLE",
+    config.database.invitationsTable.tableName
+  );
+
+  // Grant Lambda permission to read/write invitations table
+  config.database.invitationsTable.grantReadWriteData(
+    config.validateInvitation.resources.lambda
+  );
+
+  // Add Pre-signup trigger to User Pool
+  config.auth.userPool.addTrigger("preSignUp", config.validateInvitation.resources.lambda);
 }
