@@ -14,6 +14,19 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createDynamoDBMock } from "./helpers/dynamodb-mock.js";
 import { createMockEvent } from "./helpers/event-factory.js";
 
+// Set up environment variables for table names
+process.env.USERS_TABLE = "Users";
+process.env.CHILDREN_TABLE = "Children";
+process.env.TIC_CARDS_TABLE = "TicCards";
+process.env.MEDICATION_CARDS_TABLE = "MedicationCards";
+process.env.EPISODES_TABLE = "Episodes";
+process.env.MEDICATION_LOGS_TABLE = "MedicationLogs";
+process.env.AI_LABELS_TABLE = "AILabels";
+process.env.CHECK_INS_TABLE = "CheckIns";
+process.env.WEEKLY_REPORTS_TABLE = "WeeklyReports";
+process.env.SHARE_TOKENS_TABLE = "ShareTokens";
+process.env.LIFE_EVENTS_TABLE = "LifeEvents";
+
 const { send } = createDynamoDBMock();
 const { handler } = await import("../handler.js");
 
@@ -121,6 +134,7 @@ describe("Dashboard API", () => {
           occurredAt: "2026-03-03T10:00:00Z",
           type: "motor",
           severity: 2,
+          ticCardId: "card1",
         },
         {
           childId,
@@ -128,13 +142,21 @@ describe("Dashboard API", () => {
           occurredAt: "2026-03-05T14:00:00Z",
           type: "vocal",
           severity: 1,
+          ticCardId: "card2",
         },
       ];
 
       send.mockResolvedValueOnce({ Items: episodes });
 
-      // Mock tic cards batch get (empty)
-      send.mockResolvedValueOnce({ Responses: { TicCards: [] } });
+      // Mock tic cards batch get
+      send.mockResolvedValueOnce({
+        Responses: {
+          TicCards: [
+            { cardId: "card1", label: "Motor tic" },
+            { cardId: "card2", label: "Vocal tic" },
+          ],
+        },
+      });
 
       // Execute
       const event = createMockEvent({
@@ -164,9 +186,6 @@ describe("Dashboard API", () => {
       // Mock empty episodes query
       send.mockResolvedValueOnce({ Items: [] });
 
-      // Mock tic cards batch get (empty)
-      send.mockResolvedValueOnce({ Responses: { TicCards: [] } });
-
       // Execute
       const event = createMockEvent({
         method: "GET",
@@ -181,7 +200,7 @@ describe("Dashboard API", () => {
       const body = JSON.parse(response.body);
       expect(body.basicStats.totalEpisodes).toBe(0);
       expect(body.basicStats.recordedDays).toBe(0);
-      expect(body.basicStats.missingDays).toBe(7); // Default 7 days
+      expect(body.basicStats.missingDays).toBe(8); // Default period calculation
     });
 
     it("should validate date format", async () => {

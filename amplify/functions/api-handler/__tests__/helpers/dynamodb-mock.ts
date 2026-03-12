@@ -39,6 +39,12 @@ export function createDynamoDBMock() {
         this.input = input;
       }
     },
+    BatchGetCommand: class MockBatchGetCommand {
+      input: unknown;
+      constructor(input: unknown) {
+        this.input = input;
+      }
+    },
   }));
 
   return { send };
