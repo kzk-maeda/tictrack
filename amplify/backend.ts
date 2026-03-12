@@ -367,23 +367,6 @@ backend.addOutput({
 // }));
 //
 // Add /analyze/{proxy+} route to ApiConstruct
-
-// =====================================================================
-// Step 6: Weekly Reports (uncomment when ready)
-// =====================================================================
-//
-// import { reportGenerator } from './functions/report-generator/resource';
-//
-// Add reportGenerator to defineBackend({...})
-//
-// const orchestrationStack = backend.createStack('orchestration-stack');
-// const orchestration = new OrchestrationConstruct(orchestrationStack, 'Orchestration', { ... });
-//
-// IAM grants for report-generator Lambda:
-//   - DynamoDB read on all tables, write on WeeklyReports
-//   - S3 PutObject on media/reports/*
-//   - Bedrock InvokeModel + ApplyGuardrail
-
 // =====================================================================
 // Step 7: Knowledge Base (uncomment when ready)
 // =====================================================================
