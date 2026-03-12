@@ -21,7 +21,7 @@ I tried to keep track, but in the moment my hands were full — and by the time 
 Even at the doctor's office, I couldn't explain it well.
 That frustration stayed with me.
 
-It turns out that 1 in 5 children experience some form of tic during their development.
+It turns out that 1 in 5 children experience some form of tic while growing up.
 It's far from rare — yet there are almost no tools designed to support caregivers in tracking these symptoms.
 
 TicTrack is the app I built to solve this problem — an app made for caregivers.
@@ -33,7 +33,8 @@ TicTrack is the app I built to solve this problem — an app made for caregivers
 **[Screen: Auth screen → Sign up → Add child in settings]**
 
 Getting started is simple.
-Sign up with your email and register your child's name and birth month.
+TicTrack is a PWA that runs in the browser, so there's no need to install anything from an app store.
+Sign up with your email and register your child's name and birth month — that's all it takes.
 There's also a demo mode, so you can try the app before creating an account.
 
 ---
@@ -48,7 +49,7 @@ You set whether it's a motor or vocal tic, the specific symptom name, and the se
 **[Screen: Tic card list → One-tap log button]**
 
 Each card has a "Log" button — one tap is all it takes to record when and what happened.
-During meals, on the school run, while putting your child to bed — even when there's no time to take a video, you can log it instantly.
+The interface is designed to work on smartphones, so even during meals, on the school run, or while putting your child to bed, you can log it instantly with one hand.
 
 But not every symptom can be pre-registered as a card.
 When a new symptom appears, or a movement that's hard to put into words — that's where TicTrack's core feature comes in.
@@ -68,7 +69,7 @@ That's why we've placed a "Record Video" button in the header — always visible
 **[Screen: Capture screen → Recording → Countdown → Preview → Save]**
 
 Recording is capped at 20 seconds. A short clip is all you need.
-Once saved, the video is securely uploaded to the cloud.
+You can record directly from your camera, and once saved, the video is securely uploaded to the cloud.
 
 **[Screen: Timeline → Start AI analysis → Results displayed]**
 
