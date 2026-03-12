@@ -112,7 +112,8 @@ Multi-table design (8 tables):
 ### API Structure
 REST API handlers in `amplify/functions/api-handler/`:
 - `router.ts` - Pattern-based routing (no Express)
-- `routes/<feature>.ts` - Feature-specific route handlers
+- `routes/<feature>.ts` - Feature-specific route handlers (HTTP layer)
+- `services/<domain>-service.ts` - Business logic layer (ADR 012)
 - `lib/` - Shared utilities (DynamoDB, validation, error handling)
 - `__tests__/` - Vitest unit tests (TDD approach)
 
@@ -124,6 +125,24 @@ Route pattern example:
   handler: (event, params) => getDashboard(event, params)
 }
 ```
+
+### Backend Architecture Patterns
+
+#### Domain Service Layer (ADR 012)
+Complex business logic MUST be extracted to `services/` directory. See `docs/adr/012-introduce-domain-service-layer.md` for full rationale.
+
+**✅ DO:**
+- Extract complex business logic to service classes (cascade deletion, status transitions, aggregations)
+- Implement services as static methods (stateless utility classes)
+- Use shared authorization (`lib/authorization.ts`) in services
+- Write TDD tests for services first
+- Keep route handlers focused on HTTP concerns (request parsing, response building, service calls)
+
+**❌ DON'T:**
+- Over-abstract simple CRUD operations
+- Pass `APIGatewayProxyEvent` to services
+- Build HTTP responses in services
+- Create circular dependencies between services
 
 ### Frontend Structure
 Next.js 14 App Router with i18n (next-intl):
