@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1200">
+  <title>TicTrack Cover Image</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      width: 1200px;
+      height: 630px;
+      overflow: hidden;
+      background: hsl(42, 45%, 97%);
+      position: relative;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 40px 80px;
+    }
+
+    /* Subtle background decoration */
+    .bg-circle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.08;
+      background: hsl(145, 25%, 52%);
+    }
+    .bg-circle-1 {
+      width: 400px;
+      height: 400px;
+      top: -120px;
+      right: -80px;
+    }
+    .bg-circle-2 {
+      width: 300px;
+      height: 300px;
+      bottom: -100px;
+      left: -60px;
+    }
+    .bg-circle-3 {
+      width: 180px;
+      height: 180px;
+      top: 60px;
+      left: 80px;
+      opacity: 0.05;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 96px;
+      font-weight: 700;
+      color: hsl(145, 25%, 42%);
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+
+    .tagline-en {
+      font-size: 22px;
+      font-weight: 400;
+      color: hsl(145, 15%, 35%);
+    }
+
+    .badge {
+      display: inline-block;
+      background: hsl(145, 25%, 52%);
+      color: white;
+      padding: 8px 24px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .features {
+      display: flex;
+      gap: 56px;
+      margin-top: 16px;
+    }
+
+    .feature {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: hsl(145, 25%, 92%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .feature-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: hsl(145, 15%, 35%);
+    }
+
+    .hashtag {
+      position: absolute;
+      bottom: 28px;
+      right: 48px;
+      font-size: 16px;
+      font-weight: 600;
+      color: hsl(145, 20%, 60%);
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Background decorations -->
+    <div class="bg-circle bg-circle-1"></div>
+    <div class="bg-circle bg-circle-2"></div>
+    <div class="bg-circle bg-circle-3"></div>
+
+    <div class="content">
+      <div class="logo">TicTrack</div>
+
+      <div class="tagline-en">Track and analyze tic symptoms</div>
+
+      <div class="badge">Daily Life Enhancement</div>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="hsl(145, 25%, 42%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m22 8-6 4 6 4V8Z"/>
+              <rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>
+            </svg>
+          </div>
+          <div class="feature-label">Video Recording</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="hsl(145, 25%, 42%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 8V4H8"/>
+              <rect width="16" height="12" x="4" y="8" rx="2"/>
+              <path d="M2 14h2"/>
+              <path d="M20 14h2"/>
+              <path d="M15 13v2"/>
+              <path d="M9 13v2"/>
+            </svg>
+          </div>
+          <div class="feature-label">AI Analysis</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="hsl(145, 25%, 42%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18"/>
+              <path d="m19 9-5 5-4-4-3 3"/>
+            </svg>
+          </div>
+          <div class="feature-label">Dashboard</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hashtag">#aideas-2025</div>
+  </div>
+</body>
+</html>

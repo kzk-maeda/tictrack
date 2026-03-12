@@ -86,9 +86,11 @@ export function Nav() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-semibold tracking-tight text-primary">
-              TicTrack
-            </h1>
+            <Link href="/" className="cursor-pointer">
+              <h1 className="text-2xl font-semibold tracking-tight text-primary hover:opacity-80 transition-opacity">
+                TicTrack
+              </h1>
+            </Link>
 
             {/* Mobile Hamburger Menu */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -103,9 +105,11 @@ export function Nav() {
               </SheetTrigger>
               <SheetContent side="left" className="w-72">
                 <SheetHeader>
-                  <SheetTitle className="text-left text-primary">
-                    TicTrack
-                  </SheetTitle>
+                  <Link href="/" onClick={handleNavClick}>
+                    <SheetTitle className="text-left text-primary hover:opacity-80 transition-opacity cursor-pointer">
+                      TicTrack
+                    </SheetTitle>
+                  </Link>
                 </SheetHeader>
                 <nav className="flex flex-col gap-2 mt-8">
                   {navItems.map((item) => {

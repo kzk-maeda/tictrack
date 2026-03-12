@@ -1,15 +1,8 @@
+"use client";
+
 import { fetchAuthSession } from "aws-amplify/auth";
 import type { ProblemDetails } from "../types";
-
-export class ApiError extends Error {
-  constructor(
-    public readonly status: number,
-    public readonly details: ProblemDetails,
-  ) {
-    super(details.detail);
-    this.name = "ApiError";
-  }
-}
+import { ApiError } from "./types";
 
 async function getAuthToken(): Promise<string> {
   const session = await fetchAuthSession();

@@ -23,7 +23,11 @@
     "feature2Description": "AI automatically analyzes tic types and frequency",
     "feature3Title": "Weekly Reports",
     "feature3Description": "Visualize trends with charts and easily share with doctors",
-    "footer": "© 2026 TicTrack - Tic Symptom Tracking App for Children"
+    "footer": "© 2026 TicTrack - Tic Symptom Tracking App for Children",
+    "storyHeadline1": "Built by a parent, for parents.",
+    "storyBody1": "Inspired by my son's tic symptoms and the struggle to keep track of them.",
+    "storyHeadline2": "1 in 5 children experience tics.",
+    "storyBody2": "Yet there are almost no tools to support caregivers."
   },
   "auth": {
     "title": "TicTrack",
@@ -153,6 +157,9 @@
     "stopRecording": "Stop Recording",
     "requestingCamera": "Starting camera...",
     "retake": "Retake",
+    "analyze": "Labeling",
+    "analyzing": "Labeling",
+    "saveOnly": "Save Only (AI later)",
     "cameraNotSupported": "Your browser does not support camera access",
     "selectVideo": "Select Video"
   },
