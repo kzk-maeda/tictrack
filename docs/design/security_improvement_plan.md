@@ -158,28 +158,33 @@ This document outlines security vulnerabilities identified in the TicTrack MVP a
 
 ## Phase 3: Authentication & Authorization (P1)
 
-### 3.1 Implement consistent ownership checks
+### 3.1 ✅ Implement consistent ownership checks [COMPLETED]
 
 **Issue**: Not all API endpoints verify resource ownership (child, episode, ticCard, etc.).
 
 **Risk**: High - Could allow unauthorized access to user data.
 
-**Required Changes**:
-1. Audit all API endpoints for ownership checks
-2. Create reusable `verifyOwnership()` helper functions
-3. Add ownership checks to all CRUD operations
-4. Document ownership verification patterns
+**Solution**:
+1. Created lib/authorization.ts module with reusable functions
+2. Implemented verifyChildOwnership() and getOwnedChild() helpers
+3. Refactored 6 route files to use common authorization
+4. Standardized error handling (404 vs 403)
 
-**Estimated Effort**: 4 hours
-**Endpoints to Audit**: ~20
-- [ ] GET /children/{childId}
-- [ ] PUT /children/{childId}
-- [ ] DELETE /children/{childId}
-- [ ] GET /children/{childId}/episodes
-- [ ] POST /children/{childId}/episodes
-- [ ] PUT /episodes/{episodeId}
-- [ ] DELETE /episodes/{episodeId}
-- [ ] (Continue for all endpoints...)
+**Status**: ✅ Fixed in PR #12
+- Created: lib/authorization.ts with 2 exported functions
+- Tests: 10/10 passing for authorization module
+- Refactored: children.ts, episodes.ts, tic-cards.ts, medications.ts, life-events.ts, dashboard.ts
+- All 140 tests passing
+
+**Test Coverage**:
+```typescript
+✓ verifyChildOwnership passes when child belongs to user
+✓ verifyChildOwnership throws NotFoundError when child not found (404)
+✓ verifyChildOwnership throws ForbiddenError when wrong user (403)
+✓ getOwnedChild returns child when ownership verified
+✓ getOwnedChild throws NotFoundError when child not found
+✓ getOwnedChild throws ForbiddenError when wrong user
+```
 
 ---
 
