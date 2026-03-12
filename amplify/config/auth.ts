@@ -79,6 +79,11 @@ export function configureAuth(config: AuthConfig): void {
     config.validateInvitation.resources.lambda
   );
 
-  // Add Pre-signup trigger to User Pool
-  config.auth.userPool.addTrigger("preSignUp", config.validateInvitation.resources.lambda);
+  // Grant User Pool permission to invoke Lambda
+  config.validateInvitation.resources.lambda.grantInvoke(config.auth.userPool);
+
+  // Add Pre-signup trigger to User Pool via LambdaConfig
+  userPoolCfn.addPropertyOverride("LambdaConfig", {
+    PreSignUp: config.validateInvitation.resources.lambda.functionArn,
+  });
 }
