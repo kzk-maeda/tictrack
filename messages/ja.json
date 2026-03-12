@@ -12,6 +12,19 @@
     "noData": "データがありません",
     "error": "エラーが発生しました"
   },
+  "landing": {
+    "tagline": "子どものチック症状を記録・分析",
+    "description": "保護者のための非診断型チック症状トラッキングアプリ。動画記録、AI分析、週次レポートで子どもの健康をサポート。",
+    "getStarted": "はじめる",
+    "tryDemo": "デモを試す",
+    "feature1Title": "動画で記録",
+    "feature1Description": "チックの瞬間を動画で記録し、いつでも振り返り可能",
+    "feature2Title": "AI分析",
+    "feature2Description": "AIがチックの種類や頻度を自動で分析",
+    "feature3Title": "週次レポート",
+    "feature3Description": "週ごとの傾向をグラフで可視化し、医師との共有も簡単",
+    "footer": "© 2026 TicTrack - 子どものチック症状記録アプリ"
+  },
   "auth": {
     "title": "TicTrack",
     "description": "子どものチック症状を記録・分析",

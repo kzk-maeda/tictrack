@@ -12,6 +12,19 @@
     "noData": "No data available",
     "error": "An error occurred"
   },
+  "landing": {
+    "tagline": "Track and analyze tic symptoms",
+    "description": "A caregiver-first, non-diagnostic app for tracking children's tic symptoms. Record videos, get AI analysis, and weekly reports to support your child's health.",
+    "getStarted": "Get Started",
+    "tryDemo": "Try Demo",
+    "feature1Title": "Video Recording",
+    "feature1Description": "Capture tic moments on video and review them anytime",
+    "feature2Title": "AI Analysis",
+    "feature2Description": "AI automatically analyzes tic types and frequency",
+    "feature3Title": "Weekly Reports",
+    "feature3Description": "Visualize trends with charts and easily share with doctors",
+    "footer": "© 2026 TicTrack - Tic Symptom Tracking App for Children"
+  },
   "auth": {
     "title": "TicTrack",
     "description": "Track and analyze tic symptoms",
