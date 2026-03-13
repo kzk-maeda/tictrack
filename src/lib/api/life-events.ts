@@ -1,3 +1,5 @@
+"use client";
+
 import { apiClient } from "./index";
 import type { LifeEvent } from "../types";
 

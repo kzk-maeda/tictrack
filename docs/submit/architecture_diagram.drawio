@@ -1,0 +1,196 @@
+<mxfile host="65bd71144e">
+    <diagram id="tictrack-architecture" name="TicTrack Architecture">
+        <mxGraphModel dx="1257" dy="1251" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" background="none" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="TicTrack - Architecture Overview" style="text;html=1;fontSize=22;fontStyle=1;align=left;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="10" width="500" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="client-group" value="Client" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;fontSize=14;fontStyle=1;fontColor=#1A1A1A;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="110" width="260" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="pwa" value="Next.js 14 PWA&#10;(Serwist)&#10;&#10;- Timeline / Dashboard&#10;- Video Capture&#10;- Tic Cards&#10;- Medications / Life Events&#10;- i18n (JP/EN)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=10;fontColor=#1A1A1A;" parent="client-group" vertex="1">
+                    <mxGeometry x="15" y="35" width="230" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="amplify" value="AWS Amplify&#10;Hosting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;fontColor=#1A1A1A;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="150" width="100" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-pwa-amplify" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;" parent="1" source="pwa" target="amplify" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="cognito" value="Amazon Cognito" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;fontColor=#1A1A1A;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="110" width="130" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="cognito-detail" value="User Pool + Identity Pool&#10;COPPA Consent, JWT Auth" style="text;html=1;fontSize=9;align=center;verticalAlign=top;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="495" y="150" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-pwa-cognito" value="Auth" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;dashed=1;fontSize=9;" parent="1" source="pwa" target="cognito" edge="1">
+                    <mxGeometry x="0.4098" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="390" y="220"/>
+                            <mxPoint x="390" y="130"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="api-group" value="API Layer" style="swimlane;startSize=25;fillColor=#e1d5e7;strokeColor=#9673a6;rounded=1;fontSize=14;fontStyle=1;fontColor=#1A1A1A;" parent="1" vertex="1">
+                    <mxGeometry x="460" y="200" width="350" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="apigw" value="API Gateway (REST)&#10;+ Cognito Authorizer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;fontStyle=1;fontColor=#1A1A1A;" parent="api-group" vertex="1">
+                    <mxGeometry x="15" y="35" width="320" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="api-handler" value="Lambda: api-handler&#10;(Node.js 20)&#10;CRUD Router" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;fontColor=#1A1A1A;" parent="api-group" vertex="1">
+                    <mxGeometry x="15" y="90" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="start-analysis" value="Lambda:&#10;start-analysis&#10;(Node.js 20)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;fontColor=#1A1A1A;" parent="api-group" vertex="1">
+                    <mxGeometry x="195" y="90" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-apigw-handler" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;" parent="api-group" source="apigw" target="api-handler" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-apigw-analysis" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;" parent="api-group" source="apigw" target="start-analysis" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-pwa-api" value="REST API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;fontSize=10;" parent="1" source="pwa" target="apigw" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="data-group" value="Data Layer" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;fontSize=14;fontStyle=1;fontColor=#1A1A1A;" parent="1" vertex="1">
+                    <mxGeometry x="870" y="110" width="310" height="260" as="geometry"/>
+                </mxCell>
+                <mxCell id="dynamodb" value="Amazon DynamoDB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;fontColor=#1A1A1A;" parent="data-group" vertex="1">
+                    <mxGeometry x="15" y="35" width="280" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3-media" value="S3: Media Bucket&#10;(Videos)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;fontColor=#1A1A1A;" parent="data-group" vertex="1">
+                    <mxGeometry x="15" y="140" width="130" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-handler-ddb" value="CRUD" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="api-handler" target="dynamodb" edge="1">
+                    <mxGeometry x="-0.1034" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="545" y="390"/>
+                            <mxPoint x="1050" y="390"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e-handler-s3" value="Presigned URL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;dashed=1;fontSize=9;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" parent="1" source="api-handler" target="s3-media" edge="1">
+                    <mxGeometry x="0.3433" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="580" y="360"/>
+                            <mxPoint x="830" y="360"/>
+                            <mxPoint x="830" y="273"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e-pwa-s3" value="Video Upload&#10;(Presigned URL)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;dashed=1;fontSize=9;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" parent="1" source="pwa" target="s3-media" edge="1">
+                    <mxGeometry x="0.5839" y="-10" relative="1" as="geometry">
+                        <mxPoint x="170" y="140" as="sourcePoint"/>
+                        <Array as="points">
+                            <mxPoint x="310" y="183"/>
+                            <mxPoint x="310" y="100"/>
+                            <mxPoint x="830" y="100"/>
+                            <mxPoint x="830" y="273"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="orch-group" value="Orchestration" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;rounded=1;fontSize=14;fontStyle=1;fontColor=#1A1A1A;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="430" width="360" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="stepfn" value="AWS Step Functions&lt;br&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;AI Labeling Workflow&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;fontColor=#1A1A1A;" parent="orch-group" vertex="1">
+                    <mxGeometry x="15" y="50" width="170" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="agentcore-proxy" value="Lambda:&lt;br&gt;agentcore-proxy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontColor=#1A1A1A;" parent="orch-group" vertex="1">
+                    <mxGeometry x="220" y="50" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-sfn-proxy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;" parent="orch-group" source="stepfn" target="agentcore-proxy" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-analysis-sfn" value="StartExecution" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;fontSize=9;exitX=0.25;exitY=1;exitDx=0;exitDy=0;" parent="1" source="start-analysis" target="stepfn" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="690" y="410"/>
+                            <mxPoint x="140" y="410"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e-sfn-ddb" value="Update&#10;Episode Status" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;dashed=1;fontSize=9;" parent="1" source="stepfn" target="dynamodb" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1050" y="505"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="agent-group" value="Bedrock AgentCore Runtime — Tic Labeling Agent (Strands SDK)" style="swimlane;startSize=30;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;fontSize=13;fontStyle=1;fontColor=#1A1A1A;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="600" width="1140" height="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="" style="rounded=1;whiteSpace=wrap;html=1;fontColor=#1A1A1A;arcSize=6;strokeColor=#FFFF33;strokeWidth=2;dashed=1;dashPattern=8 8;fillColor=none;" vertex="1" parent="agent-group">
+                    <mxGeometry x="230" y="70" width="900" height="145" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" style="edgeStyle=none;html=1;entryX=0;entryY=0.207;entryDx=0;entryDy=0;entryPerimeter=0;fontColor=#1A1A1A;" edge="1" parent="agent-group" source="agent-llm" target="3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="agent-llm" value="Agent Orchestrator&#10;(Claude Sonnet 4.5)&#10;&#10;System Prompt:&#10;2-axis classification&#10;non-diagnostic constraints" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;align=center;fontColor=#1A1A1A;" parent="agent-group" vertex="1">
+                    <mxGeometry x="15" y="45" width="180" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="tool-video" value="analyze_video&lt;br&gt;&lt;br&gt;S3 URI → Nova Pro&lt;br&gt;→ observations,&lt;br&gt;type, severity,&lt;br&gt;confidence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=center;fontColor=#1A1A1A;" parent="agent-group" vertex="1">
+                    <mxGeometry x="245" y="90" width="150" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="tool-audio" value="transcribe_audio&lt;br&gt;&lt;br&gt;S3 video → Transcribe&lt;br&gt;→ transcript,&lt;br&gt;vocal tic detection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=center;fontColor=#1A1A1A;" parent="agent-group" vertex="1">
+                    <mxGeometry x="425" y="90" width="150" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="tool-integrate" value="integrate_results&lt;br&gt;&lt;br&gt;Video + Audio fusion&lt;br&gt;→ 2-axis label,&lt;br&gt;severity scoring,&lt;br&gt;secondary tics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=center;fontColor=#1A1A1A;" parent="agent-group" vertex="1">
+                    <mxGeometry x="605" y="90" width="150" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="tool-guardrails" value="apply_guardrails&lt;br&gt;&lt;br&gt;Bedrock Guardrails&lt;br&gt;+ keyword fallback&lt;br&gt;→ sanitize&lt;br&gt;diagnostic language" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=center;fontColor=#1A1A1A;" parent="agent-group" vertex="1">
+                    <mxGeometry x="785" y="90" width="150" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="tool-store" value="store_label&lt;br&gt;&lt;br&gt;→ AILabels table&lt;br&gt;→ Update Episode&lt;br&gt;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=center;fontColor=#1A1A1A;" parent="agent-group" vertex="1">
+                    <mxGeometry x="965" y="90" width="150" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc-nova" value="Amazon Bedrock&#10;Nova Pro" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;fontColor=#1A1A1A;" parent="agent-group" vertex="1">
+                    <mxGeometry x="245" y="230" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc-transcribe" value="Amazon&#10;Transcribe" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;fontColor=#1A1A1A;" parent="agent-group" vertex="1">
+                    <mxGeometry x="425" y="230" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc-guardrails" value="Bedrock&#10;Guardrails" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;fontColor=#1A1A1A;" parent="agent-group" vertex="1">
+                    <mxGeometry x="785" y="230" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-t1-nova" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;" parent="agent-group" source="tool-video" target="svc-nova" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-t2-transcribe" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;" parent="agent-group" source="tool-audio" target="svc-transcribe" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-t4-guardrails" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;" parent="agent-group" source="tool-guardrails" target="svc-guardrails" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="tool-flow-label" value="Tool Execution Flow: ① analyze_video (Nova Pro) → ② transcribe_audio (Transcribe) → ③ integrate_results (local fusion) → ④ apply_guardrails (safety) → ⑤ store_label (DynamoDB)" style="text;html=1;fontSize=10;align=left;fillColor=none;strokeColor=none;fontStyle=2;" parent="agent-group" vertex="1">
+                    <mxGeometry x="15" y="300" width="1100" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="ecr" value="Amazon ECR&#10;(Agent Docker Image)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;fontColor=#1A1A1A;" parent="agent-group" vertex="1">
+                    <mxGeometry x="15" y="185" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="&lt;b&gt;Agent Tools&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=center;fontColor=#1A1A1A;" vertex="1" parent="agent-group">
+                    <mxGeometry x="220" y="45" width="150" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-proxy-agent" value="InvokeAgentRuntime" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;fontSize=9;" parent="1" source="agentcore-proxy" target="agent-llm" edge="1">
+                    <mxGeometry x="-0.0341" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="320" y="580"/>
+                            <mxPoint x="145" y="580"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="2" style="edgeStyle=none;html=1;entryX=0.712;entryY=-0.057;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;" edge="1" parent="1" source="tool-store">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1084.3600000000001" y="181.86500000000024" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

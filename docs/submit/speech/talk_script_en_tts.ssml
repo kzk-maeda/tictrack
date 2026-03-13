@@ -1,0 +1,205 @@
+<speak>
+
+<p>Hi. I'd like to introduce TicTrack.</p>
+
+<break time="800ms"/>
+
+<p>Let me share my story.</p>
+
+<break time="600ms"/>
+
+<p>
+My son has tic symptoms.
+<break time="400ms"/>
+One day, out of nowhere, he started blinking more frequently and shaking his head in ways I hadn't seen before.
+<break time="500ms"/>
+<s>"When did this start?"</s>
+<s>"How often is it happening?"</s>
+<break time="400ms"/>
+I tried to keep track, but in the moment my hands were full
+<break time="300ms"/>
+— and by the time I tried to recall later, the details had already faded.
+<break time="400ms"/>
+Even at the doctor's office, I couldn't explain it well.
+<break time="500ms"/>
+That frustration stayed with me.
+</p>
+
+<break time="800ms"/>
+
+<p>
+It turns out that 1 in 5 children experience some form of tic while growing up.
+<break time="400ms"/>
+It's far from rare
+<break time="300ms"/>
+— yet there are almost no tools designed to support caregivers in tracking these symptoms.
+</p>
+
+<break time="600ms"/>
+
+<p>TicTrack is the app I built to solve this problem — an app made for caregivers.</p>
+
+<break time="1s"/>
+
+<p>
+Getting started is simple.
+TicTrack is a <sub alias="progressive web app">PWA</sub> that runs in the browser, so there's no need to install anything from an app store.
+Sign up with your email and register your child's name and birth month — that's all it takes.
+There's also a demo mode, so you can try the app before creating an account.
+</p>
+
+<break time="1s"/>
+
+<p>
+First, you register the tic symptoms you've observed in your child as "Tic Cards."
+You set whether it's a motor or vocal tic, the specific symptom name, and the severity.
+</p>
+
+<break time="500ms"/>
+
+<p>
+Each card has a "Log" button — one tap is all it takes to record when and what happened.
+<break time="300ms"/>
+The interface is designed to work on smartphones, so even during meals, on the school run, or while putting your child to bed,
+you can log it instantly with one hand.
+</p>
+
+<break time="600ms"/>
+
+<p>
+But not every symptom can be pre-registered as a card.
+<break time="400ms"/>
+When a new symptom appears, or a movement that's hard to put into words
+<break time="500ms"/>
+— that's where TicTrack's core feature comes in.
+</p>
+
+<break time="1s"/>
+
+<p>
+Accurately describing tic symptoms in words is extremely difficult for caregivers without medical expertise.
+<break time="500ms"/>
+"How do I even describe that movement?"
+<break time="400ms"/>
+— AI solves this problem.
+</p>
+
+<break time="600ms"/>
+
+<p>
+Video recording is also available from the "Video Input" tab on the Events page, but symptoms can happen at any time.
+<break time="300ms"/>
+That's why we've placed a "Record Video" button in the header
+<break time="200ms"/>
+— always visible on every screen —
+so you can start recording the moment you notice something.
+</p>
+
+<break time="500ms"/>
+
+<p>
+Recording is capped at 20 seconds. A short clip is all you need.
+You can record directly from your camera, and once saved, the video is securely uploaded to the cloud.
+</p>
+
+<break time="600ms"/>
+
+<p>
+Tap "Start AI Analysis,"
+and <sub alias="Amazon Bedrock's Nova Pro">Amazon Bedrock's Nova Pro</sub> model analyzes the video,
+automatically suggesting structured labels for the symptoms.
+<break time="400ms"/>
+Symptom name, motor or vocal, simple or complex, severity, confidence level, and timestamped observations.
+<break time="500ms"/>
+The symptoms that caregivers struggled to put into words
+<break time="300ms"/>
+— AI transforms them into structured information that medical professionals can understand.
+</p>
+
+<break time="600ms"/>
+
+<p>
+Of course, final review and corrections are made by the caregiver.
+AI only suggests — it does not diagnose.
+<break time="300ms"/>
+There's also a feedback feature, so the AI's accuracy can be continuously improved over time.
+</p>
+
+<break time="800ms"/>
+
+<p>
+Known symptoms with one tap.
+<break time="400ms"/>
+New symptoms with video plus AI.
+<break time="500ms"/>
+By combining these two methods of recording, caregivers can keep tracking effortlessly in their daily lives.
+</p>
+
+<break time="1s"/>
+
+<p>
+On the timeline, record counts appear as badges on the calendar.
+Tap a date to see one-tap logs and video recordings listed chronologically.
+You can play back videos and review AI analysis results right from this screen.
+</p>
+
+<break time="800ms"/>
+
+<p>
+Tic symptoms can be related to medication changes or shifts in a child's environment.
+<break time="300ms"/>
+With TicTrack, you can log medication intake with one tap
+and record life events like school transfers or relocations along with their stress levels.
+<break time="400ms"/>
+By capturing not just symptoms but the context behind them,
+you can later look back and understand why changes occurred during certain periods.
+</p>
+
+<break time="1s"/>
+
+<p>
+The dashboard visualizes your recorded data statistically.
+<break time="300ms"/>
+Total episodes, days recorded, daily average, and the most frequent tic.
+<break time="300ms"/>
+Charts for type distribution, severity distribution, time-of-day patterns, and more
+let you grasp trends at a glance.
+</p>
+
+<break time="500ms"/>
+
+<p>
+It's designed around the reality that you can't watch your child <sub alias="twenty four seven">24/7</sub>
+<break time="300ms"/>
+— it reads trends and changes from whatever you were able to record.
+</p>
+
+<break time="600ms"/>
+
+<p>
+And this information can be used directly when visiting a medical professional.
+<break time="400ms"/>
+When the doctor asks "How have things been lately?",
+instead of relying on memory, you can explain with data.
+<break time="500ms"/>
+It changes the quality of the conversation with your doctor.
+</p>
+
+<break time="1s"/>
+
+<p>
+TicTrack is an app that reduces anxiety for caregivers facing their child's tic symptoms,
+while keeping the burden of recording to an absolute minimum.
+<break time="500ms"/>
+It's okay to miss things.
+<break time="400ms"/>
+From what you were able to capture, AI helps articulate the symptoms and understand the trends.
+<break time="500ms"/>
+That's the TicTrack approach.
+</p>
+
+<break time="1s"/>
+
+<p>Thank you for watching.</p>
+
+</speak>

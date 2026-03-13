@@ -23,7 +23,11 @@
     "feature2Description": "AIがチックの種類や頻度を自動で分析",
     "feature3Title": "週次レポート",
     "feature3Description": "週ごとの傾向をグラフで可視化し、医師との共有も簡単",
-    "footer": "© 2026 TicTrack - 子どものチック症状記録アプリ"
+    "footer": "© 2026 TicTrack - 子どものチック症状記録アプリ",
+    "storyHeadline1": "親としての経験から、このアプリを作りました。",
+    "storyBody1": "息子のチック症状をきっかけに、記録の難しさを実感して開発しました。",
+    "storyHeadline2": "5人に1人の子どもがチック症状を経験。",
+    "storyBody2": "でも、保護者を支えるツールはほとんどありません。"
   },
   "auth": {
     "title": "TicTrack",
@@ -153,6 +157,9 @@
     "stopRecording": "撮影を停止",
     "requestingCamera": "カメラを起動中...",
     "retake": "撮り直し",
+    "analyze": "ラベリング",
+    "analyzing": "ラベリング中",
+    "saveOnly": "保存のみ（後でAI分析）",
     "cameraNotSupported": "お使いのブラウザはカメラに対応していません",
     "selectVideo": "動画を選択"
   },

@@ -243,3 +243,5 @@ agents/~/.cache/
 
 # uv cache (root-level, created during uv operations)
 ~/.cache/tsconfig.tsbuildinfo
+
+*.wfp

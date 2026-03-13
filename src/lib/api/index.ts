@@ -31,4 +31,4 @@ export async function apiClient<T>(
 }
 
 // Re-export ApiError for convenience
-export { ApiError } from "./client";
+export { ApiError } from "./types";

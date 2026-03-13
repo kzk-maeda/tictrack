@@ -30,7 +30,7 @@ export default function Home() {
         </header>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4 pb-20">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 pb-12">
           <div className="max-w-2xl text-center space-y-8 animate-fade-in-up">
             {/* Logo */}
             <div className="space-y-2">
@@ -81,6 +81,24 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Story Section 1 */}
+        <section className="flex min-h-[60vh] items-center justify-center px-6">
+          <div className="text-center max-w-md space-y-4">
+            <span className="text-6xl block">👨‍👦</span>
+            <h2 className="text-2xl font-bold text-foreground">{t("storyHeadline1")}</h2>
+            <p className="text-lg text-muted-foreground">{t("storyBody1")}</p>
+          </div>
+        </section>
+
+        {/* Story Section 2 */}
+        <section className="flex min-h-[60vh] items-center justify-center px-6">
+          <div className="text-center max-w-md space-y-4">
+            <span className="text-6xl block">📊</span>
+            <h2 className="text-2xl font-bold text-foreground">{t("storyHeadline2")}</h2>
+            <p className="text-lg text-muted-foreground">{t("storyBody2")}</p>
+          </div>
+        </section>
 
         {/* Footer */}
         <footer className="py-6 text-center text-sm text-muted-foreground">

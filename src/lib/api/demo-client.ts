@@ -1,4 +1,6 @@
-import { ApiError } from "./client";
+"use client";
+
+import { ApiError } from "./types";
 import type { ProblemDetails } from "../types";
 
 export async function demoClient<T>(
