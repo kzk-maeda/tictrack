@@ -25,7 +25,8 @@ export function configureDatabase(config: DatabaseConfig): DatabaseResources {
   // =====================================================================
 
   const databaseStack = config.createStack("database-stack");
-  const database = new DatabaseConstruct(databaseStack, "Database");
+  const environment = process.env.AWS_BRANCH ?? "sandbox";
+  const database = new DatabaseConstruct(databaseStack, "Database", { environment });
 
   const foundationStack = config.createStack("foundation-stack");
   const foundation = new FoundationConstruct(foundationStack, "Foundation");

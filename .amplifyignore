@@ -1,0 +1,22 @@
+# Test files
+e2e/
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+
+# Documentation
+docs/
+
+# IDE and editor files
+.vscode/
+.idea/
+.claude/
+
+# Development config
+playwright.config.ts
+vitest.config.ts
+
+# OS files
+.DS_Store
+Thumbs.db
