@@ -23,9 +23,11 @@ export function configureAgentCore(config: AgentCoreConfig): AgentCoreConstruct 
   // =====================================================================
 
   const agentCoreStack = config.createStack("agentcore-stack");
+  const environment = process.env.AWS_BRANCH ?? "sandbox";
   const agentCore = new AgentCoreConstruct(agentCoreStack, "AgentCore", {
     agentsRepository: config.foundation.agentsRepository,
     imageTag: "latest",
+    environment,
     environmentVariables: {
       EPISODES_TABLE: config.database.episodesTable.tableName,
       AI_LABELS_TABLE: config.database.aiLabelsTable.tableName,

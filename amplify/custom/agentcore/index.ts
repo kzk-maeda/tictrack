@@ -32,6 +32,7 @@ export class AgentCoreConstruct extends Construct {
       agentsRepository: ecr.Repository;
       imageTag?: string;
       environmentVariables?: { [key: string]: string };
+      environment?: string;
     }
   ) {
     super(scope, id);
@@ -40,12 +41,14 @@ export class AgentCoreConstruct extends Construct {
       agentsRepository,
       imageTag = "latest",
       environmentVariables = {},
+      environment = "sandbox",
     } = props;
     const stack = cdk.Stack.of(this);
+    const agentName = `tic_labeling_agent_${environment}`;
 
     // --- CloudWatch Logs for Agent Runtime ---
     this.logGroup = new logs.LogGroup(this, "AgentLogs", {
-      logGroupName: `/aws/bedrock/agentcore/tic_labeling_agent`,
+      logGroupName: `/aws/bedrock/agentcore/${agentName}`,
       retention: logs.RetentionDays.ONE_WEEK,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
@@ -110,7 +113,7 @@ export class AgentCoreConstruct extends Construct {
     const imageUri = `${agentsRepository.repositoryUri}:${imageTag}`;
 
     this.runtime = new bedrockagentcore.CfnRuntime(this, "TicLabelingRuntime", {
-      agentRuntimeName: "tic_labeling_agent",
+      agentRuntimeName: agentName,
       agentRuntimeArtifact: {
         containerConfiguration: {
           containerUri: imageUri,
