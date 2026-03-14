@@ -1,4 +1,12 @@
 version: 1
+backend:
+  phases:
+    preBuild:
+      commands:
+        - nvm install 20
+        - nvm use 20
+        - npm ci
+        - cd amplify/functions/agentcore-proxy && npm ci && cd ../../..
 frontend:
   phases:
     preBuild:
@@ -18,3 +26,4 @@ frontend:
     paths:
       - node_modules/**/*
       - .next/cache/**/*
+      - amplify/functions/agentcore-proxy/node_modules/**/*
