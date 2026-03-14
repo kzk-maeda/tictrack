@@ -7,6 +7,9 @@ backend:
         - nvm use 20
         - npm ci
         - cd amplify/functions/agentcore-proxy && npm ci && cd ../../..
+    build:
+      commands:
+        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
   phases:
     preBuild:
