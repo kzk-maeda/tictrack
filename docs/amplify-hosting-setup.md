@@ -8,7 +8,7 @@ TicTrack を Amplify Hosting で CI/CD デプロイする手順。
 ## 前提
 
 - AWS アカウント: `ap-northeast-1` で CDK bootstrap 済み
-- GitHub リポジトリ: `kzk-maeda/aws-aideas-competition`
+- GitHub リポジトリ: `kzk-maeda/tictrack`
 - 現在の sandbox 環境が動作中
 
 ---
@@ -42,7 +42,7 @@ git push -u origin develop
 1. [Amplify コンソール](https://ap-northeast-1.console.aws.amazon.com/amplify/home?region=ap-northeast-1) を開く
 2. **Create new app** をクリック
 3. **GitHub** を選択 → OAuth 認証
-4. リポジトリ `kzk-maeda/aws-aideas-competition` を選択
+4. リポジトリ `kzk-maeda/tictrack` を選択
 
 ### 2-2. Production ブランチ設定
 
