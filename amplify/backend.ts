@@ -45,13 +45,19 @@ configureAuth({
 });
 
 // AgentCore: AgentCore Runtime + agentcore-proxy env vars + IAM
-const agentCore = configureAgentCore({
-  createStack: backend.createStack.bind(backend),
-  agentcoreProxy: backend.agentcoreProxy,
-  storage: backend.storage.resources,
-  database,
-  foundation,
-});
+// Skip AgentCore on initial deployment (ECR image not yet available).
+// Set SKIP_AGENTCORE=true in Amplify environment variables for first deploy,
+// then remove it and redeploy after pushing the agent image to ECR.
+const skipAgentCore = process.env.SKIP_AGENTCORE === "true";
+const agentCore = skipAgentCore
+  ? null
+  : configureAgentCore({
+      createStack: backend.createStack.bind(backend),
+      agentcoreProxy: backend.agentcoreProxy,
+      storage: backend.storage.resources,
+      database,
+      foundation,
+    });
 
 // API: Orchestration (Step Functions) + API Gateway + api-handler IAM
 const { orchestration, api } = configureApi({
@@ -75,13 +81,17 @@ backend.addOutput({
     },
     KnowledgeBucket: foundation.knowledgeBucket.bucketName,
     AgentsECR: foundation.agentsRepository.repositoryUri,
-    AgentCore: {
-      runtimeArn: agentCore.runtimeArn,
-      runtimeId: agentCore.runtimeId,
-      runtimeEndpoint: agentCore.runtimeEndpoint,
-      executionRoleArn: agentCore.agentExecutionRole.roleArn,
-      logGroupName: agentCore.logGroup.logGroupName,
-    },
+    ...(agentCore
+      ? {
+          AgentCore: {
+            runtimeArn: agentCore.runtimeArn,
+            runtimeId: agentCore.runtimeId,
+            runtimeEndpoint: agentCore.runtimeEndpoint,
+            executionRoleArn: agentCore.agentExecutionRole.roleArn,
+            logGroupName: agentCore.logGroup.logGroupName,
+          },
+        }
+      : {}),
     Tables: database.tableNames,
   },
 });
