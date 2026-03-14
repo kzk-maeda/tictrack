@@ -1,6 +1,6 @@
 import { Construct } from "constructs";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import { RemovalPolicy } from "aws-cdk-lib";
+import { RemovalPolicy, Tags } from "aws-cdk-lib";
 
 /**
  * DatabaseConstruct — 12 DynamoDB tables for TicTrack
@@ -22,13 +22,17 @@ export class DatabaseConstruct extends Construct {
   public readonly lifeEventsTable: dynamodb.Table;
   public readonly invitationsTable: dynamodb.Table;
 
+  /** Mapping of logical names to actual table names for outputs */
+  public readonly tableNames: Record<string, string>;
   /** ARNs of all 12 tables */
   public readonly allTableArns: string[];
   /** ARNs of all tables + their GSI indexes */
   public readonly allTableAndIndexArns: string[];
 
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, props?: { environment?: string }) {
     super(scope, id);
+
+    const env = props?.environment ?? "sandbox";
 
     // --- Users ---
     this.usersTable = new dynamodb.Table(this, "Users", {
@@ -176,6 +180,43 @@ export class DatabaseConstruct extends Construct {
       partitionKey: { name: "email", type: dynamodb.AttributeType.STRING },
       projectionType: dynamodb.ProjectionType.ALL,
     });
+
+    // Tag all tables for environment filtering in AWS Console
+    const allTables = [
+      this.usersTable,
+      this.childrenTable,
+      this.ticCardsTable,
+      this.medicationCardsTable,
+      this.episodesTable,
+      this.medicationLogsTable,
+      this.aiLabelsTable,
+      this.checkInsTable,
+      this.weeklyReportsTable,
+      this.shareTokensTable,
+      this.lifeEventsTable,
+      this.invitationsTable,
+    ];
+
+    for (const table of allTables) {
+      Tags.of(table).add("app", "tictrack");
+      Tags.of(table).add("environment", env);
+    }
+
+    // Expose table names for backend outputs
+    this.tableNames = {
+      users: this.usersTable.tableName,
+      children: this.childrenTable.tableName,
+      ticCards: this.ticCardsTable.tableName,
+      medicationCards: this.medicationCardsTable.tableName,
+      episodes: this.episodesTable.tableName,
+      medicationLogs: this.medicationLogsTable.tableName,
+      aiLabels: this.aiLabelsTable.tableName,
+      checkIns: this.checkInsTable.tableName,
+      weeklyReports: this.weeklyReportsTable.tableName,
+      shareTokens: this.shareTokensTable.tableName,
+      lifeEvents: this.lifeEventsTable.tableName,
+      invitations: this.invitationsTable.tableName,
+    };
 
     // Convenience properties for IAM grants
     this.allTableArns = [

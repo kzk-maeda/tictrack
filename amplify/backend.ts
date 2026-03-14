@@ -82,5 +82,6 @@ backend.addOutput({
       executionRoleArn: agentCore.agentExecutionRole.roleArn,
       logGroupName: agentCore.logGroup.logGroupName,
     },
+    Tables: database.tableNames,
   },
 });
