@@ -32,7 +32,7 @@ export class DatabaseConstruct extends Construct {
 
     // --- Users ---
     this.usersTable = new dynamodb.Table(this, "Users", {
-      tableName: "Users",
+
       partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -40,7 +40,7 @@ export class DatabaseConstruct extends Construct {
 
     // --- Children ---
     this.childrenTable = new dynamodb.Table(this, "Children", {
-      tableName: "Children",
+
       partitionKey: { name: "childId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -54,7 +54,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- TicCards ---
     this.ticCardsTable = new dynamodb.Table(this, "TicCards", {
-      tableName: "TicCards",
       partitionKey: { name: "cardId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -68,7 +67,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- MedicationCards ---
     this.medicationCardsTable = new dynamodb.Table(this, "MedicationCards", {
-      tableName: "MedicationCards",
       partitionKey: { name: "medicationId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -82,7 +80,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- Episodes ---
     this.episodesTable = new dynamodb.Table(this, "Episodes", {
-      tableName: "Episodes",
       partitionKey: { name: "episodeId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -96,7 +93,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- MedicationLogs ---
     this.medicationLogsTable = new dynamodb.Table(this, "MedicationLogs", {
-      tableName: "MedicationLogs",
       partitionKey: { name: "logId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -116,7 +112,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- AILabels (composite key: episodeId + version) ---
     this.aiLabelsTable = new dynamodb.Table(this, "AILabels", {
-      tableName: "AILabels",
       partitionKey: { name: "episodeId", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "version", type: dynamodb.AttributeType.NUMBER },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -125,7 +120,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- CheckIns ---
     this.checkInsTable = new dynamodb.Table(this, "CheckIns", {
-      tableName: "CheckIns",
       partitionKey: { name: "checkInId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -139,7 +133,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- WeeklyReports ---
     this.weeklyReportsTable = new dynamodb.Table(this, "WeeklyReports", {
-      tableName: "WeeklyReports",
       partitionKey: { name: "reportId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -153,7 +146,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- ShareTokens (TTL enabled) ---
     this.shareTokensTable = new dynamodb.Table(this, "ShareTokens", {
-      tableName: "ShareTokens",
       partitionKey: { name: "shareToken", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       timeToLiveAttribute: "TTL",
@@ -162,7 +154,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- LifeEvents ---
     this.lifeEventsTable = new dynamodb.Table(this, "LifeEvents", {
-      tableName: "LifeEvents",
       partitionKey: { name: "eventId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -176,7 +167,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- Invitations (for invite-only signup) ---
     this.invitationsTable = new dynamodb.Table(this, "Invitations", {
-      tableName: "Invitations",
       partitionKey: { name: "invitationCode", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
