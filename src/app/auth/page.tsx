@@ -3,11 +3,11 @@
 import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
-import { signUp } from "aws-amplify/auth";
+import { signUp, type SignUpInput } from "aws-amplify/auth";
 
 function AuthRedirect() {
   const { authStatus } = useAuthenticator((context) => [context.authStatus]);
@@ -22,9 +22,40 @@ function AuthRedirect() {
   return null;
 }
 
+/**
+ * Invitation code input — isolated component to avoid Authenticator re-render.
+ * Uses uncontrolled input; value is read via DOM ref at submit time.
+ */
+function InvitationCodeInput({
+  inputRef,
+}: {
+  inputRef: React.RefObject<HTMLInputElement | null>;
+}) {
+  const t = useTranslations("auth");
+  return (
+    <div className="amplify-field">
+      <label className="amplify-label" htmlFor="invitationCode">
+        {t("invitationCode")}{" "}
+        <span className="amplify-field__required">*</span>
+      </label>
+      <input
+        ref={inputRef}
+        id="invitationCode"
+        name="invitationCode"
+        type="text"
+        className="amplify-input"
+        placeholder={t("invitationCodePlaceholder")}
+        defaultValue=""
+      />
+      <small className="amplify-field__description">
+        {t("invitationCodeDescription")}
+      </small>
+    </div>
+  );
+}
+
 function CoppaConsent() {
   const t = useTranslations("auth");
-
   return (
     <div className="mt-4 space-y-3 text-sm">
       <label className="flex items-start gap-2">
@@ -52,19 +83,58 @@ function CoppaConsent() {
 export default function AuthPage() {
   const router = useRouter();
   const t = useTranslations("auth");
-  const [invitationCode, setInvitationCode] = useState("");
+  const invitationInputRef = useRef<HTMLInputElement>(null);
 
   const handleDemoMode = () => {
-    // Set demo mode flag in localStorage
     if (typeof window !== "undefined") {
       localStorage.setItem("isDemoMode", "true");
     }
     router.push("/demo/timeline");
   };
 
+  const services = useMemo(
+    () => ({
+      async handleSignUp(input: SignUpInput) {
+        const { username, password } = input;
+        const code = invitationInputRef.current?.value?.trim() ?? "";
+        if (!code) {
+          throw new Error("Invitation code is required");
+        }
+        return await signUp({
+          username,
+          password,
+          options: {
+            userAttributes: { email: username },
+            clientMetadata: { invitationCode: code },
+            autoSignIn: true,
+          },
+        });
+      },
+    }),
+    []
+  );
+
+  const components = useMemo(
+    () => ({
+      SignUp: {
+        FormFields() {
+          return (
+            <>
+              <Authenticator.SignUp.FormFields />
+              <InvitationCodeInput inputRef={invitationInputRef} />
+              <CoppaConsent />
+            </>
+          );
+        },
+      },
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
+    <div suppressHydrationWarning className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div suppressHydrationWarning className="w-full max-w-md">
         {/* Language Switcher */}
         <div className="flex justify-end mb-4">
           <LanguageSwitcher />
@@ -72,9 +142,7 @@ export default function AuthPage() {
 
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-primary">{t("title")}</h1>
-          <p className="text-muted-foreground mt-2">
-            {t("description")}
-          </p>
+          <p className="text-muted-foreground mt-2">{t("description")}</p>
         </div>
 
         {/* Demo Mode Button */}
@@ -105,56 +173,8 @@ export default function AuthPage() {
 
         <Authenticator
           signUpAttributes={["email"]}
-          services={{
-            async handleSignUp(input) {
-              const { username, password } = input;
-
-              return await signUp({
-                username,
-                password,
-                options: {
-                  userAttributes: {
-                    email: username, // username is the email in Cognito
-                  },
-                  validationData: {
-                    invitationCode,
-                  },
-                },
-              });
-            },
-          }}
-          components={{
-            SignUp: {
-              FormFields() {
-                return (
-                  <>
-                    <Authenticator.SignUp.FormFields />
-
-                    {/* Invitation Code Field */}
-                    <div className="amplify-field">
-                      <label className="amplify-label" htmlFor="invitationCode">
-                        {t("invitationCode")} <span className="amplify-field__required">*</span>
-                      </label>
-                      <input
-                        id="invitationCode"
-                        type="text"
-                        className="amplify-input"
-                        placeholder={t("invitationCodePlaceholder")}
-                        value={invitationCode}
-                        onChange={(e) => setInvitationCode(e.target.value)}
-                        required
-                      />
-                      <small className="amplify-field__description">
-                        {t("invitationCodeDescription")}
-                      </small>
-                    </div>
-
-                    <CoppaConsent />
-                  </>
-                );
-              },
-            },
-          }}
+          services={services}
+          components={components}
         >
           <AuthRedirect />
         </Authenticator>

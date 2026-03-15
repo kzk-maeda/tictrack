@@ -28,8 +28,10 @@ export const handler: PreSignUpTriggerHandler = async (
   });
 
   try {
-    // Extract invitation code from validationData
-    const invitationCode = event.request.validationData?.invitationCode;
+    // Extract invitation code from clientMetadata (Amplify v6 sends clientMetadata, not validationData)
+    const invitationCode =
+      event.request.clientMetadata?.invitationCode ??
+      event.request.validationData?.invitationCode;
     if (!invitationCode) {
       throw new Error("Invitation code is required");
     }
