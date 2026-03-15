@@ -1,4 +1,5 @@
 import { defineBackend } from "@aws-amplify/backend";
+import { CfnFunction } from "aws-cdk-lib/aws-lambda";
 import { Stack } from "aws-cdk-lib";
 import { auth } from "./auth/resource";
 import { storage } from "./storage/resource";
@@ -22,6 +23,21 @@ const backend = defineBackend({
   agentcoreProxy,
   validateInvitation,
 });
+
+// =====================================================================
+// Lambda function naming: readable names for CloudWatch metrics
+// =====================================================================
+
+const env = process.env.AWS_BRANCH ?? "sandbox";
+
+const apiHandlerCfn = backend.apiHandler.resources.lambda.node.defaultChild as CfnFunction;
+apiHandlerCfn.functionName = `api-handler-${env}`;
+
+const agentcoreProxyCfn = backend.agentcoreProxy.resources.lambda.node.defaultChild as CfnFunction;
+agentcoreProxyCfn.functionName = `agentcore-proxy-${env}`;
+
+const validateInvitationCfn = backend.validateInvitation.resources.lambda.node.defaultChild as CfnFunction;
+validateInvitationCfn.functionName = `validate-invitation-${env}`;
 
 // =====================================================================
 // Configuration: Apply overrides and create custom stacks
