@@ -1,6 +1,6 @@
 import { Construct } from "constructs";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import { RemovalPolicy } from "aws-cdk-lib";
+import { RemovalPolicy, Tags } from "aws-cdk-lib";
 
 /**
  * DatabaseConstruct — 12 DynamoDB tables for TicTrack
@@ -22,17 +22,21 @@ export class DatabaseConstruct extends Construct {
   public readonly lifeEventsTable: dynamodb.Table;
   public readonly invitationsTable: dynamodb.Table;
 
+  /** Mapping of logical names to actual table names for outputs */
+  public readonly tableNames: Record<string, string>;
   /** ARNs of all 12 tables */
   public readonly allTableArns: string[];
   /** ARNs of all tables + their GSI indexes */
   public readonly allTableAndIndexArns: string[];
 
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, props?: { environment?: string }) {
     super(scope, id);
+
+    const env = props?.environment ?? "sandbox";
 
     // --- Users ---
     this.usersTable = new dynamodb.Table(this, "Users", {
-      tableName: "Users",
+
       partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -40,7 +44,7 @@ export class DatabaseConstruct extends Construct {
 
     // --- Children ---
     this.childrenTable = new dynamodb.Table(this, "Children", {
-      tableName: "Children",
+
       partitionKey: { name: "childId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -54,7 +58,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- TicCards ---
     this.ticCardsTable = new dynamodb.Table(this, "TicCards", {
-      tableName: "TicCards",
       partitionKey: { name: "cardId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -68,7 +71,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- MedicationCards ---
     this.medicationCardsTable = new dynamodb.Table(this, "MedicationCards", {
-      tableName: "MedicationCards",
       partitionKey: { name: "medicationId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -82,7 +84,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- Episodes ---
     this.episodesTable = new dynamodb.Table(this, "Episodes", {
-      tableName: "Episodes",
       partitionKey: { name: "episodeId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -96,7 +97,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- MedicationLogs ---
     this.medicationLogsTable = new dynamodb.Table(this, "MedicationLogs", {
-      tableName: "MedicationLogs",
       partitionKey: { name: "logId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -116,7 +116,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- AILabels (composite key: episodeId + version) ---
     this.aiLabelsTable = new dynamodb.Table(this, "AILabels", {
-      tableName: "AILabels",
       partitionKey: { name: "episodeId", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "version", type: dynamodb.AttributeType.NUMBER },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -125,7 +124,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- CheckIns ---
     this.checkInsTable = new dynamodb.Table(this, "CheckIns", {
-      tableName: "CheckIns",
       partitionKey: { name: "checkInId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -139,7 +137,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- WeeklyReports ---
     this.weeklyReportsTable = new dynamodb.Table(this, "WeeklyReports", {
-      tableName: "WeeklyReports",
       partitionKey: { name: "reportId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -153,7 +150,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- ShareTokens (TTL enabled) ---
     this.shareTokensTable = new dynamodb.Table(this, "ShareTokens", {
-      tableName: "ShareTokens",
       partitionKey: { name: "shareToken", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       timeToLiveAttribute: "TTL",
@@ -162,7 +158,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- LifeEvents ---
     this.lifeEventsTable = new dynamodb.Table(this, "LifeEvents", {
-      tableName: "LifeEvents",
       partitionKey: { name: "eventId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -176,7 +171,6 @@ export class DatabaseConstruct extends Construct {
 
     // --- Invitations (for invite-only signup) ---
     this.invitationsTable = new dynamodb.Table(this, "Invitations", {
-      tableName: "Invitations",
       partitionKey: { name: "invitationCode", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -186,6 +180,43 @@ export class DatabaseConstruct extends Construct {
       partitionKey: { name: "email", type: dynamodb.AttributeType.STRING },
       projectionType: dynamodb.ProjectionType.ALL,
     });
+
+    // Tag all tables for environment filtering in AWS Console
+    const allTables = [
+      this.usersTable,
+      this.childrenTable,
+      this.ticCardsTable,
+      this.medicationCardsTable,
+      this.episodesTable,
+      this.medicationLogsTable,
+      this.aiLabelsTable,
+      this.checkInsTable,
+      this.weeklyReportsTable,
+      this.shareTokensTable,
+      this.lifeEventsTable,
+      this.invitationsTable,
+    ];
+
+    for (const table of allTables) {
+      Tags.of(table).add("app", "tictrack");
+      Tags.of(table).add("environment", env);
+    }
+
+    // Expose table names for backend outputs
+    this.tableNames = {
+      users: this.usersTable.tableName,
+      children: this.childrenTable.tableName,
+      ticCards: this.ticCardsTable.tableName,
+      medicationCards: this.medicationCardsTable.tableName,
+      episodes: this.episodesTable.tableName,
+      medicationLogs: this.medicationLogsTable.tableName,
+      aiLabels: this.aiLabelsTable.tableName,
+      checkIns: this.checkInsTable.tableName,
+      weeklyReports: this.weeklyReportsTable.tableName,
+      shareTokens: this.shareTokensTable.tableName,
+      lifeEvents: this.lifeEventsTable.tableName,
+      invitations: this.invitationsTable.tableName,
+    };
 
     // Convenience properties for IAM grants
     this.allTableArns = [
