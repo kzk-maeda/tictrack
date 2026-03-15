@@ -3,6 +3,7 @@ import {
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { docClient, TableNames } from "../lib/dynamodb.js";
+import { GSI } from "../lib/schema.js";
 import { getOwnedChild } from "../lib/authorization.js";
 
 /**
@@ -33,7 +34,7 @@ export class ChildService {
     const ticCardsResult = await docClient.send(
       new QueryCommand({
         TableName: TableNames.TIC_CARDS,
-        IndexName: "childId-index",
+        IndexName: GSI.TicCards.byChildId.name,
         KeyConditionExpression: "childId = :childId",
         ExpressionAttributeValues: { ":childId": childId },
       }),
@@ -54,7 +55,7 @@ export class ChildService {
     const episodesResult = await docClient.send(
       new QueryCommand({
         TableName: TableNames.EPISODES,
-        IndexName: "childId-occurredAt-index",
+        IndexName: GSI.Episodes.byChildOccurredAt.name,
         KeyConditionExpression: "childId = :childId",
         ExpressionAttributeValues: { ":childId": childId },
       }),
@@ -96,7 +97,7 @@ export class ChildService {
     const medicationCardsResult = await docClient.send(
       new QueryCommand({
         TableName: TableNames.MEDICATION_CARDS,
-        IndexName: "childId-index",
+        IndexName: GSI.MedicationCards.byChildId.name,
         KeyConditionExpression: "childId = :childId",
         ExpressionAttributeValues: { ":childId": childId },
       }),
@@ -108,7 +109,7 @@ export class ChildService {
         const logsResult = await docClient.send(
           new QueryCommand({
             TableName: TableNames.MEDICATION_LOGS,
-            IndexName: "medicationId-takenAt-index",
+            IndexName: GSI.MedicationLogs.byMedicationTakenAt.name,
             KeyConditionExpression: "medicationId = :medicationId",
             ExpressionAttributeValues: { ":medicationId": card.medicationId },
           }),
@@ -139,7 +140,7 @@ export class ChildService {
     const lifeEventsResult = await docClient.send(
       new QueryCommand({
         TableName: TableNames.LIFE_EVENTS,
-        IndexName: "childId-occurredAt-index",
+        IndexName: GSI.LifeEvents.byChildOccurredAt.name,
         KeyConditionExpression: "childId = :childId",
         ExpressionAttributeValues: { ":childId": childId },
       }),

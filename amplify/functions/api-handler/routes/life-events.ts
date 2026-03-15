@@ -15,6 +15,7 @@ import {
 import type { RouteResult } from "../types.js";
 import { getUserId } from "../lib/auth.js";
 import { docClient, TableNames } from "../lib/dynamodb.js";
+import { GSI } from "../lib/schema.js";
 import { ok, created } from "../lib/response.js";
 import { ValidationError, NotFoundError } from "../lib/errors.js";
 import { ulid } from "ulidx";
@@ -37,7 +38,7 @@ export async function listLifeEvents(
   const result = await docClient.send(
     new QueryCommand({
       TableName: TableNames.LIFE_EVENTS,
-      IndexName: "childId-occurredAt-index",
+      IndexName: GSI.LifeEvents.byChildOccurredAt.name,
       KeyConditionExpression: "childId = :childId",
       ExpressionAttributeValues: {
         ":childId": childId,

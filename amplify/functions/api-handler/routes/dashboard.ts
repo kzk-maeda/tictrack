@@ -9,6 +9,7 @@ import { GetCommand, QueryCommand, BatchGetCommand } from "@aws-sdk/lib-dynamodb
 import type { RouteResult } from "../types.js";
 import { getUserId } from "../lib/auth.js";
 import { docClient, TableNames } from "../lib/dynamodb.js";
+import { GSI } from "../lib/schema.js";
 import { ok } from "../lib/response.js";
 import { BadRequestError } from "../lib/errors.js";
 import { aggregateData } from "../lib/aggregation.js";
@@ -112,7 +113,7 @@ async function fetchEpisodes(
   const result = await docClient.send(
     new QueryCommand({
       TableName: TableNames.EPISODES,
-      IndexName: "childId-occurredAt-index",
+      IndexName: GSI.Episodes.byChildOccurredAt.name,
       KeyConditionExpression: "childId = :childId AND occurredAt BETWEEN :start AND :end",
       ExpressionAttributeValues: {
         ":childId": childId,
