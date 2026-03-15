@@ -4,6 +4,7 @@ import { ulid } from "ulid";
 import type { RouteResult, Episode } from "../types.js";
 import { getUserId } from "../lib/auth.js";
 import { docClient, TableNames } from "../lib/dynamodb.js";
+import { GSI } from "../lib/schema.js";
 import { ok, created, noContent } from "../lib/response.js";
 import { parseJsonBody, validateISODateTime } from "../lib/validation.js";
 import { ForbiddenError, NotFoundError } from "../lib/errors.js";
@@ -64,7 +65,7 @@ export async function listEpisodes(
   const result = await docClient.send(
     new QueryCommand({
       TableName: TableNames.EPISODES,
-      IndexName: "childId-occurredAt-index",
+      IndexName: GSI.Episodes.byChildOccurredAt.name,
       KeyConditionExpression: keyConditionExpression,
       ExpressionAttributeValues: expressionValues,
       ScanIndexForward: false, // Descending order (newest first)

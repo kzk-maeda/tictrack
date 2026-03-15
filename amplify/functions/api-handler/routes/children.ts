@@ -10,6 +10,7 @@ import { ulid } from "ulid";
 import type { RouteResult, Child } from "../types.js";
 import { getUserId } from "../lib/auth.js";
 import { docClient, TableNames } from "../lib/dynamodb.js";
+import { GSI } from "../lib/schema.js";
 import { ok, created, noContent } from "../lib/response.js";
 import {
   validateDisplayName,
@@ -27,7 +28,7 @@ export async function listChildren(
   const result = await docClient.send(
     new QueryCommand({
       TableName: TableNames.CHILDREN,
-      IndexName: "userId-index",
+      IndexName: GSI.Children.byUserId.name,
       KeyConditionExpression: "userId = :userId",
       ExpressionAttributeValues: { ":userId": userId },
     }),
@@ -137,7 +138,7 @@ export async function setDefaultChild(
   const listResult = await docClient.send(
     new QueryCommand({
       TableName: TableNames.CHILDREN,
-      IndexName: "userId-index",
+      IndexName: GSI.Children.byUserId.name,
       KeyConditionExpression: "userId = :userId",
       ExpressionAttributeValues: { ":userId": userId },
     }),

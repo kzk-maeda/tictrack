@@ -10,6 +10,7 @@ import { ulid } from "ulid";
 import type { RouteResult, MedicationCard, MedicationLog } from "../types.js";
 import { getUserId } from "../lib/auth.js";
 import { docClient, TableNames } from "../lib/dynamodb.js";
+import { GSI } from "../lib/schema.js";
 import { ok, created, noContent } from "../lib/response.js";
 import {
   parseJsonBody,
@@ -33,7 +34,7 @@ export async function listMedicationCards(
   const result = await docClient.send(
     new QueryCommand({
       TableName: TableNames.MEDICATION_CARDS,
-      IndexName: "childId-index",
+      IndexName: GSI.MedicationCards.byChildId.name,
       KeyConditionExpression: "childId = :childId",
       ExpressionAttributeValues: { ":childId": childId },
     }),
@@ -196,7 +197,7 @@ export async function deleteMedicationCard(
   const logsResult = await docClient.send(
     new QueryCommand({
       TableName: TableNames.MEDICATION_LOGS,
-      IndexName: "medicationId-takenAt-index",
+      IndexName: GSI.MedicationLogs.byMedicationTakenAt.name,
       KeyConditionExpression: "medicationId = :medicationId",
       ExpressionAttributeValues: { ":medicationId": medicationId },
     }),
@@ -236,7 +237,7 @@ export async function listMedicationLogs(
   const result = await docClient.send(
     new QueryCommand({
       TableName: TableNames.MEDICATION_LOGS,
-      IndexName: "childId-takenAt-index",
+      IndexName: GSI.MedicationLogs.byChildTakenAt.name,
       KeyConditionExpression: "childId = :childId",
       ExpressionAttributeValues: { ":childId": childId },
       ScanIndexForward: false, // Sort by takenAt descending

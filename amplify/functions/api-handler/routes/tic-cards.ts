@@ -10,6 +10,7 @@ import { ulid } from "ulid";
 import type { RouteResult, TicCard } from "../types.js";
 import { getUserId } from "../lib/auth.js";
 import { docClient, TableNames } from "../lib/dynamodb.js";
+import { GSI } from "../lib/schema.js";
 import { ok, created, noContent } from "../lib/response.js";
 import {
   parseJsonBody,
@@ -35,7 +36,7 @@ export async function listTicCards(
   const result = await docClient.send(
     new QueryCommand({
       TableName: TableNames.TIC_CARDS,
-      IndexName: "childId-index",
+      IndexName: GSI.TicCards.byChildId.name,
       KeyConditionExpression: "childId = :childId",
       ExpressionAttributeValues: { ":childId": childId },
     }),
