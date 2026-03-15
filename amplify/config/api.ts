@@ -51,6 +51,7 @@ export function configureApi(config: ApiConfig): ApiResources {
     childrenTable: config.database.childrenTable,
     mediaBucket: config.storage.bucket,
     region: Stack.of(backendIntegrationStack).region,
+    environment,
   });
 
   // =====================================================================

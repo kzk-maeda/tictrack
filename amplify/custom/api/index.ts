@@ -28,6 +28,8 @@ export interface ApiConstructProps {
   mediaBucket?: any; // Using any to avoid importing s3.IBucket
   /** AWS Region */
   region?: string;
+  /** Environment name for resource naming */
+  environment?: string;
 }
 
 /**
@@ -50,11 +52,11 @@ export class ApiConstruct extends Construct {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
 
-    const { userPool, apiHandlerFn, corsOrigin, agentCoreProxyFn, stateMachineArn, episodesTable, childrenTable, mediaBucket, region } = props;
+    const { userPool, apiHandlerFn, corsOrigin, agentCoreProxyFn, stateMachineArn, episodesTable, childrenTable, mediaBucket, region, environment = "sandbox" } = props;
 
     // --- REST API ---
     this.restApi = new apigateway.RestApi(this, "RestApi", {
-      restApiName: "tictrack-api",
+      restApiName: `tictrack-api-${environment}`,
       description: "TicTrack REST API",
       deploy: true,
       deployOptions: {
@@ -111,7 +113,7 @@ export class ApiConstruct extends Construct {
         this,
         "StartAnalysisFunction",
         {
-          functionName: "start-analysis",
+          functionName: `start-analysis-${environment}`,
           runtime: lambda.Runtime.NODEJS_20_X,
           entry: join(__dirname, "../../functions/start-analysis/handler.ts"),
           handler: "handler",
