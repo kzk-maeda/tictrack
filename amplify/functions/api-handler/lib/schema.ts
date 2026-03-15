@@ -1,9 +1,13 @@
 /**
- * Schema Registry — Single source of truth for DynamoDB table schemas.
+ * Schema Registry — Single source of truth for DynamoDB schemas used by api-handler.
  *
- * All GSI names, key structures, and attribute names referenced by application
- * code MUST be defined here. Route handlers and services should import from
- * this module instead of hardcoding index names or key expressions.
+ * GSI names, key structures, and attribute names referenced by route handlers
+ * and services MUST be defined here instead of being hardcoded.
+ *
+ * Note: This covers tables accessible to the api-handler Lambda only.
+ * Tables used exclusively by other Lambdas (e.g., Invitations by
+ * validate-invitation) are defined in GSI/Keys for reference but omitted
+ * from the Schema object since api-handler has no env var or IAM grant for them.
  *
  * This registry mirrors the CDK definitions in amplify/custom/database/index.ts.
  * When the CDK schema changes, update this file to keep them in sync.
