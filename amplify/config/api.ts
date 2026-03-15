@@ -33,10 +33,12 @@ export function configureApi(config: ApiConfig): ApiResources {
   const backendIntegrationStack = config.createStack("backend-integration-stack");
 
   // Create orchestration (Step Functions State Machine)
+  const environment = process.env.AWS_BRANCH ?? "sandbox";
   const orchestration = new OrchestrationConstruct(backendIntegrationStack, "Orchestration", {
     invokeAgentCoreLambda: config.agentcoreProxy.resources.lambda,
     episodesTable: config.database.episodesTable,
     aiLabelsTable: config.database.aiLabelsTable,
+    environment,
   });
 
   // Create API Gateway with all integrations

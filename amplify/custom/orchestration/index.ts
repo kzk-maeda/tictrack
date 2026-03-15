@@ -23,12 +23,14 @@ export interface OrchestrationConstructProps {
 export class OrchestrationConstruct extends Construct {
   public readonly stateMachine: sfn.StateMachine;
 
-  constructor(scope: Construct, id: string, props: OrchestrationConstructProps) {
+  constructor(scope: Construct, id: string, props: OrchestrationConstructProps & { environment?: string }) {
     super(scope, id);
+
+    const env = props.environment ?? "sandbox";
 
     // CloudWatch Log Group for Step Functions
     const logGroup = new logs.LogGroup(this, "StateMachineLogGroup", {
-      logGroupName: "/aws/stepfunctions/ai-labeling-workflow",
+      logGroupName: `/aws/stepfunctions/ai-labeling-workflow-${env}`,
       retention: logs.RetentionDays.ONE_WEEK,
       removalPolicy: RemovalPolicy.DESTROY,
     });
@@ -134,7 +136,7 @@ export class OrchestrationConstruct extends Construct {
 
     // Create State Machine
     this.stateMachine = new sfn.StateMachine(this, "AILabelingWorkflow", {
-      stateMachineName: "AILabelingWorkflow",
+      stateMachineName: `AILabelingWorkflow-${env}`,
       definitionBody: sfn.DefinitionBody.fromString(JSON.stringify(definition)),
       role,
       logs: {
