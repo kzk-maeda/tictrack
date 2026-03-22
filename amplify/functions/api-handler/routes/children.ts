@@ -30,6 +30,7 @@ export async function listChildren(
       TableName: TableNames.CHILDREN,
       IndexName: GSI.Children.byUserId.name,
       KeyConditionExpression: "userId = :userId",
+      FilterExpression: "attribute_not_exists(deletedAt)",
       ExpressionAttributeValues: { ":userId": userId },
     }),
   );
