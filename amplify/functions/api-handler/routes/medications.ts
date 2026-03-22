@@ -21,6 +21,7 @@ import {
 } from "../lib/validation.js";
 import { ForbiddenError, NotFoundError, ValidationError } from "../lib/errors.js";
 import { verifyChildOwnership } from "../lib/authorization.js";
+import { transactDeleteItems } from "../lib/transact-delete.js";
 
 export async function listMedicationCards(
   event: APIGatewayProxyEvent,
@@ -193,7 +194,10 @@ export async function deleteMedicationCard(
   await verifyChildOwnership(childId, userId);
   await getMedicationCard(medicationId, childId);
 
-  // Delete associated medication logs first
+  // Collect all items to delete
+  const deleteItems: { tableName: string; key: Record<string, unknown> }[] = [];
+
+  // Medication logs for this card
   const logsResult = await docClient.send(
     new QueryCommand({
       TableName: TableNames.MEDICATION_LOGS,
@@ -203,24 +207,20 @@ export async function deleteMedicationCard(
     }),
   );
 
-  if (logsResult.Items && logsResult.Items.length > 0) {
+  if (logsResult.Items) {
     for (const log of logsResult.Items) {
-      await docClient.send(
-        new DeleteCommand({
-          TableName: TableNames.MEDICATION_LOGS,
-          Key: { logId: log.logId },
-        }),
-      );
+      deleteItems.push({
+        tableName: TableNames.MEDICATION_LOGS,
+        key: { logId: log.logId },
+      });
     }
   }
 
-  // Delete the medication card
-  await docClient.send(
-    new DeleteCommand({
-      TableName: TableNames.MEDICATION_CARDS,
-      Key: { medicationId },
-    }),
-  );
+  // The medication card itself
+  deleteItems.push({ tableName: TableNames.MEDICATION_CARDS, key: { medicationId } });
+
+  // Atomic delete (batched if >100 items)
+  await transactDeleteItems(deleteItems);
 
   return noContent();
 }

@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent } from "aws-lambda";
-import { PutCommand, GetCommand, QueryCommand, DeleteCommand, UpdateCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, GetCommand, QueryCommand, UpdateCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { ulid } from "ulid";
 import type { RouteResult, Episode } from "../types.js";
 import { getUserId } from "../lib/auth.js";
@@ -9,6 +9,7 @@ import { ok, created, noContent } from "../lib/response.js";
 import { parseJsonBody, validateISODateTime } from "../lib/validation.js";
 import { ForbiddenError, NotFoundError } from "../lib/errors.js";
 import { verifyChildOwnership } from "../lib/authorization.js";
+import { transactDeleteItems } from "../lib/transact-delete.js";
 
 async function verifyTicCardOwnership(
   ticCardId: string,
@@ -151,7 +152,10 @@ export async function deleteEpisode(
     throw new ForbiddenError("Episode does not belong to this child");
   }
 
-  // Delete associated AI labels first
+  // Collect all items to delete atomically
+  const deleteItems: { tableName: string; key: Record<string, unknown> }[] = [];
+
+  // AI labels for this episode
   const aiLabelsResult = await docClient.send(
     new QueryCommand({
       TableName: TableNames.AI_LABELS,
@@ -160,24 +164,20 @@ export async function deleteEpisode(
     }),
   );
 
-  if (aiLabelsResult.Items && aiLabelsResult.Items.length > 0) {
+  if (aiLabelsResult.Items) {
     for (const label of aiLabelsResult.Items) {
-      await docClient.send(
-        new DeleteCommand({
-          TableName: TableNames.AI_LABELS,
-          Key: { episodeId: label.episodeId, version: label.version },
-        }),
-      );
+      deleteItems.push({
+        tableName: TableNames.AI_LABELS,
+        key: { episodeId: label.episodeId, version: label.version },
+      });
     }
   }
 
-  // Delete the episode
-  await docClient.send(
-    new DeleteCommand({
-      TableName: TableNames.EPISODES,
-      Key: { episodeId },
-    }),
-  );
+  // The episode itself
+  deleteItems.push({ tableName: TableNames.EPISODES, key: { episodeId } });
+
+  // Atomic delete (episode + AI labels in one transaction)
+  await transactDeleteItems(deleteItems);
 
   return noContent();
 }

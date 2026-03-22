@@ -5,12 +5,14 @@ import { ForbiddenError, NotFoundError } from "../../lib/errors.js";
 // Mock dependencies
 vi.mock("../../lib/dynamodb.js");
 vi.mock("../../lib/authorization.js");
+vi.mock("../../lib/transact-delete.js");
 
 const mockDocClient = {
   send: vi.fn(),
 };
 
 const mockGetOwnedChild = vi.fn();
+const mockTransactDeleteItems = vi.fn();
 
 vi.mocked(await import("../../lib/dynamodb.js")).docClient = mockDocClient as any;
 vi.mocked(await import("../../lib/dynamodb.js")).TableNames = {
@@ -28,18 +30,20 @@ vi.mocked(await import("../../lib/dynamodb.js")).TableNames = {
 };
 vi.mocked(await import("../../lib/authorization.js")).getOwnedChild =
   mockGetOwnedChild;
+vi.mocked(await import("../../lib/transact-delete.js")).transactDeleteItems =
+  mockTransactDeleteItems;
 
 describe("ChildService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockTransactDeleteItems.mockResolvedValue(undefined);
   });
 
   describe("deleteChildCascade", () => {
     const userId = "user-123";
     const childId = "child-456";
 
-    it("should delete child and all related data in correct order", async () => {
-      // Setup: authorization passes
+    it("should soft-delete child first, then physically delete related data", async () => {
       mockGetOwnedChild.mockResolvedValue({
         childId,
         userId,
@@ -49,20 +53,14 @@ describe("ChildService", () => {
         updatedAt: "2024-01-01T00:00:00Z",
       });
 
-      // Setup: mock data exists for cascade deletion
       mockDocClient.send
-        // TicCards query
+        // Phase 1: Soft-delete (UpdateCommand)
+        .mockResolvedValueOnce({})
+        // Phase 2a: TicCards query
         .mockResolvedValueOnce({
-          Items: [
-            { cardId: "card-1", childId },
-            { cardId: "card-2", childId },
-          ],
+          Items: [{ cardId: "card-1", childId }, { cardId: "card-2", childId }],
         })
-        // TicCard delete 1
-        .mockResolvedValueOnce({})
-        // TicCard delete 2
-        .mockResolvedValueOnce({})
-        // Episodes query
+        // Phase 2b: Episodes query
         .mockResolvedValueOnce({
           Items: [{ episodeId: "episode-1", childId }],
         })
@@ -73,13 +71,7 @@ describe("ChildService", () => {
             { episodeId: "episode-1", version: 2 },
           ],
         })
-        // AILabel delete 1
-        .mockResolvedValueOnce({})
-        // AILabel delete 2
-        .mockResolvedValueOnce({})
-        // Episode delete
-        .mockResolvedValueOnce({})
-        // MedicationCards query
+        // Phase 2c: MedicationCards query
         .mockResolvedValueOnce({
           Items: [{ medicationId: "med-1", childId }],
         })
@@ -87,17 +79,11 @@ describe("ChildService", () => {
         .mockResolvedValueOnce({
           Items: [{ logId: "log-1", medicationId: "med-1" }],
         })
-        // MedicationLog delete
-        .mockResolvedValueOnce({})
-        // MedicationCard delete
-        .mockResolvedValueOnce({})
-        // LifeEvents query
+        // Phase 2d: LifeEvents query
         .mockResolvedValueOnce({
           Items: [{ eventId: "event-1", childId }],
         })
-        // LifeEvent delete
-        .mockResolvedValueOnce({})
-        // Child delete
+        // Phase 3: Child physical delete
         .mockResolvedValueOnce({});
 
       await ChildService.deleteChildCascade(childId, userId);
@@ -105,41 +91,62 @@ describe("ChildService", () => {
       // Verify authorization was checked
       expect(mockGetOwnedChild).toHaveBeenCalledWith(childId, userId);
 
-      // Verify DynamoDB calls happened in correct order
-      const calls = mockDocClient.send.mock.calls;
+      // First DynamoDB call should be soft-delete (UpdateCommand with deletedAt)
+      const firstCall = mockDocClient.send.mock.calls[0][0];
+      expect(firstCall.input.UpdateExpression).toContain("deletedAt");
 
-      // Should have 15 calls total:
-      // 1 TicCards query + 2 TicCard deletes
-      // 1 Episodes query + 1 AILabels query + 2 AILabel deletes + 1 Episode delete
-      // 1 MedicationCards query + 1 MedicationLogs query + 1 Log delete + 1 Card delete
-      // 1 LifeEvents query + 1 LifeEvent delete
-      // 1 Child delete
-      expect(calls).toHaveLength(15);
-
-      // Verify child was deleted last
-      const lastCall = calls[calls.length - 1][0];
+      // Last DynamoDB call should be physical child delete
+      const lastCall = mockDocClient.send.mock.calls[mockDocClient.send.mock.calls.length - 1][0];
       expect(lastCall.input.TableName).toBe("Children");
       expect(lastCall.input.Key).toEqual({ childId });
+
+      // transactDeleteItems should have been called for each entity group
+      expect(mockTransactDeleteItems).toHaveBeenCalledTimes(4);
+
+      // TicCards batch
+      expect(mockTransactDeleteItems).toHaveBeenCalledWith([
+        { tableName: "TicCards", key: { cardId: "card-1" } },
+        { tableName: "TicCards", key: { cardId: "card-2" } },
+      ]);
+
+      // Episodes + AILabels batch
+      expect(mockTransactDeleteItems).toHaveBeenCalledWith([
+        { tableName: "AILabels", key: { episodeId: "episode-1", version: 1 } },
+        { tableName: "AILabels", key: { episodeId: "episode-1", version: 2 } },
+        { tableName: "Episodes", key: { episodeId: "episode-1" } },
+      ]);
+
+      // Medications + Logs batch
+      expect(mockTransactDeleteItems).toHaveBeenCalledWith([
+        { tableName: "MedicationLogs", key: { logId: "log-1" } },
+        { tableName: "MedicationCards", key: { medicationId: "med-1" } },
+      ]);
+
+      // LifeEvents batch
+      expect(mockTransactDeleteItems).toHaveBeenCalledWith([
+        { tableName: "LifeEvents", key: { eventId: "event-1" } },
+      ]);
     });
 
     it("should throw ForbiddenError if user does not own the child", async () => {
       mockGetOwnedChild.mockRejectedValue(
-        new ForbiddenError("Not your child")
+        new ForbiddenError("Not your child"),
       );
 
       await expect(
-        ChildService.deleteChildCascade(childId, userId)
+        ChildService.deleteChildCascade(childId, userId),
       ).rejects.toThrow(ForbiddenError);
 
-      // Should not attempt any deletions
       expect(mockDocClient.send).not.toHaveBeenCalled();
     });
 
     it("should throw NotFoundError if child does not exist", async () => {
-      mockGetOwnedChild.mockRejectedValue(new NotFoundError("Child not found"));
+      mockGetOwnedChild.mockRejectedValue(
+        new NotFoundError("Child not found"),
+      );
 
       await expect(
-        ChildService.deleteChildCascade(childId, userId)
+        ChildService.deleteChildCascade(childId, userId),
       ).rejects.toThrow(NotFoundError);
 
       expect(mockDocClient.send).not.toHaveBeenCalled();
@@ -155,20 +162,29 @@ describe("ChildService", () => {
         updatedAt: "2024-01-01T00:00:00Z",
       });
 
-      // All queries return empty results
       mockDocClient.send
+        // Phase 1: Soft-delete
+        .mockResolvedValueOnce({})
+        // Phase 2: All queries return empty
         .mockResolvedValueOnce({ Items: [] }) // TicCards
         .mockResolvedValueOnce({ Items: [] }) // Episodes
         .mockResolvedValueOnce({ Items: [] }) // MedicationCards
         .mockResolvedValueOnce({ Items: [] }) // LifeEvents
-        .mockResolvedValueOnce({}); // Child delete
+        // Phase 3: Child physical delete
+        .mockResolvedValueOnce({});
 
       await ChildService.deleteChildCascade(childId, userId);
 
-      // Should only have 5 calls (4 queries + 1 child delete)
-      expect(mockDocClient.send).toHaveBeenCalledTimes(5);
+      // Soft-delete + 4 queries + child physical delete = 6 DynamoDB calls
+      expect(mockDocClient.send).toHaveBeenCalledTimes(6);
 
-      // Last call should still be child deletion
+      // transactDeleteItems called 4 times with empty arrays
+      expect(mockTransactDeleteItems).toHaveBeenCalledTimes(4);
+      for (const call of mockTransactDeleteItems.mock.calls) {
+        expect(call[0]).toEqual([]);
+      }
+
+      // Last call should still be child physical deletion
       const calls = mockDocClient.send.mock.calls;
       const lastCall = calls[calls.length - 1][0];
       expect(lastCall.input.TableName).toBe("Children");
